@@ -1,2 +1,3 @@
-# dart
-Spine client-side API implemented in Dart
+# Spine Dart
+
+Spine client-side API implemented in Dart.
