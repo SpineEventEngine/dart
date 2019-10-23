@@ -1,3 +1,3 @@
 # Spine Dart
 
-Spine client-side API implemented in Dart.
+Components for developing Dart client side applications based on Spine.
