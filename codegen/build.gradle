@@ -27,10 +27,10 @@ apply from: deps.scripts.pubPublishTasks
 
 dependencies {
     protobuf deps.build.protobuf
-    protobuf project(':base')
-    implementation project(':tool-base')
+    protobuf "io.spine:spine-base:$spineBaseVersion"
+    protobuf "io.spine.tools:spine-tool-base:$spineBaseVersion"
 
-    testImplementation project(':testlib')
+    testImplementation "io.spine:spine-testlib:$spineBaseVersion"
 }
 
 final def generationRoot = "$projectDir/generated"
