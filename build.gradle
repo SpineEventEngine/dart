@@ -51,7 +51,7 @@ subprojects {
     apply plugin: 'com.google.protobuf'
     apply plugin: 'io.spine.tools.proto-dart-plugin'
     apply from: deps.scripts.dartBuildTasks
-    apply from: deps.scripts.pubPublishTasksK
+    apply from: deps.scripts.pubPublishTasks
 
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
