@@ -76,4 +76,4 @@ pubspec.lock
 **/*.pbserver.dart
 **/*.pbjson.dart
 **/types.dart
-**/validation.dart
+**/validators.dart
