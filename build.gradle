@@ -30,13 +30,13 @@ buildscript { final scriptHandler ->
         classpath deps.build.guava
         classpath deps.build.gradlePlugins.protobuf
         classpath deps.build.gradlePlugins.errorProne
+        classpath "io.spine.tools:spine-proto-dart-plugin:$spineBaseVersion"
     }
 
     forceConfiguration(scriptHandler)
 }
 
 apply from: 'version.gradle'
-
 
 allprojects {
     apply plugin: 'idea'
@@ -47,20 +47,11 @@ allprojects {
 }
 
 subprojects {
-    buildscript { final scriptHandler ->
-
-        apply from: "$rootDir/version.gradle"
-
-        defaultRepositories(scriptHandler)
-        dependencies {
-            classpath deps.build.gradlePlugins.protobuf
-        }
-
-        forceConfiguration(scriptHandler)
-    }
-
     apply plugin: 'java-library'
     apply plugin: 'com.google.protobuf'
+    apply plugin: 'io.spine.tools.proto-dart-plugin'
+    apply from: deps.scripts.dartBuildTasks
+    apply from: deps.scripts.pubPublishTasks
 
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
@@ -68,8 +59,16 @@ subprojects {
     defaultRepositories(project)
 
     protobuf {
-        protoc {
-            artifact = deps.build.protoc
+        generateProtoTasks {
+            all().each { final task ->
+                task.plugins {
+                    dart {}
+                }
+
+                task.builtins {
+                    remove java
+                }
+            }
         }
     }
 

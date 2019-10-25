@@ -20,10 +20,17 @@
 
 import org.codehaus.plexus.util.Os
 
-group = 'io.spine.tools'
+ext {
+    final def windows = Os.isFamily(Os.FAMILY_WINDOWS);
+    pubCache = windows
+            ? "${System.getenv('APPDATA')}/Pub/Cache/bin"
+            : "${System.getProperty('user.home')}/.pub-cache/bin"
+    scriptExtension = windows ? '.bat' : ''
+}
 
-apply from: deps.scripts.dartBuildTasks
-apply from: deps.scripts.pubPublishTasks
+task copyDartProtobuf(type: Copy) {
+    from protoDart
+}
 
 dependencies {
     protobuf deps.build.protobuf
@@ -33,46 +40,22 @@ dependencies {
     testImplementation "io.spine:spine-testlib:$spineBaseVersion"
 }
 
-final def generationRoot = "$projectDir/generated"
-
-task copyGeneratedDart(type: Copy) {
-    from "$generationRoot/main/dart"
-    into "$projectDir/lib"
+task generateTestValidators(type: Exec) {
+    final def command = "$pubCache/dart_code_gen$scriptExtension"
+    commandLine(command,
+            '--descriptor', "${file(protoDart.testDescriptorSet.get())}",
+            '--destination', "$projectDir/test/validators.dart",
+            '--standard-types', 'dart_code_gen',
+            '--import-prefix', 'package:codegen_test')
 }
 
-assemble.dependsOn 'copyGeneratedDart'
-
-protobuf {
-    generatedFilesBaseDir = generationRoot
-
-    plugins {
-        dart {
-            final def windows = Os.isFamily(Os.FAMILY_WINDOWS)
-            final def dartPluginExe = windows
-                    ? "${System.getenv('APPDATA')}\\Pub\\Cache\\bin\\protoc-gen-dart.bat"
-                    : "${System.getProperty('user.home')}/.pub-cache/bin/protoc-gen-dart"
-            path = dartPluginExe
-        }
-    }
-
-    generateProtoTasks {
-        all().each { final task ->
-            task.builtins {
-                remove java
-            }
-            task.plugins {
-                dart {}
-                remove spineProtoc
-            }
-            task.generateDescriptorSet = false
-            if (task.sourceSet.name.equals('main')) {
-                project.tasks['copyGeneratedDart'].dependsOn task
-            }
-        }
-    }
-}
+tasks['testDart'].dependsOn 'activateLocally', 'generateTestValidators'
 
 tasks.withType(JavaCompile)*.enabled false
-tasks['testDart'].enabled false
 
-tasks['build'].dependsOn 'activateLocally'
+task cleanProto(type: Delete) {
+
+    delete += "$projectDir/proto"
+}
+
+clean.dependsOn 'cleanProto'
