@@ -33,11 +33,12 @@ task copyDartProtobuf(type: Copy) {
 }
 
 dependencies {
-    protobuf deps.build.protobuf
-    protobuf "io.spine:spine-base:$spineBaseVersion"
-    protobuf "io.spine.tools:spine-tool-base:$spineBaseVersion"
-
-    testImplementation "io.spine:spine-testlib:$spineBaseVersion"
+    final def protobufDefinitions = [deps.build.protobuf,
+                                     "io.spine:spine-base:$spineBaseVersion",
+                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
+    protobuf protobufDefinitions
+    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is resolved, all types must be compiled in a single batch.
+    testProtobuf protobufDefinitions
 }
 
 task generateTestValidators(type: Exec) {
@@ -46,7 +47,7 @@ task generateTestValidators(type: Exec) {
             '--descriptor', "${file(protoDart.testDescriptorSet.get())}",
             '--destination', "$projectDir/test/validators.dart",
             '--standard-types', 'dart_code_gen',
-            '--import-prefix', 'package:codegen_test')
+            '--import-prefix', '.')
 }
 
 tasks['testDart'].dependsOn 'activateLocally', 'generateTestValidators'

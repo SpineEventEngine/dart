@@ -18,15 +18,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:codegen_test/google/protobuf/empty.pb.dart';
-import 'package:codegen_test/google/protobuf/wrappers.pb.dart';
-import 'package:codegen_test/spine/net/email_address.pb.dart';
-import 'package:codegen_test/spine/people/person_name.pb.dart';
-import 'package:codegen_test/spine/test/tools/dart/validation.pb.dart';
-import 'package:codegen_test/spine/validate/validation_error.pb.dart';
+import 'package:dart_code_gen/spine/validate/validation_error.pb.dart';
 import 'package:protobuf/protobuf.dart';
 import 'package:test/test.dart';
 
+import 'google/protobuf/empty.pb.dart';
+import 'google/protobuf/wrappers.pb.dart';
+import 'spine/net/email_address.pb.dart';
+import 'spine/people/person_name.pb.dart';
+import 'spine/test/tools/dart/validation.pb.dart';
 import 'validators.dart';
 
 void main() {
