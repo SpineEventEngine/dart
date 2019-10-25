@@ -50,8 +50,8 @@ subprojects {
     apply plugin: 'java-library'
     apply plugin: 'com.google.protobuf'
     apply plugin: 'io.spine.tools.proto-dart-plugin'
-    apply from: deps.scripts.dartBuildTasks
-    apply from: deps.scripts.pubPublishTasks
+    apply from: "$rootDir/config/gradle/dart/build-tasks.gradle"
+    apply from: "$rootDir/config/gradle/dart/pub-publish-tasks.gradle"
 
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
