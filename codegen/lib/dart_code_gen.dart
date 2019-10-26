@@ -25,6 +25,8 @@ import 'package:dart_code_gen/src/imports.dart';
 import 'package:dart_code_gen/src/validator_factory.dart';
 import 'package:dart_style/dart_style.dart';
 
+import 'src/known_types_factory.dart';
+
 /// Code generation properties.
 ///
 class Properties {
@@ -42,18 +44,22 @@ class Properties {
 }
 
 /// Generates the message validators and obtains their Dart source code.
-String generateValidators(Properties properties) {
-    var allocator = Allocator.simplePrefixing();
+String generate(Properties properties) {
+    var knownTypes = KnownTypesFactory(properties);
     var code = Library((b) =>
-        b..body.add(_createValidatorMap(properties, allocator))
-         ..body.add(createViolationFactory(properties.standardPackage))
+        b.body..add(_createValidatorMap(properties))
+              ..add(createViolationFactory(properties.standardPackage))
+              ..add(_createTypeUrlToInfoMap(properties))
+              ..add(_createMessageToTypeUrlMap(properties))
+              ..add(knownTypes.generateClass())
+              ..add(knownTypes.generateAccessor())
     );
-    var emitter = DartEmitter(allocator);
+    var emitter = DartEmitter(Allocator.simplePrefixing());
     var formatter = DartFormatter();
     return formatter.format(code.accept(emitter).toString());
 }
 
-Field _createValidatorMap(Properties properties, Allocator allocator) {
+Field _createValidatorMap(Properties properties) {
     var keyType = refer('String');
     var validationError = refer('ValidationError',
                                 validationErrorImport(properties.standardPackage));
@@ -63,7 +69,7 @@ Field _createValidatorMap(Properties properties, Allocator allocator) {
     var validatorMap = Map<String, Expression>();
     for (var file in properties.types.file) {
         for (var type in file.messageType) {
-            var factory = ValidatorFactory(file, type, allocator, properties);
+            var factory = ValidatorFactory(file, type, properties);
             validatorMap[factory.fullTypeName] = factory.createValidator();
         }
     }
@@ -75,4 +81,16 @@ Field _createValidatorMap(Properties properties, Allocator allocator) {
             ..types.addAll([keyType, valueType]))
         ..assignment = literalMap(validatorMap, keyType, valueType).code
     );
+}
+
+Field _createTypeUrlToInfoMap(Properties properties) {
+
+}
+
+Field _createMessageToTypeUrlMap(Properties properties) {
+
+}
+
+Class _createKnownTypesPartClass(Properties properties) {
+
 }

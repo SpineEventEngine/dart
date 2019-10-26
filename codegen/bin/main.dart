@@ -64,7 +64,7 @@ void _launch_code_gen(ArgResults args) {
 
     FileDescriptorSet descriptors = _parseDescriptors(descFile);
     var properties = dart_code_gen.Properties(descriptors, stdPackage, importPrefix);
-    var dartCode = dart_code_gen.generateValidators(properties);
+    var dartCode = dart_code_gen.generate(properties);
     destinationFile.writeAsStringSync(dartCode, flush: true);
     if (shouldPrint) {
         stdout.write(dartCode);
