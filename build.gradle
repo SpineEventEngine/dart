@@ -1,0 +1,107 @@
+/*
+ * Copyright 2019, TeamDev. All rights reserved.
+ *
+ * Redistribution and use in source and/or binary forms, with or without
+ * modification, must retain the above copyright notice and the following
+ * disclaimer.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+buildscript { final scriptHandler ->
+
+    // As long as `buildscript` section is always evaluated first,
+    // we need to apply explicitly here.
+    apply from: "$rootDir/config/gradle/dependencies.gradle"
+    apply from: "$rootDir/version.gradle"
+
+    defaultRepositories(scriptHandler)
+    dependencies {
+        classpath deps.build.guava
+        classpath deps.build.gradlePlugins.protobuf
+        classpath deps.build.gradlePlugins.errorProne
+        classpath "io.spine.tools:spine-proto-dart-plugin:$spineBaseVersion"
+    }
+
+    forceConfiguration(scriptHandler)
+}
+
+apply from: 'version.gradle'
+
+allprojects {
+    apply plugin: 'idea'
+    apply plugin: 'maven-publish'
+
+    // Use the same version numbering for the Spine Base library.
+    version = versionToPublish
+}
+
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'com.google.protobuf'
+    apply plugin: 'io.spine.tools.proto-dart-plugin'
+    apply from: deps.scripts.dartBuildTasks
+    apply from: deps.scripts.pubPublishTasks
+
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    defaultRepositories(project)
+
+    protobuf {
+        generateProtoTasks {
+            all().each { final task ->
+                task.plugins {
+                    dart {}
+                }
+
+                task.builtins {
+                    remove java
+                }
+            }
+        }
+    }
+
+    // Apply the same IDEA module configuration for each of sub-projects.
+    idea {
+        module {
+            downloadJavadoc = true
+            downloadSources = true
+
+            iml {
+                beforeMerged { final module ->
+                    module.dependencies.clear()
+                }
+                whenMerged { final module ->
+                    module.dependencies*.exported = true
+                }
+            }
+        }
+    }
+}
+
+// IDEA project configuration.
+idea {
+    project {
+        ipr {
+            beforeMerged { final project ->
+                project.modulePaths.clear()
+            }
+            withXml { final provider ->
+                provider.node.component
+                        .find { it.@name == 'VcsDirectoryMappings' }
+                        .mapping.@vcs = 'Git'
+            }
+        }
+    }
+}
