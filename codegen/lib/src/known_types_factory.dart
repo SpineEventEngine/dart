@@ -21,10 +21,17 @@
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_code_gen/dart_code_gen.dart';
 import 'package:dart_code_gen/src/imports.dart';
+import 'package:dart_code_gen/src/type.dart';
+
+import 'validator_factory.dart';
 
 const _typeUrlToInfo = 'typeUrlToInfo';
 const _defaultToTypeUrl = 'defaultToTypeUrl';
 const _validators = 'validators';
+
+const _privateTypeUrlToInfo = '_typeUrlToInfo';
+const _privateDefaultToTypeUrl = '_defaultToTypeUrl';
+const _privateValidators = '_validators';
 
 const _knownTypesPart = '_KnownTypesPart';
 
@@ -34,25 +41,57 @@ class KnownTypesFactory {
 
     KnownTypesFactory(this._properties);
 
+    Iterable<Spec> generateValues() {
+        var typeSet = TypeSet.of(_properties.types);
+        var importPrefix = _properties.importPrefix;
+        var urlToBuilderMap = <Expression, Expression>{};
+        var defaultToUrlMap = <Expression, Expression>{};
+        for (var type in typeSet.types) {
+            var typeRef = refer(type.dartClassName, "${importPrefix}/${type.dartFilePath}");
+            var ctorCall = typeRef.newInstance([]);
+            var builderInfoAccessor = ctorCall.property('info_');
+            var typeUrl = literal(type.typeUrl);
+
+            urlToBuilderMap[typeUrl] = builderInfoAccessor;
+            defaultToUrlMap[ctorCall] = typeUrl;
+        }
+        var urlToBuilder = _mapField(_privateTypeUrlToInfo, _urlToInfoType, urlToBuilderMap);
+        var defaultToUrl = _mapField(_privateDefaultToTypeUrl, _messageToUrlType, defaultToUrlMap);
+        var validators = _createValidatorMap();
+        return [urlToBuilder, defaultToUrl, validators];
+    }
+
+
+    Field _createValidatorMap() {
+        var validatorMap = Map<Expression, Expression>();
+        var typeSet = TypeSet.topLevelOnly(_properties.types);
+        for (var type in typeSet.types) {
+            var factory = ValidatorFactory(type.file, type.descriptor, _properties);
+            var typeUrl = literalString(type.typeUrl);
+            validatorMap[typeUrl] = factory.createValidator();
+        }
+        return _mapField(_privateValidators, _typeUrlToValidatorType, validatorMap);
+    }
+
+    Field _mapField(String name, Reference type, Map value) {
+        return Field((b) => b
+            ..name = name
+            ..modifier = FieldModifier.final$
+            ..type = type
+            ..assignment = literalMap(value).code
+        );
+    }
+
     Class generateClass() {
-        var builderInfoType = refer('BuilderInfo', protobufImport);
-        var generatedMessageType = refer('GeneratedMessage', protobufImport);
-        var stringType = refer('String');
-        var errorImport = validationErrorImport(_properties.standardPackage);
-        var validationErrorType = refer('ValidationError', errorImport);
-        var validatorFunctionType = FunctionType((b) => b
-            ..requiredParameters.add(generatedMessageType)
-            ..returnType = validationErrorType);
-        
         var typeUrlToInfo = Field((b) => b
             ..name = _typeUrlToInfo
-            ..type = _mapType(stringType, builderInfoType));
+            ..type = _urlToInfoType);
         var defaultToTypeUrl = Field((b) => b
             ..name = _defaultToTypeUrl
-            ..type = _mapType(generatedMessageType, stringType));
+            ..type = _messageToUrlType);
         var validators = Field((b) => b
             ..name = _validators
-            ..type = _mapType(stringType, validatorFunctionType));
+            ..type = _typeUrlToValidatorType);
         
         Constructor ctor = Constructor((b) => b
             ..requiredParameters.addAll([_initParam(_typeUrlToInfo),
@@ -67,9 +106,9 @@ class KnownTypesFactory {
     }
 
     Method generateAccessor() {
-        var ctorCall = refer(_knownTypesPart).newInstance([refer(_typeUrlToInfo),
-                                                           refer(_defaultToTypeUrl),
-                                                           refer(_validators)]);
+        var ctorCall = refer(_knownTypesPart).newInstance([refer(_privateTypeUrlToInfo),
+                                                           refer(_privateDefaultToTypeUrl),
+                                                           refer(_privateValidators)]);
         return Method((b) => b
             ..name = 'types'
             ..returns = refer('dynamic')
@@ -80,6 +119,28 @@ class KnownTypesFactory {
     Parameter _initParam(String name) {
         return Parameter((b) => b..name = name
                                  ..toThis = true);
+    }
+
+    Reference get _stringType => refer('String');
+
+    Reference get _generateMessageType => refer('GeneratedMessage', protobufImport);
+
+    Reference get _builderInfoType => refer('BuilderInfo', protobufImport);
+
+    Reference get _validationErrorType {
+        var errorImport = validationErrorImport(_properties.standardPackage);
+        return refer('ValidationError', errorImport);
+    }
+
+    Reference get _urlToInfoType => _mapType(_stringType, _builderInfoType);
+
+    Reference get _messageToUrlType => _mapType(_generateMessageType, _stringType);
+
+    Reference get _typeUrlToValidatorType {
+        var valueType = FunctionType((b) => b
+            ..requiredParameters.add(_generateMessageType)
+            ..returnType = _validationErrorType);
+        return _mapType(_stringType, valueType);
     }
 
     Reference _mapType(Reference keyType, Reference valueType) => TypeReference((b) => b

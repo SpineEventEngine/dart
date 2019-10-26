@@ -47,46 +47,12 @@ class Properties {
 String generate(Properties properties) {
     var knownTypes = KnownTypesFactory(properties);
     var code = Library((b) =>
-        b.body..add(_createValidatorMap(properties))
-              ..add(createViolationFactory(properties.standardPackage))
-              ..add(_createTypeUrlToInfoMap(properties))
-              ..add(_createMessageToTypeUrlMap(properties))
+        b.body..add(createViolationFactory(properties.standardPackage))
+              ..addAll(knownTypes.generateValues())
               ..add(knownTypes.generateClass())
               ..add(knownTypes.generateAccessor())
     );
     var emitter = DartEmitter(Allocator.simplePrefixing());
     var formatter = DartFormatter();
     return formatter.format(code.accept(emitter).toString());
-}
-
-Field _createValidatorMap(Properties properties) {
-    var keyType = refer('String');
-    var validationError = refer('ValidationError',
-                                validationErrorImport(properties.standardPackage));
-    var valueType = FunctionType((b) => b
-        ..requiredParameters.add(refer('GeneratedMessage', protobufImport))
-        ..returnType = validationError);
-    var validatorMap = Map<String, Expression>();
-    for (var file in properties.types.file) {
-        for (var type in file.messageType) {
-            var factory = ValidatorFactory(file, type, properties);
-            validatorMap[factory.fullTypeName] = factory.createValidator();
-        }
-    }
-    return Field((b) => b
-        ..name = 'validators'
-        ..modifier = FieldModifier.final$
-        ..type = TypeReference((b) => b
-            ..symbol = 'Map'
-            ..types.addAll([keyType, valueType]))
-        ..assignment = literalMap(validatorMap, keyType, valueType).code
-    );
-}
-
-Field _createTypeUrlToInfoMap(Properties properties) {
-
-}
-
-Field _createMessageToTypeUrlMap(Properties properties) {
-
 }

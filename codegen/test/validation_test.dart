@@ -226,7 +226,8 @@ void assertInvalid(GeneratedMessage message) {
 }
 
 List<ConstraintViolation> validate(GeneratedMessage message) {
-    var doValidate = validators[message.info_.qualifiedMessageName];
+    var typeUrl = types().defaultToTypeUrl[message.createEmptyInstance()];
+    var doValidate = types().validators[typeUrl];
     var error = doValidate(message);
     return error.constraintViolation;
 }

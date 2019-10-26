@@ -19,9 +19,11 @@
  */
 
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
+import 'package:dart_code_gen/spine/options.pb.dart';
 
 const _protoExtension = 'proto';
 const _pbDartExtension = 'pb.dart';
+const _standardTypeUrlPrefix = 'type.googleapis.com';
 
 class MessageType {
 
@@ -32,8 +34,7 @@ class MessageType {
 
     MessageType._(this.file, this.descriptor, this.fullName, this.dartClassName);
 
-    MessageType._fromFile(FileDescriptorProto file, DescriptorProto descriptor)
-        :
+    MessageType._fromFile(FileDescriptorProto file, DescriptorProto descriptor) :
             file = file,
             descriptor = descriptor,
             fullName = _fullName(file, descriptor),
@@ -46,9 +47,8 @@ class MessageType {
         var children = <MessageType>{};
         for (var child in _nestedDeclarations()) {
             children.add(child);
-            children.addAll(child
-                                .allChildDeclarations()
-                                .types);
+            children.addAll(child.allChildDeclarations()
+                                 .types);
         }
         return TypeSet._(children);
     }
@@ -60,13 +60,20 @@ class MessageType {
         return dartPath;
     }
 
-    Iterable<MessageType> _nestedDeclarations() {
-        return descriptor.nestedType
-            .map((desc) => _child(desc));
+    String get typeUrl {
+        var prefix = file.options.getExtension(Options.typeUrlPrefix) as String ?? '';
+        prefix = prefix.isNotEmpty ? prefix : _standardTypeUrlPrefix;
+        return "$prefix/$fullName";
     }
+
+    Iterable<MessageType> _nestedDeclarations() =>
+        descriptor.nestedType
+                  .where((desc) => !desc.options.mapEntry)
+                  .map((desc) => _child(desc));
 
     MessageType _child(DescriptorProto descriptor) {
         var name = descriptor.name;
+
         return MessageType._(file, descriptor, _childName(name), _childDartName(name));
     }
 
@@ -75,7 +82,7 @@ class MessageType {
     }
 
     String _childDartName(String simpleName) {
-        return '${fullName}_${simpleName}';
+        return '${dartClassName}_${simpleName}';
     }
 }
 
@@ -93,6 +100,19 @@ class TypeSet {
                 var messageType = MessageType._fromFile(file, type);
                 typeSet.add(messageType);
                 typeSet.addAll(messageType.allChildDeclarations().types);
+            }
+        }
+        return TypeSet._(typeSet);
+    }
+
+    factory TypeSet.topLevelOnly(FileDescriptorSet fileSet) {
+        var typeSet = <MessageType>{};
+        var files = fileSet.file;
+        for (var file in files) {
+            for (var type in file.messageType) {
+                var messageType = MessageType._fromFile(file, type);
+                typeSet.add(messageType);
+                typeSet.addAll(messageType._nestedDeclarations());
             }
         }
         return TypeSet._(typeSet);
