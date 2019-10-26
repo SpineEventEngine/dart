@@ -90,7 +90,3 @@ Field _createTypeUrlToInfoMap(Properties properties) {
 Field _createMessageToTypeUrlMap(Properties properties) {
 
 }
-
-Class _createKnownTypesPartClass(Properties properties) {
-
-}
