@@ -25,15 +25,31 @@ const _protoExtension = 'proto';
 const _pbDartExtension = 'pb.dart';
 const _standardTypeUrlPrefix = 'type.googleapis.com';
 
+/// A Protobuf message type.
 class MessageType {
 
+    /// The file which defines this type.
     final FileDescriptorProto file;
+
+    /// The descriptor of this type.
     final DescriptorProto descriptor;
+
+    /// The full Protobuf name of this type.
+    ///
+    /// For example, `spine.net.Uri.Protocol`.
+    ///
     final String fullName;
+
+    /// The name of the Dart class generated for this type.
+    ///
+    /// For example, `Uri_Protocol`.
+    ///
     final String dartClassName;
 
     MessageType._(this.file, this.descriptor, this.fullName, this.dartClassName);
 
+    /// Creates a `MessageType` from the given descriptor and file assuming the message declaration
+    /// is top-level, i.e. the type is not nested within another type.
     MessageType._fromFile(FileDescriptorProto file, DescriptorProto descriptor) :
             file = file,
             descriptor = descriptor,
@@ -43,6 +59,28 @@ class MessageType {
     static String _fullName(FileDescriptorProto file, DescriptorProto descriptor) =>
         "${file.package}.${descriptor.name}";
 
+    /// Relative path to the file which contains the Dart class for this message type.
+    ///
+    /// For example, `spine/net/url.pb.dart`.
+    ///
+    String get dartFilePath {
+        var protoFilePath = file.name;
+        var extensionIndex = protoFilePath.length - _protoExtension.length;
+        var dartPath = protoFilePath.substring(0, extensionIndex) + _pbDartExtension;
+        return dartPath;
+    }
+
+    /// Type URL of the message.
+    ///
+    /// For example, `type.spine.io/spine.net.Uri.Protocol`
+    ///
+    String get typeUrl {
+        var prefix = file.options.getExtension(Options.typeUrlPrefix) as String ?? '';
+        prefix = prefix.isNotEmpty ? prefix : _standardTypeUrlPrefix;
+        return "$prefix/$fullName";
+    }
+
+    /// Obtains all the nested declarations of this type, including deeper levels of nesting.
     TypeSet allChildDeclarations() {
         var children = <MessageType>{};
         for (var child in _nestedDeclarations()) {
@@ -53,19 +91,7 @@ class MessageType {
         return TypeSet._(children);
     }
 
-    String get dartFilePath {
-        var protoFilePath = file.name;
-        var extensionIndex = protoFilePath.length - _protoExtension.length;
-        var dartPath = protoFilePath.substring(0, extensionIndex) + _pbDartExtension;
-        return dartPath;
-    }
-
-    String get typeUrl {
-        var prefix = file.options.getExtension(Options.typeUrlPrefix) as String ?? '';
-        prefix = prefix.isNotEmpty ? prefix : _standardTypeUrlPrefix;
-        return "$prefix/$fullName";
-    }
-
+    /// Obtains the message declarations nested in this type.
     Iterable<MessageType> _nestedDeclarations() =>
         descriptor.nestedType
                   .where((desc) => !desc.options.mapEntry)
@@ -86,12 +112,14 @@ class MessageType {
     }
 }
 
+/// A set of Protobuf message types.
 class TypeSet {
 
     final Set<MessageType> types;
 
     TypeSet._(this.types);
 
+    /// Obtains all the message types declared in files of the given [fileSet].
     factory TypeSet.of(FileDescriptorSet fileSet) {
         var typeSet = <MessageType>{};
         var files = fileSet.file;
@@ -105,6 +133,7 @@ class TypeSet {
         return TypeSet._(typeSet);
     }
 
+    /// Obtains all the top-level message types declared in files of the given [fileSet].
     factory TypeSet.topLevelOnly(FileDescriptorSet fileSet) {
         var typeSet = <MessageType>{};
         var files = fileSet.file;
