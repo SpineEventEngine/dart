@@ -1,5 +1,5 @@
 name: dart_code_gen
-description: A command line application for generating validation code based on Spine validation options.
+description: A command line tool which generates Dart code for Protobuf type registries.
 version: 0.1.0
 homepage: https://spine.io
 author: Spine Event Engine <spine-developers@teamdev.com>

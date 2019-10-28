@@ -44,10 +44,9 @@ class ValidatorFactory {
 
     final FileDescriptorProto file;
     final DescriptorProto type;
-    final Allocator allocator;
     final Properties properties;
 
-    ValidatorFactory(this.file, this.type, this.allocator, this.properties);
+    ValidatorFactory(this.file, this.type, this.properties);
 
     String get fullTypeName => '${file.package}.${type.name}';
 

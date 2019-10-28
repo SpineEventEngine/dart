@@ -21,9 +21,9 @@
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/src/constraint_violation.dart';
-import 'package:dart_code_gen/src/imports.dart';
-import 'package:dart_code_gen/src/validator_factory.dart';
 import 'package:dart_style/dart_style.dart';
+
+import 'src/known_types_factory.dart';
 
 /// Code generation properties.
 ///
@@ -41,38 +41,16 @@ class Properties {
     Properties(this.types, this.standardPackage, this.importPrefix);
 }
 
-/// Generates the message validators and obtains their Dart source code.
-String generateValidators(Properties properties) {
-    var allocator = Allocator.simplePrefixing();
+/// Generates a helper library which works with Protobuf message types compiled into Dart.
+String generate(Properties properties) {
+    var knownTypes = KnownTypesFactory(properties);
     var code = Library((b) =>
-        b..body.add(_createValidatorMap(properties, allocator))
-         ..body.add(createViolationFactory(properties.standardPackage))
+        b.body..add(createViolationFactory(properties.standardPackage))
+              ..addAll(knownTypes.generateValues())
+              ..add(knownTypes.generateClass())
+              ..add(knownTypes.generateAccessor())
     );
-    var emitter = DartEmitter(allocator);
+    var emitter = DartEmitter(Allocator.simplePrefixing());
     var formatter = DartFormatter();
     return formatter.format(code.accept(emitter).toString());
-}
-
-Field _createValidatorMap(Properties properties, Allocator allocator) {
-    var keyType = refer('String');
-    var validationError = refer('ValidationError',
-                                validationErrorImport(properties.standardPackage));
-    var valueType = FunctionType((b) => b
-        ..requiredParameters.add(refer('GeneratedMessage', protobufImport))
-        ..returnType = validationError);
-    var validatorMap = Map<String, Expression>();
-    for (var file in properties.types.file) {
-        for (var type in file.messageType) {
-            var factory = ValidatorFactory(file, type, allocator, properties);
-            validatorMap[factory.fullTypeName] = factory.createValidator();
-        }
-    }
-    return Field((b) => b
-        ..name = 'validators'
-        ..modifier = FieldModifier.final$
-        ..type = TypeReference((b) => b
-            ..symbol = 'Map'
-            ..types.addAll([keyType, valueType]))
-        ..assignment = literalMap(validatorMap, keyType, valueType).code
-    );
 }
