@@ -21,8 +21,6 @@
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/src/constraint_violation.dart';
-import 'package:dart_code_gen/src/imports.dart';
-import 'package:dart_code_gen/src/validator_factory.dart';
 import 'package:dart_style/dart_style.dart';
 
 import 'src/known_types_factory.dart';
