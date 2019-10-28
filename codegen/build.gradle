@@ -21,7 +21,7 @@
 import org.codehaus.plexus.util.Os
 
 ext {
-    final def windows = Os.isFamily(Os.FAMILY_WINDOWS);
+    final def windows = Os.isFamily(Os.FAMILY_WINDOWS)
     pubCache = windows
             ? "${System.getenv('APPDATA')}/Pub/Cache/bin"
             : "${System.getProperty('user.home')}/.pub-cache/bin"
