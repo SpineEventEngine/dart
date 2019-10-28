@@ -41,7 +41,7 @@ class Properties {
     Properties(this.types, this.standardPackage, this.importPrefix);
 }
 
-/// Generates the message validators and obtains their Dart source code.
+/// Generates a helper library which works with Protobuf message types compiled into Dart.
 String generate(Properties properties) {
     var knownTypes = KnownTypesFactory(properties);
     var code = Library((b) =>

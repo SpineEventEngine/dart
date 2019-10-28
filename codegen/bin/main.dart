@@ -34,15 +34,15 @@ const String importPrefixArgument = 'import-prefix';
 const String stdoutFlag = 'stdout';
 const String helpFlag = 'help';
 
-/// Launches the Dart validation code generator.
+/// Launches the Dart code generator.
 ///
 main(List<String> arguments) {
     ArgParser parser = _createParser();
     var args = parser.parse(arguments);
     var help = args[helpFlag];
     if (help) {
-        stdout.writeln('dart_code_gen — a command line application for generating Dart validation '
-                       'code based on Spine validation options.');
+        stdout.writeln('dart_code_gen — a command line application for generating Dart type '
+                       'registries and validation code.');
         stdout.writeln(parser.usage);
     } else {
         _launch_code_gen(args);

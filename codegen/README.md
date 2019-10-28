@@ -1,16 +1,15 @@
-# Dart Validation Code Generator
+# Dart Code Generator
 
-A command line tool which generates validation code for protobuf code basing on the validation
-options from `spine/options.proto`.
+A command line tool which generates Dart code for Protobuf type registries.
 
 ## Usage 
 
 The generator accepts several command line arguments:
  - Required option `--descriptor` specifies the path to a file which contains
    a `google.protobuf.FileDescriptorSet`. The descriptor set contains all the Protobuf types
-   for which the tool must generate validation code.
- - Required option `--destination` specifies the path to the file into which the validation code
-   must be written. If the file does not exist, it is created.
+   for which the tool must generate code.
+ - Required option `--destination` specifies the path to the file into which the code must be 
+   written. If the file does not exist, it is created.
  - Option `--standard-types` specifies a Dart package which contains standard Protobuf types. 
    The default value of this option is `spine_client`. The package should contain types:
      - declared in the `google.protobuf.*` package;
