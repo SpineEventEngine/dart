@@ -147,4 +147,3 @@ class KnownTypesFactory {
             ..symbol = 'Map'
             ..types.addAll([keyType, valueType]));
 }
-
