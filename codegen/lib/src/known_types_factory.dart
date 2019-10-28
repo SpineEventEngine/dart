@@ -35,12 +35,20 @@ const _privateValidators = '_validators';
 
 const _knownTypesPart = '_KnownTypesPart';
 
+/// A factory of Dart code which assembles all the known types into registries to be used by
+/// the Dart client code.
+///
 class KnownTypesFactory {
 
     final Properties _properties;
 
     KnownTypesFactory(this._properties);
 
+    /// Generated registry values.
+    ///
+    /// These are maps fields which support convertion between different types which describe
+    /// a Protobuf message type. For example, a mapping between the generated classes and type URLs.
+    ///
     Iterable<Spec> generateValues() {
         var typeSet = TypeSet.of(_properties.types);
         var importPrefix = _properties.importPrefix;
@@ -61,7 +69,12 @@ class KnownTypesFactory {
         return [urlToBuilder, defaultToUrl, validators];
     }
 
-
+    /// Creates a map of type URLs to validator functions.
+    ///
+    /// A validator function accepts a message of a given Protobuf type and performs validation
+    /// according to the rules described in the `.proto` definition. The output of the function is
+    /// `spine.validate.ValidationError`. If the message is valid, the error is **empty**.
+    ///
     Field _createValidatorMap() {
         var validatorMap = Map<Expression, Expression>();
         var typeSet = TypeSet.topLevelOnly(_properties.types);
@@ -82,6 +95,11 @@ class KnownTypesFactory {
         );
     }
 
+    /// Generates the `_KnownTypesPart` class.
+    ///
+    /// The class represents a tuple of all the type registries. The class is private and should not
+    /// be used outside the library crated by this `KnownTypesFactory`.
+    ///
     Class generateClass() {
         var typeUrlToInfo = Field((b) => b
             ..name = _typeUrlToInfo
@@ -92,7 +110,7 @@ class KnownTypesFactory {
         var validators = Field((b) => b
             ..name = _validators
             ..type = _typeUrlToValidatorType);
-        
+
         Constructor ctor = Constructor((b) => b
             ..requiredParameters.addAll([_initParam(_typeUrlToInfo),
                                          _initParam(_defaultToTypeUrl),
@@ -105,6 +123,15 @@ class KnownTypesFactory {
         });
     }
 
+    /// Generated a method which produces instances of `_KnownTypesPart`.
+    ///
+    /// The method is declared with the `dynamic` return type, so that the users may access
+    /// the fields of `_KnownTypesPart`.
+    ///
+    /// _Note_: the API of `_KnownTypesPart` is private and may be changed at any time. End users
+    /// should not depend on it. Instead, the abstractions defined in the Spine client libraries
+    /// should be used.
+    ///
     Method generateAccessor() {
         var ctorCall = refer(_knownTypesPart).newInstance([refer(_privateTypeUrlToInfo),
                                                            refer(_privateDefaultToTypeUrl),
@@ -115,7 +142,7 @@ class KnownTypesFactory {
             ..body = ctorCall.returned.statement
         );
     }
-    
+
     Parameter _initParam(String name) {
         return Parameter((b) => b..name = name
                                  ..toThis = true);
