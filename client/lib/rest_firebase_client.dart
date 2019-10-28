@@ -18,22 +18,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * Declares the version of the artifacts to publish and versions of
- * project-specific general dependencies.
- *
- * This file is used in both module `build.gradle` scripts and in the integration tests,
- * as we want to manage the versions in a single source.
- * 
- * This file is copied to the root of the project ONLY if there's no file with such a name
- * already in the root directory.
- */
+import 'package:firebase/firebase_io.dart' as fb;
+import 'package:spine_client/firebase_client.dart';
+import 'package:spine_client/src/url.dart';
 
-final def SPINE_VERSION = '1.1.7'
+/// A [FirebaseClient] based on the Firebase REST API.
+///
+/// This implementation does not have platform limitations.
+///
+/// See `WebFirebaseClient` for a web-specific implementation.
+///
+class RestClient implements FirebaseClient {
 
-ext {
-    spineBaseVersion = SPINE_VERSION
-    versionToPublish = SPINE_VERSION
+    final fb.FirebaseClient _client;
+    final String _databaseUrl;
 
-    spineWebVersion = SPINE_VERSION
+    /// Creates a new [RestClient] which connects to the database on the given [_databaseUrl]
+    /// with the given REST API [_client].
+    RestClient(this._client, this._databaseUrl);
+
+    @override
+    Stream<String> get(String path) async* {
+        var root = await _client.get(Url.from(_databaseUrl, '${path}.json').stringUrl);
+        for (var element in root.values) {
+            yield element.toString();
+        }
+    }
 }

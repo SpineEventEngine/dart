@@ -18,22 +18,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * Declares the version of the artifacts to publish and versions of
- * project-specific general dependencies.
- *
- * This file is used in both module `build.gradle` scripts and in the integration tests,
- * as we want to manage the versions in a single source.
- * 
- * This file is copied to the root of the project ONLY if there's no file with such a name
- * already in the root directory.
- */
+import 'package:spine_client/google/protobuf/timestamp.pb.dart';
+import 'package:spine_client/spine/time/time.pb.dart';
 
-final def SPINE_VERSION = '1.1.7'
+/// Obtains a [Timestamp] with the current time.
+Timestamp now() {
+    return Timestamp.fromDateTime(DateTime.now());
+}
 
-ext {
-    spineBaseVersion = SPINE_VERSION
-    versionToPublish = SPINE_VERSION
+/// Obtains the current time zone offset.
+ZoneOffset zoneOffset() {
+    var dateTime = DateTime.now();
+    var zoneOffset = dateTime.timeZoneOffset;
+    var offset = ZoneOffset();
+    offset.amountSeconds = zoneOffset.inSeconds;
+    return offset;
+}
 
-    spineWebVersion = SPINE_VERSION
+/// Obtains an identifier string for the current time zone.
+///
+/// There is no way to obtain an actual time zone ID in Dart. The obtained value if platform
+/// dependant and usually human readable.
+///
+/// See https://github.com/dart-lang/sdk/issues/21758
+///
+ZoneId guessZoneId() {
+    var dateTime = DateTime.now();
+    var zoneName = dateTime.timeZoneName;
+    var zoneId = ZoneId();
+    zoneId.value = zoneName;
+    return zoneId;
 }

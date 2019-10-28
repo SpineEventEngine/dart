@@ -18,22 +18,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * Declares the version of the artifacts to publish and versions of
- * project-specific general dependencies.
- *
- * This file is used in both module `build.gradle` scripts and in the integration tests,
- * as we want to manage the versions in a single source.
- * 
- * This file is copied to the root of the project ONLY if there's no file with such a name
- * already in the root directory.
- */
+/// A link which points to a network resource.
+///
+class Url {
 
-final def SPINE_VERSION = '1.1.7'
+    /// String representation of this URL.
+    final String stringUrl;
 
-ext {
-    spineBaseVersion = SPINE_VERSION
-    versionToPublish = SPINE_VERSION
+    Url(this.stringUrl);
 
-    spineWebVersion = SPINE_VERSION
+    /// Concatenates a URL from the given [host] and [path].
+    static Url from(String host, String path) {
+        if (host.endsWith('/')) {
+            host = host.substring(0, host.length - 1);
+        }
+        if (path.startsWith('/')) {
+            path = path.substring(1);
+        }
+        return Url('$host/$path');
+    }
+
+    @override
+    String toString() {
+        return stringUrl;
+    }
 }

@@ -18,22 +18,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * Declares the version of the artifacts to publish and versions of
- * project-specific general dependencies.
- *
- * This file is used in both module `build.gradle` scripts and in the integration tests,
- * as we want to manage the versions in a single source.
- * 
- * This file is copied to the root of the project ONLY if there's no file with such a name
- * already in the root directory.
- */
+import 'package:spine_client/google/protobuf/any.pb.dart';
+import 'package:spine_client/google/protobuf/timestamp.pb.dart';
+import 'package:spine_client/src/any_packer.dart';
+import 'package:spine_client/time.dart';
+import 'package:test/test.dart';
 
-final def SPINE_VERSION = '1.1.7'
+void main() {
+    group('AnyPacker should', () {
+        test('pack a known type', () {
+            var timestamp = now();
+            var any = pack(timestamp);
+            expect(any.canUnpackInto(Timestamp()), isTrue);
+            expect(unpack(any), timestamp);
+        });
 
-ext {
-    spineBaseVersion = SPINE_VERSION
-    versionToPublish = SPINE_VERSION
-
-    spineWebVersion = SPINE_VERSION
+        test('not unpack an unknown type', () {
+            var any = Any()
+                ..typeUrl = 'types.example.com/unknown.Type'
+                ..value = [42];
+            expect(() { unpack(any); }, throwsA(isA<ArgumentError>()));
+        });
+    });
 }

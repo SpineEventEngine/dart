@@ -20,4 +20,5 @@
 
 rootProject.name = 'spine-dart'
 
+include 'client'
 include 'codegen'

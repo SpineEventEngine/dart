@@ -18,22 +18,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * Declares the version of the artifacts to publish and versions of
- * project-specific general dependencies.
- *
- * This file is used in both module `build.gradle` scripts and in the integration tests,
- * as we want to manage the versions in a single source.
- * 
- * This file is copied to the root of the project ONLY if there's no file with such a name
- * already in the root directory.
- */
+import 'package:uuid/uuid.dart';
 
-final def SPINE_VERSION = '1.1.7'
-
-ext {
-    spineBaseVersion = SPINE_VERSION
-    versionToPublish = SPINE_VERSION
-
-    spineWebVersion = SPINE_VERSION
+/// Creates a new UUID of version 4.
+///
+/// If [prefix] is specified, the result string starts with the given prefix.
+///
+String newUuid({String prefix = ''}) {
+    var uuid = Uuid();
+    return '${prefix}${uuid.v4()}';
 }

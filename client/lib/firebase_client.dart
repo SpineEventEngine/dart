@@ -18,22 +18,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * Declares the version of the artifacts to publish and versions of
- * project-specific general dependencies.
- *
- * This file is used in both module `build.gradle` scripts and in the integration tests,
- * as we want to manage the versions in a single source.
- * 
- * This file is copied to the root of the project ONLY if there's no file with such a name
- * already in the root directory.
- */
+/// A client of a Firebase Realtime Database.
+///
+/// This class is a platform-agnostic interface. Implementations are platform-specific.
+///
+class FirebaseClient {
 
-final def SPINE_VERSION = '1.1.7'
-
-ext {
-    spineBaseVersion = SPINE_VERSION
-    versionToPublish = SPINE_VERSION
-
-    spineWebVersion = SPINE_VERSION
+    /// Obtains children of the database node under a given path.
+    ///
+    /// If the node values are strings, those strings are obtained without change. Otherwise,
+    /// the values are converted into JSONs in form of strings and yielded.
+    ///
+    /// It is expected that the implementations are asynchronous and do not block the calling site
+    /// for a long time (i.e. while performing networking).
+    ///
+    Stream<String> get(String path) {
+        throw UnimplementedError('FirebaseClient is an interface');
+    }
 }

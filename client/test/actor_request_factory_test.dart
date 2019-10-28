@@ -18,22 +18,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * Declares the version of the artifacts to publish and versions of
- * project-specific general dependencies.
- *
- * This file is used in both module `build.gradle` scripts and in the integration tests,
- * as we want to manage the versions in a single source.
- * 
- * This file is copied to the root of the project ONLY if there's no file with such a name
- * already in the root directory.
- */
+import 'package:spine_client/actor_request_factory.dart';
+import 'package:spine_client/spine/core/user_id.pbserver.dart';
+import 'package:test/test.dart';
 
-final def SPINE_VERSION = '1.1.7'
+void main() {
+    group('ActorRequestFactory should', () {
 
-ext {
-    spineBaseVersion = SPINE_VERSION
-    versionToPublish = SPINE_VERSION
+        var actor = UserId();
 
-    spineWebVersion = SPINE_VERSION
+        setUp(() {
+            actor.value = 'me';
+        });
+
+        test('be instantiatable only with the actor', () {
+            var factory = ActorRequestFactory(actor);
+            expect(factory, isNotNull);
+        });
+    });
 }

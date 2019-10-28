@@ -53,8 +53,6 @@ task generateTestValidators(type: Exec) {
 
 tasks['testDart'].dependsOn 'activateLocally', 'generateTestValidators'
 
-tasks.withType(JavaCompile)*.enabled false
-
 task cleanProto(type: Delete) {
 
     delete += "$projectDir/proto"
