@@ -99,11 +99,10 @@ class MessageType {
 
     MessageType _child(DescriptorProto descriptor) {
         var name = descriptor.name;
-
-        return MessageType._(file, descriptor, _childName(name), _childDartName(name));
+        return MessageType._(file, descriptor, _childProtoName(name), _childDartName(name));
     }
 
-    String _childName(String simpleName) {
+    String _childProtoName(String simpleName) {
         return '${fullName}.${simpleName}';
     }
 
