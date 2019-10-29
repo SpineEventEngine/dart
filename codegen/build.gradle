@@ -34,4 +34,9 @@ dependencies {
     testProtobuf protobufDefinitions
 }
 
-tasks['testDart'].dependsOn 'generateTestDart'
+tasks['testDart'].dependsOn 'generateDart'
+
+generateDart {
+    descriptor = protoDart.testDescriptorSet
+    target = "$projectDir/test"
+}

@@ -23,6 +23,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 apply from: "$rootDir/gradle/dart.gradle"
 
 dependencies {
+    protobuf "io.spine:spine-base:$spineBaseVersion"
     testProtobuf project(':test-app')
 }
 
@@ -41,3 +42,10 @@ task integrationTest(type: Exec) {
 protoDart {
     testDir.set project.layout.projectDirectory.dir(integrationTestDir)
 }
+
+generateDart {
+    descriptor = protoDart.testDescriptorSet
+    target = "$projectDir/integration-test"
+}
+
+assemble.dependsOn 'generateDart'

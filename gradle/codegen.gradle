@@ -36,24 +36,29 @@ final def scriptExtension = windows ? '.bat' : ''
 final def command = "$pubCache/dart_code_gen$scriptExtension"
 final def pubSpec = new Yaml().load(file("${project.projectDir}/pubspec.yaml").newInputStream())
 
-final def composeCommandLine = { final descriptor, final String targetSubdir ->
+final def composeCommandLine = { final descriptor, final String targetDir ->
     return [command,
             '--descriptor', "${file(descriptor.get())}",
-            '--destination', "$projectDir/$targetSubdir/types.dart",
+            '--destination', "$targetDir/types.dart",
             '--standard-types', pubSpec.name,
             '--import-prefix', '.']
 }
 
-task generateDart(type: Exec) {
-    final def descriptor = protoDart.mainDescriptorSet
-    inputs.file(descriptor)
-    commandLine(composeCommandLine(descriptor, 'lib'))
-    dependsOn ':codegen:activateLocally'
+class GenerateDart extends Exec {
+
+    def descriptor
+    def target
 }
 
-task generateTestDart(type: Exec) {
-    final def descriptor = protoDart.testDescriptorSet
-    inputs.file(descriptor)
-    commandLine(composeCommandLine(descriptor, 'test'))
-    dependsOn ':codegen:activateLocally'
+task generateDart(type: GenerateDart) {
+    descriptor = protoDart.mainDescriptorSet
+    target = "$projectDir/lib"
+}
+
+afterEvaluate {
+    generateDart {
+        inputs.file(descriptor)
+        commandLine(composeCommandLine(descriptor, target))
+        dependsOn ':codegen:activateLocally'
+    }
 }
