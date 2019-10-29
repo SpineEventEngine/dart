@@ -52,6 +52,7 @@ subprojects {
     apply plugin: 'io.spine.tools.proto-dart-plugin'
     apply from: deps.scripts.dartBuildTasks
     apply from: deps.scripts.pubPublishTasks
+    apply from: "$rootDir/gradle/codegen.gradle"
 
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
@@ -71,6 +72,13 @@ subprojects {
             }
         }
     }
+
+    task cleanProto(type: Delete) {
+
+        delete += ["$projectDir/proto", "$projectDir/generated"]
+    }
+
+    clean.dependsOn 'cleanProto'
 
     // Apply the same IDEA module configuration for each of sub-projects.
     idea {

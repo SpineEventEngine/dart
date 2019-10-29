@@ -21,3 +21,5 @@
 dependencies {
     protobuf "io.spine.gcloud:spine-firebase-web:$spineWebVersion"
 }
+
+assemble.dependsOn 'generateDart'
