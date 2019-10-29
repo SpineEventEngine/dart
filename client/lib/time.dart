@@ -18,25 +18,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-apply from: "$rootDir/gradle/dart.gradle"
+import 'package:spine_client/google/protobuf/timestamp.pb.dart';
+import 'package:spine_client/spine/time/time.pb.dart';
 
-task copyDartProtobuf(type: Copy) {
-    from protoDart
+/// Obtains a [Timestamp] with the current time.
+Timestamp now() {
+    return Timestamp.fromDateTime(DateTime.now());
 }
 
-dependencies {
-    final def protobufDefinitions = [deps.build.protobuf,
-                                     "io.spine:spine-base:$spineBaseVersion",
-                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
-    protobuf protobufDefinitions
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-    testProtobuf protobufDefinitions
+/// Obtains the current time zone offset.
+ZoneOffset zoneOffset() {
+    var dateTime = DateTime.now();
+    var zoneOffset = dateTime.timeZoneOffset;
+    var offset = ZoneOffset();
+    offset.amountSeconds = zoneOffset.inSeconds;
+    return offset;
 }
 
-tasks['testDart'].dependsOn 'generateDart'
-
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
+/// Obtains an identifier string for the current time zone.
+///
+/// There is no way to obtain an actual time zone ID in Dart. The obtained value if platform
+/// dependant and usually human readable.
+///
+/// See https://github.com/dart-lang/sdk/issues/21758
+///
+ZoneId guessZoneId() {
+    var dateTime = DateTime.now();
+    var zoneName = dateTime.timeZoneName;
+    var zoneId = ZoneId();
+    zoneId.value = zoneName;
+    return zoneId;
 }

@@ -18,25 +18,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-apply from: "$rootDir/gradle/dart.gradle"
+package io.spine.web.test.given;
 
-task copyDartProtobuf(type: Copy) {
-    from protoDart
-}
+import io.spine.server.BoundedContext;
 
-dependencies {
-    final def protobufDefinitions = [deps.build.protobuf,
-                                     "io.spine:spine-base:$spineBaseVersion",
-                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
-    protobuf protobufDefinitions
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-    testProtobuf protobufDefinitions
-}
+/**
+ * The test application server.
+ */
+final class Server {
 
-tasks['testDart'].dependsOn 'generateDart'
+    private static final Application app = createApplication();
 
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
+    /**
+     * Prevents the utility class instantiation.
+     */
+    private Server() {
+    }
+
+    /**
+     * Retrieves the {@link Application} instance.
+     */
+    static Application application() {
+        return app;
+    }
+
+    private static Application createApplication() {
+        String name = "Test Bounded Context";
+        BoundedContext context = BoundedContext
+                .singleTenant(name)
+                .add(new TaskRepository())
+                .add(new ProjectRepository())
+                .add(new UserTasksProjectionRepository())
+                .build();
+        Application app = Application.create(context);
+        return app;
+    }
 }

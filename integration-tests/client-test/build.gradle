@@ -18,25 +18,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import org.apache.tools.ant.taskdefs.condition.Os
+
 apply from: "$rootDir/gradle/dart.gradle"
 
-task copyDartProtobuf(type: Copy) {
-    from protoDart
-}
-
 dependencies {
-    final def protobufDefinitions = [deps.build.protobuf,
-                                     "io.spine:spine-base:$spineBaseVersion",
-                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
-    protobuf protobufDefinitions
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-    testProtobuf protobufDefinitions
+    protobuf "io.spine:spine-base:$spineBaseVersion"
+    testProtobuf project(':test-app')
 }
 
-tasks['testDart'].dependsOn 'generateDart'
+tasks['testDart'].enabled false
+
+final def integrationTestDir = './integration-test'
+
+task integrationTest(type: Exec) {
+    final def pub = 'pub' + (Os.isFamily(Os.FAMILY_WINDOWS) ? '.bat' : '')
+    commandLine pub, 'run', 'test', integrationTestDir
+
+    dependsOn 'resolveDependencies', ':test-app:appBeforeIntegrationTest'
+    finalizedBy ':test-app:appAfterIntegrationTest'
+}
+
+protoDart {
+    testDir.set project.layout.projectDirectory.dir(integrationTestDir)
+}
 
 generateDart {
     descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
+    target = "$projectDir/integration-test"
 }
+
+assemble.dependsOn 'generateDart'

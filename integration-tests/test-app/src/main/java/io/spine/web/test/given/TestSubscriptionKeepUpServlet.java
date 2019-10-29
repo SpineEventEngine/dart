@@ -18,25 +18,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-apply from: "$rootDir/gradle/dart.gradle"
+package io.spine.web.test.given;
 
-task copyDartProtobuf(type: Copy) {
-    from protoDart
-}
+import io.spine.web.subscription.servlet.SubscriptionKeepUpServlet;
 
-dependencies {
-    final def protobufDefinitions = [deps.build.protobuf,
-                                     "io.spine:spine-base:$spineBaseVersion",
-                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
-    protobuf protobufDefinitions
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-    testProtobuf protobufDefinitions
-}
+import javax.servlet.annotation.WebServlet;
 
-tasks['testDart'].dependsOn 'generateDart'
+import static io.spine.web.test.given.Server.application;
 
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
+/**
+ * An endpoint for client requests to keep subscription running.
+ */
+@WebServlet("/subscription/keep-up")
+@SuppressWarnings("serial")
+public class TestSubscriptionKeepUpServlet extends SubscriptionKeepUpServlet {
+
+    public TestSubscriptionKeepUpServlet() {
+        super(application().subscriptionBridge());
+    }
 }

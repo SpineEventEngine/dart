@@ -18,25 +18,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-apply from: "$rootDir/gradle/dart.gradle"
+/**
+ * This package contains a simplistic Spine application which allows to test the usage of the Spine
+ * Web API.
+ */
 
-task copyDartProtobuf(type: Copy) {
-    from protoDart
-}
+@CheckReturnValue
+@ParametersAreNonnullByDefault
+package io.spine.web.test.given;
 
-dependencies {
-    final def protobufDefinitions = [deps.build.protobuf,
-                                     "io.spine:spine-base:$spineBaseVersion",
-                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
-    protobuf protobufDefinitions
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-    testProtobuf protobufDefinitions
-}
+import com.google.errorprone.annotations.CheckReturnValue;
 
-tasks['testDart'].dependsOn 'generateDart'
-
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
-}
+import javax.annotation.ParametersAreNonnullByDefault;

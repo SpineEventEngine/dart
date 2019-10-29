@@ -27,7 +27,7 @@ import 'google/protobuf/wrappers.pb.dart';
 import 'spine/net/email_address.pb.dart';
 import 'spine/people/person_name.pb.dart';
 import 'spine/test/tools/dart/validation.pb.dart';
-import 'validators.dart';
+import 'types.dart' as types;
 
 void main() {
     group('Generated validators should', () {
@@ -226,8 +226,9 @@ void assertInvalid(GeneratedMessage message) {
 }
 
 List<ConstraintViolation> validate(GeneratedMessage message) {
-    var typeUrl = types().defaultToTypeUrl[message.createEmptyInstance()];
-    var doValidate = types().validators[typeUrl];
+    var knownTypes = types.types();
+    var typeUrl = knownTypes.defaultToTypeUrl[message.createEmptyInstance()];
+    var doValidate = knownTypes.validators[typeUrl];
     var error = doValidate(message);
     return error.constraintViolation;
 }

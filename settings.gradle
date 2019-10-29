@@ -20,4 +20,13 @@
 
 rootProject.name = 'spine-dart'
 
+def integrationTest(final String name) {
+    include name
+    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
+}
+
+include 'client'
 include 'codegen'
+
+integrationTest 'test-app'
+integrationTest 'client-test'

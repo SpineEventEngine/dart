@@ -18,25 +18,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-apply from: "$rootDir/gradle/dart.gradle"
-
-task copyDartProtobuf(type: Copy) {
-    from protoDart
+buildscript { final scriptHandler ->
+    defaultRepositories(scriptHandler)
+    dependencies {
+        classpath "io.spine.tools:spine-model-compiler:$spineBaseVersion"
+    }
 }
+
+plugins {
+    id 'java'
+    id 'org.gretty' version '2.3.1'
+    id "com.github.psxpaul.execfork" version "0.1.11"
+}
+
+apply plugin: 'io.spine.tools.spine-model-compiler'
+apply from: "$rootDir/config/gradle/model-compiler.gradle"
 
 dependencies {
-    final def protobufDefinitions = [deps.build.protobuf,
-                                     "io.spine:spine-base:$spineBaseVersion",
-                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
-    protobuf protobufDefinitions
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-    testProtobuf protobufDefinitions
+    implementation "io.spine.gcloud:spine-firebase-web:$spineWebVersion"
 }
 
-tasks['testDart'].dependsOn 'generateDart'
-
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
+gretty {
+    contextPath = '/'
+    httpPort = 8080
+    debugPort = 5005
+    debugSuspend = true
+    jvmArgs = ['-Dio.spine.tests=true', '-Xverify:none']
+    servletContainer = 'jetty9'
 }

@@ -18,25 +18,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-apply from: "$rootDir/gradle/dart.gradle"
+import 'package:spine_client/actor_request_factory.dart';
+import 'package:spine_client/spine/core/user_id.pbserver.dart';
+import 'package:test/test.dart';
 
-task copyDartProtobuf(type: Copy) {
-    from protoDart
-}
+void main() {
+    group('ActorRequestFactory should', () {
 
-dependencies {
-    final def protobufDefinitions = [deps.build.protobuf,
-                                     "io.spine:spine-base:$spineBaseVersion",
-                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
-    protobuf protobufDefinitions
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-    testProtobuf protobufDefinitions
-}
+        var actor = UserId();
 
-tasks['testDart'].dependsOn 'generateDart'
+        setUp(() {
+            actor.value = 'me';
+        });
 
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
+        test('be instantiatable only with the actor', () {
+            var factory = ActorRequestFactory(actor);
+            expect(factory, isNotNull);
+        });
+    });
 }

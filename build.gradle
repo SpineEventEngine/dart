@@ -27,9 +27,7 @@ buildscript { final scriptHandler ->
 
     defaultRepositories(scriptHandler)
     dependencies {
-        classpath deps.build.guava
         classpath deps.build.gradlePlugins.protobuf
-        classpath deps.build.gradlePlugins.errorProne
         classpath "io.spine.tools:spine-proto-dart-plugin:$spineBaseVersion"
     }
 
@@ -39,69 +37,14 @@ buildscript { final scriptHandler ->
 apply from: 'version.gradle'
 
 allprojects {
-    apply plugin: 'idea'
-    apply plugin: 'maven-publish'
-
-    // Use the same version numbering for the Spine Base library.
-    version = versionToPublish
+    apply plugin: 'java'
+    defaultRepositories(project)
 }
 
 subprojects {
-    apply plugin: 'java-library'
-    apply plugin: 'com.google.protobuf'
     apply plugin: 'io.spine.tools.proto-dart-plugin'
-    apply from: deps.scripts.dartBuildTasks
-    apply from: deps.scripts.pubPublishTasks
+    apply plugin: 'com.google.protobuf'
+    apply plugin: 'maven-publish'
 
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-
-    defaultRepositories(project)
-
-    protobuf {
-        generateProtoTasks {
-            all().each { final task ->
-                task.plugins {
-                    dart {}
-                }
-
-                task.builtins {
-                    remove java
-                }
-            }
-        }
-    }
-
-    // Apply the same IDEA module configuration for each of sub-projects.
-    idea {
-        module {
-            downloadJavadoc = true
-            downloadSources = true
-
-            iml {
-                beforeMerged { final module ->
-                    module.dependencies.clear()
-                }
-                whenMerged { final module ->
-                    module.dependencies*.exported = true
-                }
-            }
-        }
-    }
-}
-
-// IDEA project configuration.
-idea {
-    project {
-        ipr {
-            beforeMerged { final project ->
-                project.modulePaths.clear()
-            }
-            withXml { final provider ->
-                provider.node.component
-                        .find { it.@name == 'VcsDirectoryMappings' }
-                        .mapping.@vcs = 'Git'
-            }
-        }
-    }
+    version = versionToPublish
 }

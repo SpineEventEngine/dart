@@ -18,25 +18,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-apply from: "$rootDir/gradle/dart.gradle"
+import 'package:protobuf/protobuf.dart';
+import 'package:spine_client/actor_request_factory.dart';
+import 'package:spine_client/spine/core/command.pb.dart';
+import 'package:spine_client/src/any_packer.dart';
+import 'package:spine_client/uuids.dart';
 
-task copyDartProtobuf(type: Copy) {
-    from protoDart
-}
+/// A factory of commands to send to the server.
+class CommandFactory {
 
-dependencies {
-    final def protobufDefinitions = [deps.build.protobuf,
-                                     "io.spine:spine-base:$spineBaseVersion",
-                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
-    protobuf protobufDefinitions
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-    testProtobuf protobufDefinitions
-}
+    final ActorProvider _context;
 
-tasks['testDart'].dependsOn 'generateDart'
+    CommandFactory(this._context);
 
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
+    /// Creates a command with the given message.
+    Command create(GeneratedMessage message) {
+        var cmd = Command();
+        cmd
+            ..id = _newId()
+            ..message = pack(message)
+            ..context = _buildContext();
+        return cmd;
+    }
+
+    CommandContext _buildContext() {
+        var ctx = CommandContext();
+        ctx.actorContext = _context();
+        return ctx;
+    }
+
+    CommandId _newId() {
+        var id = CommandId();
+        id.uuid = newUuid();
+        return id;
+    }
 }

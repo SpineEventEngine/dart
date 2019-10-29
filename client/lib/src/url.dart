@@ -18,25 +18,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-apply from: "$rootDir/gradle/dart.gradle"
+/// A link which points to a network resource.
+///
+class Url {
 
-task copyDartProtobuf(type: Copy) {
-    from protoDart
-}
+    /// String representation of this URL.
+    final String stringUrl;
 
-dependencies {
-    final def protobufDefinitions = [deps.build.protobuf,
-                                     "io.spine:spine-base:$spineBaseVersion",
-                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
-    protobuf protobufDefinitions
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-    testProtobuf protobufDefinitions
-}
+    Url(this.stringUrl);
 
-tasks['testDart'].dependsOn 'generateDart'
+    /// Concatenates a URL from the given [host] and [path].
+    static Url from(String host, String path) {
+        if (host.endsWith('/')) {
+            host = host.substring(0, host.length - 1);
+        }
+        if (path.startsWith('/')) {
+            path = path.substring(1);
+        }
+        return Url('$host/$path');
+    }
 
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
+    @override
+    String toString() {
+        return stringUrl;
+    }
 }

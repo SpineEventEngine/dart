@@ -18,25 +18,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-apply from: "$rootDir/gradle/dart.gradle"
+package io.spine.web.test.given;
 
-task copyDartProtobuf(type: Copy) {
-    from protoDart
-}
+import io.spine.server.aggregate.Aggregate;
+import io.spine.server.aggregate.Apply;
+import io.spine.server.command.Assign;
 
-dependencies {
-    final def protobufDefinitions = [deps.build.protobuf,
-                                     "io.spine:spine-base:$spineBaseVersion",
-                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
-    protobuf protobufDefinitions
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-    testProtobuf protobufDefinitions
-}
+/**
+ * An aggregate that is used to create projects.
+ */
+@SuppressWarnings("unused") // Reflective access.
+public class ProjectAggregate extends Aggregate<ProjectId, Project, Project.Builder> {
 
-tasks['testDart'].dependsOn 'generateDart'
+    public ProjectAggregate(ProjectId id) {
+        super(id);
+    }
 
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
+    @Assign
+    ProjectCreated handle(CreateProject command) {
+        return ProjectCreated
+                .newBuilder()
+                .setId(command.getId())
+                .vBuild();
+    }
+
+    @Apply
+    private void on(ProjectCreated event) {
+        builder().setId(event.getId());
+    }
 }
