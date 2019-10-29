@@ -57,4 +57,3 @@ task generateTestDart(type: Exec) {
     commandLine(composeCommandLine(descriptor, 'test'))
     dependsOn ':codegen:activateLocally'
 }
-
