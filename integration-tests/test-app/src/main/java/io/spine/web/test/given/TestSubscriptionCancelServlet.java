@@ -18,15 +18,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
+package io.spine.web.test.given;
 
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
+import io.spine.web.subscription.servlet.SubscriptionCancelServlet;
+
+import javax.servlet.annotation.WebServlet;
+
+import static io.spine.web.test.given.Server.application;
+
+/**
+ * An endpoint canceling the client entity change subscriptions.
+ */
+@WebServlet("/subscription/cancel")
+@SuppressWarnings("serial")
+public class TestSubscriptionCancelServlet extends SubscriptionCancelServlet {
+
+    public TestSubscriptionCancelServlet() {
+        super(application().subscriptionBridge());
+    }
 }
-
-include 'client'
-include 'codegen'
-
-integrationTest 'test-app'
-integrationTest 'client-test'

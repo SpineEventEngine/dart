@@ -18,15 +18,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
+package io.spine.web.test.given;
 
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
+import io.spine.server.aggregate.AggregateRepository;
+
+/**
+ * A repository for the task aggregates.
+ */
+class TaskRepository extends AggregateRepository<TaskId, TaskAggregate> {
 }
-
-include 'client'
-include 'codegen'
-
-integrationTest 'test-app'
-integrationTest 'client-test'

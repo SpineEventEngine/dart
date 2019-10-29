@@ -18,15 +18,5 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
-
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
-}
-
-include 'client'
-include 'codegen'
-
-integrationTest 'test-app'
-integrationTest 'client-test'
+const BACKEND = 'http://localhost:8080/';
+const FIREBASE = 'https://spine-dev.firebaseio.com/';

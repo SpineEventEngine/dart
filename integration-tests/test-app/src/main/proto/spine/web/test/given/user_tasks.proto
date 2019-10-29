@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package spine.web.test.given;
+
+import "spine/options.proto";
+import "spine/core/user_id.proto";
+
+option (type_url_prefix) = "type.spine.io";
+option java_package = "io.spine.web.test.given";
+option java_outer_classname = "UserTasksProto";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+
+import "google/protobuf/timestamp.proto";
+import "spine/web/test/given/task.proto";
+
+message UserTasks {
+    option (entity).kind = PROJECTION;
+
+    spine.core.UserId id =1;
+
+    repeated TaskId tasks = 2;
+
+    google.protobuf.Timestamp last_updated = 3;
+}

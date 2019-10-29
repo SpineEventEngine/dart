@@ -34,7 +34,7 @@ final def pubCache = windows
         : "${System.getProperty('user.home')}/.pub-cache/bin"
 final def scriptExtension = windows ? '.bat' : ''
 final def command = "$pubCache/dart_code_gen$scriptExtension"
-final def pubSpec = new Yaml().load(file("$projectDir/pubspec.yaml").newInputStream())
+final def pubSpec = new Yaml().load(file("${project.projectDir}/pubspec.yaml").newInputStream())
 
 final def composeCommandLine = { final descriptor, final String targetSubdir ->
     return [command,

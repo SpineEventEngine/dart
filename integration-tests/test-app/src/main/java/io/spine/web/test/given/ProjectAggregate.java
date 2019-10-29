@@ -18,15 +18,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
+package io.spine.web.test.given;
 
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
+import io.spine.server.aggregate.Aggregate;
+import io.spine.server.aggregate.Apply;
+import io.spine.server.command.Assign;
+
+/**
+ * An aggregate that is used to create projects.
+ */
+@SuppressWarnings("unused") // Reflective access.
+public class ProjectAggregate extends Aggregate<ProjectId, Project, Project.Builder> {
+
+    public ProjectAggregate(ProjectId id) {
+        super(id);
+    }
+
+    @Assign
+    ProjectCreated handle(CreateProject command) {
+        return ProjectCreated
+                .newBuilder()
+                .setId(command.getId())
+                .vBuild();
+    }
+
+    @Apply
+    private void on(ProjectCreated event) {
+        builder().setId(event.getId());
+    }
 }
-
-include 'client'
-include 'codegen'
-
-integrationTest 'test-app'
-integrationTest 'client-test'

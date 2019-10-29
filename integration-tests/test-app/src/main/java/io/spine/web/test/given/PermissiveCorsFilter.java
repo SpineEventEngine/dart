@@ -18,15 +18,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
+package io.spine.web.test.given;
 
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
+import io.spine.web.AllowAnyOriginFilter;
+
+import javax.servlet.annotation.WebFilter;
+
+import static io.spine.web.AllowAnyOriginFilter.ANY_URL;
+import static io.spine.web.AllowAnyOriginFilter.NAME;
+
+/**
+ * A filter which allows requests from any origin to interact with any endpoint of this server.
+ *
+ * @see AllowAnyOriginFilter
+ */
+@WebFilter(filterName = NAME, urlPatterns = ANY_URL)
+public final class PermissiveCorsFilter extends AllowAnyOriginFilter {
 }
-
-include 'client'
-include 'codegen'
-
-integrationTest 'test-app'
-integrationTest 'client-test'

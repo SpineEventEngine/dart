@@ -18,15 +18,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
+package io.spine.web.test.given;
 
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
+import io.spine.web.command.CommandServlet;
+
+import javax.servlet.annotation.WebServlet;
+
+import static io.spine.web.test.given.Server.application;
+
+/**
+ * The command side endpoint of the application.
+ */
+@WebServlet("/command")
+@SuppressWarnings("serial")
+public final class TestCommandServlet extends CommandServlet {
+
+    public TestCommandServlet() {
+        super(application().commandService());
+    }
 }
-
-include 'client'
-include 'codegen'
-
-integrationTest 'test-app'
-integrationTest 'client-test'

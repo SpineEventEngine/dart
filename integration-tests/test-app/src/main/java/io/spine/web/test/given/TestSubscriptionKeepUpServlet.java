@@ -18,15 +18,22 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
+package io.spine.web.test.given;
 
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
+import io.spine.web.subscription.servlet.SubscriptionKeepUpServlet;
+
+import javax.servlet.annotation.WebServlet;
+
+import static io.spine.web.test.given.Server.application;
+
+/**
+ * An endpoint for client requests to keep subscription running.
+ */
+@WebServlet("/subscription/keep-up")
+@SuppressWarnings("serial")
+public class TestSubscriptionKeepUpServlet extends SubscriptionKeepUpServlet {
+
+    public TestSubscriptionKeepUpServlet() {
+        super(application().subscriptionBridge());
+    }
 }
-
-include 'client'
-include 'codegen'
-
-integrationTest 'test-app'
-integrationTest 'client-test'

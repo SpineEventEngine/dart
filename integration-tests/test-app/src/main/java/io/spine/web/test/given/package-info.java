@@ -18,15 +18,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
+/**
+ * This package contains a simplistic Spine application which allows to test the usage of the Spine
+ * Web API.
+ */
 
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
-}
+@CheckReturnValue
+@ParametersAreNonnullByDefault
+package io.spine.web.test.given;
 
-include 'client'
-include 'codegen'
+import com.google.errorprone.annotations.CheckReturnValue;
 
-integrationTest 'test-app'
-integrationTest 'client-test'
+import javax.annotation.ParametersAreNonnullByDefault;

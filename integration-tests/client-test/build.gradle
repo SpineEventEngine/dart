@@ -18,15 +18,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
+import org.apache.tools.ant.taskdefs.condition.Os
 
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
+apply from: "$rootDir/gradle/dart.gradle"
+
+dependencies {
+    testProtobuf project(':test-app')
 }
 
-include 'client'
-include 'codegen'
+tasks['testDart'].enabled false
 
-integrationTest 'test-app'
-integrationTest 'client-test'
+final def integrationTestDir = './integration-test'
+
+task integrationTest(type: Exec) {
+    final def pub = 'pub' + (Os.isFamily(Os.FAMILY_WINDOWS) ? '.bat' : '')
+    commandLine pub, 'run', 'test', integrationTestDir
+
+    dependsOn 'resolveDependencies', ':test-app:appBeforeIntegrationTest'
+    finalizedBy ':test-app:appAfterIntegrationTest'
+}
+
+protoDart {
+    testDir.set project.layout.projectDirectory.dir(integrationTestDir)
+}

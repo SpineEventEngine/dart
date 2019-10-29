@@ -18,15 +18,39 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
+package io.spine.web.test.given;
 
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
+import io.spine.server.BoundedContext;
+
+/**
+ * The test application server.
+ */
+final class Server {
+
+    private static final Application app = createApplication();
+
+    /**
+     * Prevents the utility class instantiation.
+     */
+    private Server() {
+    }
+
+    /**
+     * Retrieves the {@link Application} instance.
+     */
+    static Application application() {
+        return app;
+    }
+
+    private static Application createApplication() {
+        String name = "Test Bounded Context";
+        BoundedContext context = BoundedContext
+                .singleTenant(name)
+                .add(new TaskRepository())
+                .add(new ProjectRepository())
+                .add(new UserTasksProjectionRepository())
+                .build();
+        Application app = Application.create(context);
+        return app;
+    }
 }
-
-include 'client'
-include 'codegen'
-
-integrationTest 'test-app'
-integrationTest 'client-test'

@@ -18,15 +18,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
+apply from: deps.scripts.dartBuildTasks
+apply from: deps.scripts.pubPublishTasks
+apply from: "$rootDir/gradle/codegen.gradle"
 
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+defaultRepositories(project)
+
+protobuf {
+    generateProtoTasks {
+        all().each { final task ->
+            task.plugins {
+                dart {}
+            }
+
+            task.builtins {
+                remove java
+            }
+        }
+    }
 }
 
-include 'client'
-include 'codegen'
+task cleanProto(type: Delete) {
 
-integrationTest 'test-app'
-integrationTest 'client-test'
+    delete += ["$projectDir/proto", "$projectDir/generated"]
+}
+
+clean.dependsOn 'cleanProto'
+
+tasks.withType(JavaCompile)*.enabled false

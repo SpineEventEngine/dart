@@ -18,6 +18,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+apply from: "$rootDir/gradle/dart.gradle"
+
 dependencies {
     protobuf "io.spine.gcloud:spine-firebase-web:$spineWebVersion"
 }
