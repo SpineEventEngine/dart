@@ -39,4 +39,5 @@ tasks['testDart'].dependsOn 'generateDart'
 generateDart {
     descriptor = protoDart.testDescriptorSet
     target = "$projectDir/test"
+    standardTypesPackage = 'dart_code_gen'
 }
