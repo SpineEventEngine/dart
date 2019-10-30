@@ -29,9 +29,9 @@ script:
   - ./gradlew integrationTest
 
 deploy:
-  provider: script
   skip_cleanup: true
-  script: echo "deploy fired"
+  provider: script
+  script: bash config/publish-artifacts.sh
   on:
     branch: master
     condition: "$TRAVIS_PULL_REQUEST" == "false"
