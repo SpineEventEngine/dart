@@ -28,10 +28,10 @@ script:
   - ./gradlew build --stacktrace
   - ./gradlew integrationTest
 
-deploy:
-  on:
-    branch: master
-    condition: "$TRAVIS_PULL_REQUEST" == "false"
-  skip_cleanup: true
-  provider: script
-  script: ./gradlew publish
+#deploy:
+#  on:
+#    branch: master
+#    condition: "$TRAVIS_PULL_REQUEST" == "false"
+#  skip_cleanup: true
+#  provider: script
+#  script: ./gradlew publish
