@@ -19,10 +19,13 @@
  */
 
 import 'package:protobuf/protobuf.dart';
+import 'package:spine_client/spine/validate/validation_error.pb.dart';
 import 'package:spine_client/types.dart' as standardTypes;
 
 /// The only instance of [KnownTypes].
 final theKnownTypes = KnownTypes._instance();
+
+typedef ValidationError _Validator(GeneratedMessage);
 
 /// All the Protobuf types known to a client application.
 ///
@@ -33,6 +36,7 @@ class KnownTypes {
 
     final Map<String, BuilderInfo> _typeUrlToBuilderInfo = Map();
     final Map<GeneratedMessage, String> _msgToTypeUrl = Map();
+    final Map<String, _Validator> _validators = Map();
 
     KnownTypes._instance() {
         register(standardTypes.types());
@@ -55,6 +59,12 @@ class KnownTypes {
         return _msgToTypeUrl[defaultValue];
     }
 
+    /// Obtains a validator function for the given message.
+    ValidationError Function(GeneratedMessage) validatorFor(GeneratedMessage message) {
+        var typeUrl = typeUrlOf(message);
+        return _validators[typeUrl];
+    }
+
     /// Constructs a registry for JSON parsing.
     TypeRegistry registry() {
         return TypeRegistry(_msgToTypeUrl.keys);
@@ -67,7 +77,9 @@ class KnownTypes {
     void register(dynamic types) {
         Map<String, BuilderInfo> typeUrlToBuilderInfo = types.typeUrlToInfo;
         Map<GeneratedMessage, String> msgToTypeUrl = types.defaultToTypeUrl;
+        Map<String, _Validator> validationFunctions = types.validators;
         _typeUrlToBuilderInfo.addAll(typeUrlToBuilderInfo);
         _msgToTypeUrl.addAll(msgToTypeUrl);
+        _validators.addAll(validationFunctions);
     }
 }
