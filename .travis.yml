@@ -29,8 +29,9 @@ script:
   - ./gradlew integrationTest
 
 deploy:
-  on:
-    condition: "$TRAVIS_PULL_REQUEST" == "false"
-  skip_cleanup: true
   provider: script
+  skip_cleanup: true
   script: echo "deploy fired"
+  on:
+    branch: master
+    condition: "$TRAVIS_PULL_REQUEST" == "false"
