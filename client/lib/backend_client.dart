@@ -29,6 +29,7 @@ import 'package:spine_client/spine/core/command.pb.dart';
 import 'package:spine_client/spine/web/firebase/query/response.pb.dart';
 import 'package:spine_client/src/known_types.dart';
 import 'package:spine_client/src/url.dart';
+import 'package:spine_client/src/validate.dart';
 
 const _base64 = Base64Codec();
 const _json = JsonCodec();
@@ -74,6 +75,7 @@ class BackendClient {
 
     /// Posts a given [Command] to the server.
     Future<Ack> post(Command command) {
+        checkValid(command);
         var body = command.writeToBuffer();
         return http
             .post(Url.from(_baseUrl, 'command').stringUrl,
@@ -91,6 +93,7 @@ class BackendClient {
     /// occurs.
     ///
     Stream<T> fetch<T extends GeneratedMessage>(Query query) async* {
+        checkValid(query);
         var body = query.writeToBuffer();
         var targetTypeUrl = query.target.type;
         var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
