@@ -34,4 +34,4 @@ deploy:
   script: bash config/publish-artifacts.sh
   on:
     branch: master
-#    condition: "$TRAVIS_PULL_REQUEST" == "false"
+    condition: $TRAVIS_PULL_REQUEST == "false"
