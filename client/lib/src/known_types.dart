@@ -25,7 +25,7 @@ import 'package:spine_client/types.dart' as standardTypes;
 /// The only instance of [KnownTypes].
 final theKnownTypes = KnownTypes._instance();
 
-typedef ValidationError _Validator(GeneratedMessage);
+typedef ValidationError _Validator(GeneratedMessage m);
 
 /// All the Protobuf types known to a client application.
 ///
