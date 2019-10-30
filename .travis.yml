@@ -23,7 +23,6 @@ before_install:
   - tar xvf credentials.tar
   - mkdir ./integration-tests/test-app/src/main/resources
   - mv ./spine-dev.json ./integration-tests/test-app/src/main/resources
-  - mkdir $HOME/.pub-cache
   - mv ./pub-credentials.json $HOME/.pub-cache/credentials.json
 
 script:
