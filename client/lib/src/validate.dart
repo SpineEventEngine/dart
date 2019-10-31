@@ -18,6 +18,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'package:optional/optional.dart';
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/validate/validation_error.pb.dart';
 import 'package:spine_client/src/known_types.dart';
@@ -27,26 +28,24 @@ import 'package:sprintf/sprintf.dart';
 ///
 /// Returns a [ValidationError] if the [message] is invalid, otherwise returns `null`.
 ///
-ValidationError validate(GeneratedMessage message) {
+Optional<ValidationError> validate(GeneratedMessage message) {
     ArgumentError.checkNotNull(message, 'message');
     var validate = theKnownTypes.validatorFor(message);
     if (validate == null) {
-        return null;
+        return Optional.empty();
     }
     var error = validate(message);
     if (error == null || error.constraintViolation.isEmpty) {
-        return null;
+        return Optional.empty();
     }
-    return error;
+    return Optional.of(error);
 }
 
 /// Validates the given message according to the constrains defined in Protobuf and throws
 /// an [InvalidMessageError] if the [message] is invalid.
 void checkValid(GeneratedMessage message) {
     var error = validate(message);
-    if (error != null) {
-        throw InvalidMessageError._(error);
-    }
+    error.ifPresent((e) => throw InvalidMessageError._(e));
 }
 
 /// Checks if the given [message] is in the default state.
