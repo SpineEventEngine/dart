@@ -23,10 +23,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 apply from: "$rootDir/gradle/dart.gradle"
 
 dependencies {
-    compile project(':test-app')
-    testProtobuf(project(':test-app')) {
-        transitive = false
-    }
+    testProtobuf project(':test-app')
 }
 
 tasks['testDart'].enabled false
