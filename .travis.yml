@@ -21,7 +21,8 @@ before_install:
   #  - pub-credentials.json - credentials to publish package to Pub.
   - openssl aes-256-cbc -K $encrypted_2930eb142dc7_key -iv $encrypted_2930eb142dc7_iv -in credentials.tar.enc -out credentials.tar -d
   - tar xvf credentials.tar
-  - mv ./spine-dev.json ./interation-tests/test-app/src/main/resources
+  - mkdir ./integration-tests/test-app/src/main/resources
+  - mv ./spine-dev.json ./integration-tests/test-app/src/main/resources
   - mv ./pub-credentials.json $HOME/.pub-cache/credentials.json
 
 script:
@@ -29,9 +30,9 @@ script:
   - ./gradlew integrationTest
 
 deploy:
+  skip_cleanup: false
+  provider: script
+  script: bash config/publish-artifacts.sh
   on:
     branch: master
-    condition: "$TRAVIS_PULL_REQUEST" == "false"
-  skip_cleanup: true
-  provider: script
-  script: ./gradlew publish
+    condition: $TRAVIS_PULL_REQUEST == "false"

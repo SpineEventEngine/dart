@@ -19,14 +19,6 @@
  */
 
 import org.apache.tools.ant.taskdefs.condition.Os
-import org.yaml.snakeyaml.Yaml
-
-buildscript { final scriptHandler ->
-    defaultRepositories(scriptHandler)
-    dependencies {
-        classpath 'org.yaml:snakeyaml:1.25'
-    }
-}
 
 final def windows = Os.isFamily(Os.FAMILY_WINDOWS)
 final def pubCache = windows
@@ -34,13 +26,14 @@ final def pubCache = windows
         : "${System.getProperty('user.home')}/.pub-cache/bin"
 final def scriptExtension = windows ? '.bat' : ''
 final def command = "$pubCache/dart_code_gen$scriptExtension"
-final def pubSpec = new Yaml().load(file("${project.projectDir}/pubspec.yaml").newInputStream())
 
-final def composeCommandLine = { final descriptor, final String targetDir ->
+final def composeCommandLine = {
+    final descriptor, final String targetDir, final String standardTypesPackage ->
+
     return [command,
             '--descriptor', "${file(descriptor.get())}",
             '--destination', "$targetDir/types.dart",
-            '--standard-types', pubSpec.name,
+            '--standard-types', standardTypesPackage,
             '--import-prefix', '.']
 }
 
@@ -48,17 +41,19 @@ class GenerateDart extends Exec {
 
     def descriptor
     def target
+    def standardTypesPackage
 }
 
 task generateDart(type: GenerateDart) {
     descriptor = protoDart.mainDescriptorSet
     target = "$projectDir/lib"
+    standardTypesPackage = 'spine_client'
 }
 
 afterEvaluate {
     generateDart {
         inputs.file(descriptor)
-        commandLine(composeCommandLine(descriptor, target))
+        commandLine(composeCommandLine(descriptor, target, standardTypesPackage))
         dependsOn ':codegen:activateLocally'
     }
 }

@@ -13,6 +13,8 @@ dependencies:
   uuid: ^2.0.2
   firebase: ^5.0.4
   fixnum: ^0.10.9
+  sprintf: ^4.0.2
+  optional: ^3.1.0
 
 dev_dependencies:
   pedantic: ^1.7.0

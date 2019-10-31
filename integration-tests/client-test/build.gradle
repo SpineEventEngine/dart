@@ -23,7 +23,6 @@ import org.apache.tools.ant.taskdefs.condition.Os
 apply from: "$rootDir/gradle/dart.gradle"
 
 dependencies {
-    protobuf "io.spine:spine-base:$spineBaseVersion"
     testProtobuf project(':test-app')
 }
 
