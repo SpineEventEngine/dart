@@ -24,7 +24,6 @@ import com.google.protobuf.Timestamp;
 import io.spine.core.Subscribe;
 import io.spine.core.UserId;
 import io.spine.server.entity.storage.Column;
-import io.spine.server.entity.storage.EntityColumn;
 import io.spine.server.projection.Projection;
 
 import java.util.List;
@@ -33,9 +32,11 @@ import java.util.List;
  * A projection representing a user and a list of {@link TaskId tasks} assigned to him.
  *
  * <p>Assigned tasks count and indication of several tasks assigned are exposed as
- * {@link EntityColumn} allowing ordering and filtering when user tasks are queried.
+ * {@linkplain Column columns} allowing ordering and filtering when user tasks are queried.
  */
-public class UserTasksProjection extends Projection<UserId, UserTasks, UserTasks.Builder> {
+public class UserTasksProjection
+        extends Projection<UserId, UserTasks, UserTasks.Builder>
+        implements UserTasksWithColumns {
 
     protected UserTasksProjection(UserId id) {
         super(id);
@@ -65,19 +66,19 @@ public class UserTasksProjection extends Projection<UserId, UserTasks, UserTasks
         builder().setLastUpdated(event.getWhen());
     }
 
-    @Column
-    public int getTasksCount() {
+    @Override
+    public Timestamp getLastUpdated() {
+        return state().getLastUpdated();
+    }
+
+    @Override
+    public int getTaskCount() {
         return state().getTasksCount();
     }
 
-    @Column
-    public boolean isOverloaded() {
+    @Override
+    public boolean getOverloaded() {
         return state().getTasksCount() > 1;
-    }
-
-    @Column
-    public Timestamp getLastUpdated() {
-        return state().getLastUpdated();
     }
 
     private boolean reassignedFromThisUser(TaskReassigned event) {
