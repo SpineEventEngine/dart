@@ -22,7 +22,7 @@
 ///
 /// This class is a platform-agnostic interface. Implementations are platform-specific.
 ///
-class FirebaseClient {
+abstract class FirebaseClient {
 
     /// Obtains children of the database node under a given path.
     ///
@@ -32,7 +32,11 @@ class FirebaseClient {
     /// It is expected that the implementations are asynchronous and do not block the calling site
     /// for a long time (i.e. while performing networking).
     ///
-    Stream<String> get(String path) {
-        throw UnimplementedError('FirebaseClient is an interface');
-    }
+    Stream<String> get(String path);
+
+    Stream<String> childAdded(String path);
+
+    Stream<String> childChanged(String path);
+
+    Stream<String> childRemoved(String path);
 }

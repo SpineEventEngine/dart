@@ -19,6 +19,7 @@
  */
 
 import 'package:firebase/firebase_io.dart' as fb;
+import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/src/url.dart';
 
@@ -29,6 +30,9 @@ import 'package:spine_client/src/url.dart';
 /// See `WebFirebaseClient` for a web-specific implementation.
 ///
 class RestClient implements FirebaseClient {
+
+    static const _doesNotSupportSubscriptions =
+        "REST Firebase client does not support subscriptions.";
 
     final fb.FirebaseClient _client;
     final String _databaseUrl;
@@ -43,5 +47,20 @@ class RestClient implements FirebaseClient {
         for (var element in root.values) {
             yield element.toString();
         }
+    }
+
+    @override
+    Stream<String> childAdded(String path) {
+      throw new UnimplementedError(_doesNotSupportSubscriptions);
+    }
+
+    @override
+    Stream<String> childChanged(String path) {
+        throw new UnimplementedError(_doesNotSupportSubscriptions);
+    }
+
+    @override
+    Stream<String> childRemoved(String path) {
+        throw new UnimplementedError(_doesNotSupportSubscriptions);
     }
 }

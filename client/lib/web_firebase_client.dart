@@ -21,7 +21,6 @@
 import 'package:firebase/firebase.dart' as fb;
 import 'package:spine_client/firebase_client.dart';
 
-/// An implementation of [FirebaseClient] specific to browser JavaScript.
 ///
 /// See `RestClient` for a platform-agnostic implementation.
 ///
@@ -36,6 +35,36 @@ class WebFirebaseClient implements FirebaseClient {
         yield* _db
             .ref(path)
             .onChildAdded
-            .map((event) => event.snapshot.toJson().toString());
+            .map(_toJsonString);
+    }
+
+    @override
+    Stream<String> childAdded(String path) {
+        return _db
+            .ref(path)
+            .onChildAdded
+            .map(_toJsonString);
+    }
+
+    @override
+    Stream<String> childChanged(String path) {
+        return _db
+            .ref(path)
+            .onChildChanged
+            .map(_toJsonString);
+    }
+
+    @override
+    Stream<String> childRemoved(String path) {
+        return _db
+            .ref(path)
+            .onChildRemoved
+            .map(_toJsonString);
+    }
+
+    String _toJsonString(event) {
+        return event.snapshot.toJson().toString();
     }
 }
+
+/// An implementation of [FirebaseClient] specific to browser JavaScript.
