@@ -21,39 +21,38 @@
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/actor_request_factory.dart';
 import 'package:spine_client/google/protobuf/any.pb.dart';
-import 'package:spine_client/spine/client/query.pb.dart';
+import 'package:spine_client/spine/client/subscription.pb.dart';
 import 'package:spine_client/target_builder.dart';
 import 'package:spine_client/uuids.dart';
 
 /// A factory of queries to the server.
-class QueryFactory {
+class TopicFactory {
 
     final ActorProvider _context;
 
-    QueryFactory(this._context);
+    TopicFactory(this._context);
 
-    /// Creates a query which matches all entities of the given type with the given IDs.
-    Query byIds(GeneratedMessage instance, List<Any> ids) {
-        var query = Query();
-        query
+    Topic byIds(GeneratedMessage instance, List<Any> ids) {
+        var topic = Topic();
+        topic
             ..id = _newId()
             ..target = targetByIds(instance, ids)
             ..context = _context();
-        return query;
+        return topic;
     }
 
     /// Creates a query which matches all entities of the given type.
-    Query all(GeneratedMessage instance) {
-        var query = Query();
-        query
+    Topic all(GeneratedMessage instance) {
+        var topic = Topic();
+        topic
             ..id = _newId()
             ..target = targetAll(instance)
             ..context = _context();
-        return query;
+        return topic;
     }
 
-    QueryId _newId() {
-        var id = QueryId();
+    TopicId _newId() {
+        var id = TopicId();
         id.value = newUuid(prefix: 'q-');
         return id;
     }

@@ -79,3 +79,4 @@ export 'query_factory.dart';
 export 'spine/core/tenant_id.pb.dart';
 export 'spine/core/user_id.pb.dart';
 export 'spine/time/time.pb.dart';
+export 'topic_factory.dart';
