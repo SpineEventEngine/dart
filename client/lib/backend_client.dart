@@ -18,17 +18,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
+import 'package:spine_client/spine/client/subscription.pb.dart';
 import 'package:spine_client/spine/core/ack.pb.dart';
 import 'package:spine_client/spine/core/command.pb.dart';
 import 'package:spine_client/spine/web/firebase/query/response.pb.dart';
+import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
+import 'package:spine_client/spine_client.dart';
 import 'package:spine_client/src/known_types.dart';
 import 'package:spine_client/src/url.dart';
+
+import 'entity_subscription.dart';
 
 const _base64 = Base64Codec();
 const _json = JsonCodec();
@@ -45,6 +51,7 @@ class BackendClient {
 
     final String _baseUrl;
     final FirebaseClient _database;
+    final List<EntitySubscription> _activeSubscriptions = [];
 
     /// Creates a new instance of `BackendClient`.
     ///
@@ -70,6 +77,7 @@ class BackendClient {
         for (var registry in typeRegistries) {
             theKnownTypes.register(registry);
         }
+        Timer.periodic(new Duration(minutes: 2), (timer) => _keepUpSubscriptions());
     }
 
     /// Posts a given [Command] to the server.
@@ -107,6 +115,35 @@ class BackendClient {
             .map((json) => _copyAndParse(builder, json));
     }
 
+    Future<EntitySubscription<T>> subscribeTo<T extends GeneratedMessage>(Topic topic) async {
+        var body = topic.writeToBuffer();
+        var targetTypeUrl = topic.target.type;
+        var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
+        if (builder == null) {
+            throw ArgumentError.value(topic, 'topic', 'Target type `$targetTypeUrl` is unknown.');
+        }
+        var response = await http.post(Url.from(_baseUrl, 'subscription/create').stringUrl,
+                                       body: _base64.encode(body),
+                                       headers: _contentType)
+            .then(_parseFirebaseSubscription);
+
+        var nodePath = response.nodePath.value;
+        var itemAdded = _database
+            .childAdded(nodePath)
+            .map((json) => _copyAndParse(builder, json));
+        var itemChanged = _database
+            .childChanged(nodePath)
+            .map((json) => _copyAndParse(builder, json));
+        var itemRemoved = _database
+            .childRemoved(nodePath)
+            .map((json) => _copyAndParse(builder, json));
+
+        var entitySubscription =
+                new EntitySubscription(response.subscription, itemAdded, itemChanged, itemRemoved);
+        _activeSubscriptions.add(entitySubscription);
+        return entitySubscription;
+    }
+
     T _copyAndParse<T extends GeneratedMessage>(BuilderInfo builderInfo, String json) {
         var msg = builderInfo.createEmptyInstance();
         _parseJson(msg, json);
@@ -125,6 +162,12 @@ class BackendClient {
         return queryResponse;
     }
 
+    FirebaseSubscription _parseFirebaseSubscription(http.Response response) {
+        var firebaseSubscription = FirebaseSubscription();
+        _parseInto(firebaseSubscription, response);
+        return firebaseSubscription;
+    }
+
     void _parseInto(GeneratedMessage message, http.Response response) {
         var json = response.body;
         _parseJson(message, json);
@@ -135,5 +178,23 @@ class BackendClient {
         message.mergeFromProto3Json(jsonMap,
                                     ignoreUnknownFields: true,
                                     typeRegistry: theKnownTypes.registry());
+    }
+
+    void _keepUpSubscriptions() {
+        _activeSubscriptions.forEach(_keepUpSubscription);
+    }
+
+    void _keepUpSubscription(EntitySubscription subscription) async {
+        var body = subscription.subscription.writeToBuffer();
+        if (subscription.closed) {
+            await http.post(Url.from(_baseUrl, 'subscription/cancel').stringUrl,
+                            body: _base64.encode(body),
+                            headers: _contentType);
+            _activeSubscriptions.remove(subscription);
+        } else {
+            await http.post(Url.from(_baseUrl, 'subscription/keep-up').stringUrl,
+                            body: _base64.encode(body),
+                            headers: _contentType);
+        }
     }
 }

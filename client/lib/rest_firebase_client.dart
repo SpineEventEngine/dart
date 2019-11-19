@@ -19,7 +19,6 @@
  */
 
 import 'package:firebase/firebase_io.dart' as fb;
-import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/src/url.dart';
 
@@ -32,7 +31,8 @@ import 'package:spine_client/src/url.dart';
 class RestClient implements FirebaseClient {
 
     static const _doesNotSupportSubscriptions =
-        "REST Firebase client does not support subscriptions.";
+        "REST Firebase client does not support subscriptions. Please use a Firebase SDK-based "
+        "client.";
 
     final fb.FirebaseClient _client;
     final String _databaseUrl;
