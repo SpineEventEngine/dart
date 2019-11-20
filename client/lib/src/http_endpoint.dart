@@ -38,6 +38,7 @@ class HttpEndpoint {
     /// Sends an HTTP POST request on a given path with the given message as a request body.
     ///
     /// The given [path] will be concatenated with the [_baseUrl].
+    ///
     Future<http.Response> postMessage(String path, GeneratedMessage message) async {
         var bytes = message.writeToBuffer();
         var url = Url.from(_baseUrl, path).stringUrl;

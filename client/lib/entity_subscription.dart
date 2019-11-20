@@ -56,7 +56,6 @@ class Subscription<T extends GeneratedMessage> {
               _closed = false;
 
     /// Creates a new instance which broadcasts updates from the given Firebase node.
-    ///
     factory Subscription.of(FirebaseSubscription firebaseSubscription,
                             FirebaseClient database) {
         var subscription = firebaseSubscription.subscription;

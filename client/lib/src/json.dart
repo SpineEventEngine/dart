@@ -26,8 +26,7 @@ import 'known_types.dart';
 
 const _json = JsonCodec();
 
-/// Parses the given JSON string into the message.
-///
+/// Parses the given JSON string into a message.
 void parseInto(GeneratedMessage message, String json) {
     var jsonMap = _json.decode(json);
     message.mergeFromProto3Json(jsonMap,
@@ -35,8 +34,7 @@ void parseInto(GeneratedMessage message, String json) {
                                 typeRegistry: theKnownTypes.registry());
 }
 
-/// Parses the given JSON string into the new instance of the message described by the [builder].
-///
+/// Parses the given JSON string into a new instance of the message described by the [builder].
 T parseIntoNewInstance<T extends GeneratedMessage>(BuilderInfo builder, String json) {
     var msg = builder.createEmptyInstance();
     parseInto(msg, json);
