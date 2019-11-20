@@ -72,11 +72,12 @@ void main() {
         test('subscribe to entity changes', () async {
             // Subscribe to the `Task` changes.
             var topic = requestFactory.topic().all(Task());
-            var entitySubscription = await client.subscribeTo(topic);
+            EntitySubscription<Task> entitySubscription = await client.subscribeTo(topic);
 
             // Listen to the `itemAdded` event.
-            var taskCreated = false;
-            entitySubscription.itemAdded.listen((task) => taskCreated = true);
+            var taskName = "";
+            Stream<Task> itemAdded = entitySubscription.itemAdded;
+            itemAdded.listen((task) => taskName = task.name);
             var taskId = TaskId()
                 ..value = newUuid();
 
@@ -88,11 +89,12 @@ void main() {
             await client.post(requestFactory.command().create(createTaskCmd));
 
             // Check the event is actually fired.
-            expect(taskCreated, isTrue);
+            expect(taskName, equals(createTaskCmd.name));
 
             // Listen to the `itemChanged` event.
-            var taskChanged = false;
-            entitySubscription.itemChanged.listen((task) => taskChanged = true);
+            var newTaskName = "";
+            Stream<Task> itemChanged = entitySubscription.itemChanged;
+            itemChanged.listen((task) => newTaskName = task.name);
 
             // Send the `RenameTask` command.
             var renameTaskCmd = RenameTask()
@@ -101,7 +103,7 @@ void main() {
             await client.post(requestFactory.command().create(renameTaskCmd));
 
             // Verify the event is actually fired.
-            expect(taskChanged, isTrue);
+            expect(newTaskName, equals(renameTaskCmd.name));
         });
     });
 }

@@ -25,6 +25,11 @@ import 'package:spine_client/spine/web/firebase/subscription/firebase_subscripti
 import 'package:spine_client/src/json.dart';
 import 'package:spine_client/src/known_types.dart';
 
+/// A subscription for entity type [T].
+///
+/// Declares [itemAdded], [itemChanged] and [itemRemoved] streams that reflect the corresponding
+/// entity changes.
+///
 class EntitySubscription<T extends GeneratedMessage> {
 
     final Subscription subscription;
@@ -33,9 +38,16 @@ class EntitySubscription<T extends GeneratedMessage> {
     final Stream<T> itemChanged;
     final Stream<T> itemRemoved;
 
-    bool closed;
+    bool _closed;
 
-    EntitySubscription(this.subscription, this.itemAdded, this.itemChanged, this.itemRemoved);
+    EntitySubscription(this.subscription,
+                       Stream<T> itemAdded,
+                       Stream<T> itemChanged,
+                       Stream<T> itemRemoved)
+            : itemAdded = checkIsBroadCast(itemAdded),
+              itemChanged = checkIsBroadCast(itemChanged),
+              itemRemoved = checkIsBroadCast(itemRemoved),
+              _closed = false;
 
     factory EntitySubscription.of(FirebaseSubscription firebaseSubscription,
                                   FirebaseClient database) {
@@ -50,18 +62,28 @@ class EntitySubscription<T extends GeneratedMessage> {
 
         var itemAdded = database
             .childAdded(nodePath)
-            .map((json) => parseIntoNewInstance(builderInfo, json));
+            .map((json) => parseIntoNewInstance<T>(builderInfo, json));
         var itemChanged = database
             .childChanged(nodePath)
-            .map((json) => parseIntoNewInstance(builderInfo, json));
+            .map((json) => parseIntoNewInstance<T>(builderInfo, json));
         var itemRemoved = database
             .childRemoved(nodePath)
-            .map((json) => parseIntoNewInstance(builderInfo, json));
+            .map((json) => parseIntoNewInstance<T>(builderInfo, json));
 
         return new EntitySubscription(subscription, itemAdded, itemChanged, itemRemoved);
     }
 
+    bool get closed => _closed;
+
     void unsubscribe() {
-        closed = true;
+        _closed = true;
+    }
+
+    static Stream<T> checkIsBroadCast<T>(Stream<T> stream) {
+        if (!stream.isBroadcast) {
+            throw new ArgumentError(
+                'All streams passed to an EntitySubscription instance should be broadcast.');
+        }
+        return stream;
     }
 }

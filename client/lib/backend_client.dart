@@ -110,6 +110,16 @@ class BackendClient {
             .map((json) => parseIntoNewInstance(builder, json));
     }
 
+    /// Subscribes to the changes of entities described by the given [topic].
+    ///
+    /// Sends a subscription request to the server and receives a path to the firebase node where
+    /// the entity changes are reflected.
+    ///
+    /// Based on the given node, builds an [EntitySubscription] which allows to listen to the
+    /// entity changes in the convenient form of [Stream]s.
+    ///
+    /// Throws an exception if the query is invalid or if any kind of network or server error
+    /// occurs.
     Future<EntitySubscription<T>> subscribeTo<T extends GeneratedMessage>(Topic topic) async {
         var targetTypeUrl = topic.target.type;
         var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
@@ -120,7 +130,7 @@ class BackendClient {
             .postMessage('subscription/create', topic)
             .then(_parseFirebaseSubscription);
 
-        var entitySubscription = EntitySubscription.of(response, _database);
+        EntitySubscription<T> entitySubscription = EntitySubscription.of(response, _database);
         _activeSubscriptions.add(entitySubscription);
         return entitySubscription;
     }
