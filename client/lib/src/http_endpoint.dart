@@ -29,9 +29,9 @@ const _protobufContentType = {'Content-Type': 'application/x-protobuf'};
 
 class HttpEndpoint {
 
-  final String _baseUrl;
+    final String _baseUrl;
 
-  HttpEndpoint(this._baseUrl);
+    HttpEndpoint(this._baseUrl);
 
     Future<http.Response> postMessage(String path, GeneratedMessage message) async {
         var bytes = message.writeToBuffer();

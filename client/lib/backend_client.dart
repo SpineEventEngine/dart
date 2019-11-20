@@ -71,7 +71,7 @@ class BackendClient {
     ///                            typeRegistries: [myTypes.types(), dependencyTypes.types()]);
     /// ```
     ///
-    BackendClient(this._database, String serverUrl, {List<dynamic> typeRegistries = const []})
+    BackendClient(String serverUrl, this._database, {List<dynamic> typeRegistries = const []})
             : _endpoint = HttpEndpoint(serverUrl) {
         for (var registry in typeRegistries) {
             theKnownTypes.register(registry);
