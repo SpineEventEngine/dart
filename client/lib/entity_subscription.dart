@@ -30,6 +30,9 @@ import 'package:spine_client/src/known_types.dart';
 /// Declares [itemAdded], [itemChanged] and [itemRemoved] streams that reflect the corresponding
 /// entity changes.
 ///
+/// The streams are broadcast, i.e. can be listened to more than once, and receive all the entity
+/// state updates that happen on the server.
+///
 class EntitySubscription<T extends GeneratedMessage> {
 
     final Subscription subscription;
@@ -49,6 +52,8 @@ class EntitySubscription<T extends GeneratedMessage> {
               itemRemoved = checkIsBroadCast(itemRemoved),
               _closed = false;
 
+    /// Creates a new instance which broadcasts updates from the given Firebase node.
+    ///
     factory EntitySubscription.of(FirebaseSubscription firebaseSubscription,
                                   FirebaseClient database) {
         var subscription = firebaseSubscription.subscription;
