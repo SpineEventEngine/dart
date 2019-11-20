@@ -67,7 +67,8 @@
 ///               client.post(requests.command().create(markDone));
 ///           });
 ///     // Listen for all `TaskListView` updates and display them.
-///     var subscription = await client.subscribeTo(requests.topic().all(TaskListView()));
+///     EntitySubscription<TaskListView> subscription =
+///             await client.subscribeTo(requests.topic().all(TaskListView()));
 ///     subscription.itemChanged.listen(taskListView => updateDisplay(taskListView));
 /// }
 /// ```
