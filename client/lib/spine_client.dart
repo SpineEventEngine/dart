@@ -78,7 +78,7 @@ library spine_client;
 export 'actor_request_factory.dart';
 export 'backend_client.dart';
 export 'command_factory.dart';
-export 'entity_subscription.dart';
+export 'subscription.dart';
 export 'firebase_client.dart';
 export 'query_factory.dart';
 export 'spine/core/tenant_id.pb.dart';

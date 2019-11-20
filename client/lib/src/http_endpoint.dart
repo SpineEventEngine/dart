@@ -35,7 +35,7 @@ class HttpEndpoint {
 
     HttpEndpoint(this._baseUrl);
 
-    /// Sends an HTTP POST request on a given path with the given message as a request body.
+    /// Sends an HTTP POST request at the given path with the given message as request body.
     ///
     /// The given [path] will be concatenated with the [_baseUrl].
     ///

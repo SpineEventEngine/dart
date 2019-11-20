@@ -22,7 +22,7 @@ import 'package:firebase/firebase.dart' as fb;
 
 /// A holder of the test Firebase App.
 ///
-/// Note that the app will only compile under web environment, thus all the tests that use the app
+/// Note that the app will only work under web environment, thus all the tests that use the app
 /// should be run in the browser.
 ///
 class FirebaseApp {

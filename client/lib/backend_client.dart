@@ -34,7 +34,7 @@ import 'package:spine_client/spine_client.dart';
 import 'package:spine_client/src/json.dart';
 import 'package:spine_client/src/known_types.dart';
 
-import 'entity_subscription.dart';
+import 'subscription.dart';
 
 /// A client of a Spine-based web server.
 ///
@@ -119,14 +119,15 @@ class BackendClient {
 
     /// Subscribes to the changes of entities described by the given [topic].
     ///
-    /// Sends a subscription request to the server and receives a path to the firebase node where
-    /// the entity changes are reflected.
+    /// Sends a subscription request to the server and receives a path to the Firebase Realtime
+    /// Database node where the entity changes are reflected.
     ///
-    /// Based on the given node, builds a [Subscription] which allows to listen to the
-    /// entity or event changes in the convenient form of [Stream]s.
+    /// Based on the given location in the database, builds a [Subscription] which allows to listen
+    /// to the entity or event changes in the convenient format of [Stream]s.
     ///
     /// Throws an exception if the query is invalid or if any kind of network or server error
     /// occurs.
+    ///
     Future<Subscription<T>> subscribeTo<T extends GeneratedMessage>(pb.Topic topic) async {
         var targetTypeUrl = topic.target.type;
         var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);

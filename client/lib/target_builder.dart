@@ -23,7 +23,7 @@ import 'package:spine_client/google/protobuf/any.pb.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
 import 'package:spine_client/src/known_types.dart';
 
-/// Creates a target which matches all messages of a type.
+/// Creates a target which matches all messages of type.
 Target targetAll(GeneratedMessage instance) {
     var target = Target();
     target

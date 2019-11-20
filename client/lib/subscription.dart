@@ -34,7 +34,7 @@ import 'package:spine_client/src/known_types.dart';
 /// updates that happen on the server.
 ///
 /// To stop receiving updates from the server, invoke [unsubscribe]. This will cancel the
-/// subscription both on the client and on the server, stopping their broadcast to Firebase.
+/// subscription both on the client and on the server, stopping the changes broadcast to Firebase.
 ///
 class Subscription<T extends GeneratedMessage> {
 
@@ -55,7 +55,7 @@ class Subscription<T extends GeneratedMessage> {
               itemRemoved = checkIsBroadCast(itemRemoved),
               _closed = false;
 
-    /// Creates a new instance which broadcasts updates from the given Firebase node.
+    /// Creates a new instance which broadcasts updates from under the given Firebase node.
     factory Subscription.of(FirebaseSubscription firebaseSubscription,
                             FirebaseClient database) {
         var subscription = firebaseSubscription.subscription;
