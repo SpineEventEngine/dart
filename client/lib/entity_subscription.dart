@@ -19,7 +19,11 @@
  */
 
 import 'package:protobuf/protobuf.dart';
+import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/spine/client/subscription.pb.dart';
+import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
+import 'package:spine_client/src/json.dart';
+import 'package:spine_client/src/known_types.dart';
 
 class EntitySubscription<T extends GeneratedMessage> {
 
@@ -32,6 +36,30 @@ class EntitySubscription<T extends GeneratedMessage> {
     bool closed;
 
     EntitySubscription(this.subscription, this.itemAdded, this.itemChanged, this.itemRemoved);
+
+    factory EntitySubscription.of(FirebaseSubscription firebaseSubscription,
+                                  FirebaseClient database) {
+        var subscription = firebaseSubscription.subscription;
+        var typeUrl = subscription.topic.target.type;
+        var builderInfo = theKnownTypes.findBuilderInfo(typeUrl);
+        if (builderInfo == null) {
+            throw ArgumentError.value(firebaseSubscription, 'firebase subscription',
+                                      'Firebase subscription type `${typeUrl} is unknown.');
+        }
+        var nodePath = firebaseSubscription.nodePath.value;
+
+        var itemAdded = database
+            .childAdded(nodePath)
+            .map((json) => parseIntoNewInstance(builderInfo, json));
+        var itemChanged = database
+            .childChanged(nodePath)
+            .map((json) => parseIntoNewInstance(builderInfo, json));
+        var itemRemoved = database
+            .childRemoved(nodePath)
+            .map((json) => parseIntoNewInstance(builderInfo, json));
+
+        return new EntitySubscription(subscription, itemAdded, itemChanged, itemRemoved);
+    }
 
     void unsubscribe() {
         closed = true;

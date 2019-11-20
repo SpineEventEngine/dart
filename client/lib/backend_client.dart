@@ -19,11 +19,11 @@
  */
 
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
+import 'package:spine_client/src/http_endpoint.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/spine/client/subscription.pb.dart';
 import 'package:spine_client/spine/core/ack.pb.dart';
@@ -31,14 +31,10 @@ import 'package:spine_client/spine/core/command.pb.dart';
 import 'package:spine_client/spine/web/firebase/query/response.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
 import 'package:spine_client/spine_client.dart';
+import 'package:spine_client/src/json.dart';
 import 'package:spine_client/src/known_types.dart';
-import 'package:spine_client/src/url.dart';
 
 import 'entity_subscription.dart';
-
-const _base64 = Base64Codec();
-const _json = JsonCodec();
-const _contentType = { 'Content-Type': 'application/x-protobuf'};
 
 /// A client of a Spine-based web server.
 ///
@@ -49,13 +45,15 @@ const _contentType = { 'Content-Type': 'application/x-protobuf'};
 ///
 class BackendClient {
 
-    final String _baseUrl;
+    static final Duration subscriptionKeepUpPeriod = new Duration(minutes: 2);
+
+    final HttpEndpoint _endpoint;
     final FirebaseClient _database;
     final List<EntitySubscription> _activeSubscriptions = [];
 
     /// Creates a new instance of `BackendClient`.
     ///
-    /// The client connects to the Spine-based server by the given [_baseUrl] and reads query
+    /// The client connects to the Spine-based server at the given [_endpoint] and reads query
     /// responses from the given Firebase [_database].
     ///
     /// The client may accept [typeRegistries] defined by the client modules.
@@ -73,21 +71,20 @@ class BackendClient {
     ///                            typeRegistries: [myTypes.types(), dependencyTypes.types()]);
     /// ```
     ///
-    BackendClient(this._baseUrl, this._database, {List<dynamic> typeRegistries = const []}) {
+    BackendClient(this._database, String serverUrl, {List<dynamic> typeRegistries = const []})
+            : _endpoint = HttpEndpoint(serverUrl) {
         for (var registry in typeRegistries) {
             theKnownTypes.register(registry);
         }
-        Timer.periodic(new Duration(minutes: 2), (timer) => _keepUpSubscriptions());
+        Timer.periodic(subscriptionKeepUpPeriod, (timer) => _keepUpSubscriptions());
     }
 
     /// Posts a given [Command] to the server.
     Future<Ack> post(Command command) {
-        var body = command.writeToBuffer();
-        return http
-            .post(Url.from(_baseUrl, 'command').stringUrl,
-                  body: _base64.encode(body),
-                  headers: _contentType)
+        var result = _endpoint
+            .postMessage('command', command)
             .then(_parseAck);
+        return result;
     }
 
     /// Obtains entities matching the given query from the server.
@@ -99,55 +96,33 @@ class BackendClient {
     /// occurs.
     ///
     Stream<T> fetch<T extends GeneratedMessage>(Query query) async* {
-        var body = query.writeToBuffer();
         var targetTypeUrl = query.target.type;
         var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
         if (builder == null) {
             throw ArgumentError.value(query, 'query', 'Target type `$targetTypeUrl` is unknown.');
         }
-        var qr = await http.post(Url.from(_baseUrl, 'query').stringUrl,
-                                 body: _base64.encode(body),
-                                 headers: _contentType)
+        var qr = await _endpoint
+            .postMessage('query', query)
             .then(_parseQueryResponse);
         yield* _database
             .get(qr.path)
             .take(qr.count.toInt())
-            .map((json) => _copyAndParse(builder, json));
+            .map((json) => parseIntoNewInstance(builder, json));
     }
 
     Future<EntitySubscription<T>> subscribeTo<T extends GeneratedMessage>(Topic topic) async {
-        var body = topic.writeToBuffer();
         var targetTypeUrl = topic.target.type;
         var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
         if (builder == null) {
             throw ArgumentError.value(topic, 'topic', 'Target type `$targetTypeUrl` is unknown.');
         }
-        var response = await http.post(Url.from(_baseUrl, 'subscription/create').stringUrl,
-                                       body: _base64.encode(body),
-                                       headers: _contentType)
+        var response = await _endpoint
+            .postMessage('subscription/create', topic)
             .then(_parseFirebaseSubscription);
 
-        var nodePath = response.nodePath.value;
-        var itemAdded = _database
-            .childAdded(nodePath)
-            .map((json) => _copyAndParse(builder, json));
-        var itemChanged = _database
-            .childChanged(nodePath)
-            .map((json) => _copyAndParse(builder, json));
-        var itemRemoved = _database
-            .childRemoved(nodePath)
-            .map((json) => _copyAndParse(builder, json));
-
-        var entitySubscription =
-                new EntitySubscription(response.subscription, itemAdded, itemChanged, itemRemoved);
+        var entitySubscription = EntitySubscription.of(response, _database);
         _activeSubscriptions.add(entitySubscription);
         return entitySubscription;
-    }
-
-    T _copyAndParse<T extends GeneratedMessage>(BuilderInfo builderInfo, String json) {
-        var msg = builderInfo.createEmptyInstance();
-        _parseJson(msg, json);
-        return msg;
     }
 
     Ack _parseAck(http.Response response) {
@@ -170,31 +145,28 @@ class BackendClient {
 
     void _parseInto(GeneratedMessage message, http.Response response) {
         var json = response.body;
-        _parseJson(message, json);
-    }
-
-    void _parseJson(GeneratedMessage message, String json) {
-        var jsonMap = _json.decode(json);
-        message.mergeFromProto3Json(jsonMap,
-                                    ignoreUnknownFields: true,
-                                    typeRegistry: theKnownTypes.registry());
+        parseInto(message, json);
     }
 
     void _keepUpSubscriptions() {
         _activeSubscriptions.forEach(_keepUpSubscription);
     }
 
-    void _keepUpSubscription(EntitySubscription subscription) async {
-        var body = subscription.subscription.writeToBuffer();
+    void _keepUpSubscription(EntitySubscription subscription) {
+        var subscriptionMessage = subscription.subscription;
         if (subscription.closed) {
-            await http.post(Url.from(_baseUrl, 'subscription/cancel').stringUrl,
-                            body: _base64.encode(body),
-                            headers: _contentType);
+            _cancel(subscriptionMessage);
             _activeSubscriptions.remove(subscription);
         } else {
-            await http.post(Url.from(_baseUrl, 'subscription/keep-up').stringUrl,
-                            body: _base64.encode(body),
-                            headers: _contentType);
+            _keepUp(subscriptionMessage);
         }
+    }
+
+    void _keepUp(Subscription subscription) {
+        _endpoint.postMessage('subscription/keep-up', subscription);
+    }
+
+    void _cancel(Subscription subscription) {
+        _endpoint.postMessage('subscription/cancel', subscription);
     }
 }

@@ -25,13 +25,14 @@ import 'package:spine_client/spine/client/subscription.pb.dart';
 import 'package:spine_client/target_builder.dart';
 import 'package:spine_client/uuids.dart';
 
-/// A factory of queries to the server.
+/// A factory of [Topic] instances.
 class TopicFactory {
 
     final ActorProvider _context;
 
     TopicFactory(this._context);
 
+    /// Creates a topic which matches entities of the given type with the specified IDs.
     Topic byIds(GeneratedMessage instance, List<Any> ids) {
         var topic = Topic();
         topic
@@ -41,7 +42,7 @@ class TopicFactory {
         return topic;
     }
 
-    /// Creates a query which matches all entities of the given type.
+    /// Creates a topic which matches all entities of the given type.
     Topic all(GeneratedMessage instance) {
         var topic = Topic();
         topic
