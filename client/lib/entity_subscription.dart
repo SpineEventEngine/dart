@@ -20,7 +20,7 @@
 
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
-import 'package:spine_client/spine/client/subscription.pb.dart';
+import 'package:spine_client/spine/client/subscription.pb.dart' as pb;
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
 import 'package:spine_client/src/json.dart';
 import 'package:spine_client/src/known_types.dart';
@@ -33,9 +33,9 @@ import 'package:spine_client/src/known_types.dart';
 /// The streams are broadcast, i.e. can be listened to more than once, and receive all the entity
 /// state updates that happen on the server.
 ///
-class EntitySubscription<T extends GeneratedMessage> {
+class Subscription<T extends GeneratedMessage> {
 
-    final Subscription subscription;
+    final pb.Subscription subscription;
 
     final Stream<T> itemAdded;
     final Stream<T> itemChanged;
@@ -43,10 +43,10 @@ class EntitySubscription<T extends GeneratedMessage> {
 
     bool _closed;
 
-    EntitySubscription(this.subscription,
-                       Stream<T> itemAdded,
-                       Stream<T> itemChanged,
-                       Stream<T> itemRemoved)
+    Subscription(this.subscription,
+                 Stream<T> itemAdded,
+                 Stream<T> itemChanged,
+                 Stream<T> itemRemoved)
             : itemAdded = checkIsBroadCast(itemAdded),
               itemChanged = checkIsBroadCast(itemChanged),
               itemRemoved = checkIsBroadCast(itemRemoved),
@@ -54,8 +54,8 @@ class EntitySubscription<T extends GeneratedMessage> {
 
     /// Creates a new instance which broadcasts updates from the given Firebase node.
     ///
-    factory EntitySubscription.of(FirebaseSubscription firebaseSubscription,
-                                  FirebaseClient database) {
+    factory Subscription.of(FirebaseSubscription firebaseSubscription,
+                            FirebaseClient database) {
         var subscription = firebaseSubscription.subscription;
         var typeUrl = subscription.topic.target.type;
         var builderInfo = theKnownTypes.findBuilderInfo(typeUrl);
@@ -75,11 +75,15 @@ class EntitySubscription<T extends GeneratedMessage> {
             .childRemoved(nodePath)
             .map((json) => parseIntoNewInstance<T>(builderInfo, json));
 
-        return new EntitySubscription(subscription, itemAdded, itemChanged, itemRemoved);
+        return new Subscription(subscription, itemAdded, itemChanged, itemRemoved);
     }
 
     bool get closed => _closed;
 
+    /// Closes this subscription.
+    ///
+    /// The server will stop reflecting the updates for the topic.
+    ///
     void unsubscribe() {
         _closed = true;
     }

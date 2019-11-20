@@ -34,9 +34,12 @@ abstract class FirebaseClient {
     ///
     Stream<String> get(String path);
 
+    /// Obtains the "childAdded" event stream of the node under a given path.
     Stream<String> childAdded(String path);
 
+    /// Obtains the "childChanged" event stream of the node under a given path.
     Stream<String> childChanged(String path);
 
+    /// Obtains the "childRemoved" event stream of the node under a given path.
     Stream<String> childRemoved(String path);
 }

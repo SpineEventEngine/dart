@@ -72,7 +72,7 @@ void main() {
         test('subscribe to entity changes', () async {
             // Subscribe to the `Task` changes.
             var topic = requestFactory.topic().all(Task());
-            EntitySubscription<Task> entitySubscription = await client.subscribeTo(topic);
+            Subscription<Task> entitySubscription = await client.subscribeTo(topic);
 
             // Listen to the `itemAdded` event.
             var taskName = "";
@@ -104,6 +104,8 @@ void main() {
 
             // Verify the event is actually fired.
             expect(newTaskName, equals(renameTaskCmd.name));
+
+            entitySubscription.unsubscribe();
         });
     });
 }

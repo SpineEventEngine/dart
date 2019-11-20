@@ -28,11 +28,14 @@ import 'package:spine_client/src/url.dart';
 ///
 /// See `WebFirebaseClient` for a web-specific implementation.
 ///
+/// Note: the [childAdded], [childChanged] and [childRemoved] event streams are not supported by
+/// this client implementation. It thus does not support Spine subscriptions. If you need the
+/// subscriptions functionality, consider switching to the Firebase Admin SDK based client.
+///
 class RestClient implements FirebaseClient {
 
     static const _doesNotSupportSubscriptions =
-        "REST Firebase client does not support subscriptions. Please use a Firebase SDK-based "
-        "client.";
+        "REST Firebase client does not support the subscriptions.";
 
     final fb.FirebaseClient _client;
     final String _databaseUrl;

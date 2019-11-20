@@ -67,7 +67,7 @@
 ///               client.post(requests.command().create(markDone));
 ///           });
 ///     // Listen for all `TaskListView` updates and display them.
-///     EntitySubscription<TaskListView> subscription =
+///     Subscription<TaskListView> subscription =
 ///             await client.subscribeTo(requests.topic().all(TaskListView()));
 ///     subscription.itemChanged.listen(taskListView => updateDisplay(taskListView));
 /// }

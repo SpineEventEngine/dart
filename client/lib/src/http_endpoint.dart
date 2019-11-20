@@ -27,12 +27,17 @@ import 'package:spine_client/src/url.dart';
 const _base64 = Base64Codec();
 const _protobufContentType = {'Content-Type': 'application/x-protobuf'};
 
+/// An HTTP endpoint located at some URL.
+///
 class HttpEndpoint {
 
     final String _baseUrl;
 
     HttpEndpoint(this._baseUrl);
 
+    /// Sends an HTTP POST request on a given path with the given message as a request body.
+    ///
+    /// The given [path] will be concatenated with the [_baseUrl].
     Future<http.Response> postMessage(String path, GeneratedMessage message) async {
         var bytes = message.writeToBuffer();
         var url = Url.from(_baseUrl, path).stringUrl;

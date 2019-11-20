@@ -25,7 +25,7 @@ import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/src/http_endpoint.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
-import 'package:spine_client/spine/client/subscription.pb.dart';
+import 'package:spine_client/spine/client/subscription.pb.dart' as pb;
 import 'package:spine_client/spine/core/ack.pb.dart';
 import 'package:spine_client/spine/core/command.pb.dart';
 import 'package:spine_client/spine/web/firebase/query/response.pb.dart';
@@ -45,11 +45,18 @@ import 'entity_subscription.dart';
 ///
 class BackendClient {
 
+    /// A period which is used to send a "subscription keep-up" request for all active
+    /// subscriptions.
+    ///
+    /// The Spine server cancels the stale subscriptions after some period of time. To prevent this
+    /// from happening to the active subscriptions of this client, we need to periodically send a
+    /// "keep-up" request to the corresponding endpoint.
+    ///
     static final Duration subscriptionKeepUpPeriod = new Duration(minutes: 2);
 
     final HttpEndpoint _endpoint;
     final FirebaseClient _database;
-    final List<EntitySubscription> _activeSubscriptions = [];
+    final List<Subscription> _activeSubscriptions = [];
 
     /// Creates a new instance of `BackendClient`.
     ///
@@ -115,12 +122,12 @@ class BackendClient {
     /// Sends a subscription request to the server and receives a path to the firebase node where
     /// the entity changes are reflected.
     ///
-    /// Based on the given node, builds an [EntitySubscription] which allows to listen to the
-    /// entity changes in the convenient form of [Stream]s.
+    /// Based on the given node, builds a [Subscription] which allows to listen to the
+    /// entity or event changes in the convenient form of [Stream]s.
     ///
     /// Throws an exception if the query is invalid or if any kind of network or server error
     /// occurs.
-    Future<EntitySubscription<T>> subscribeTo<T extends GeneratedMessage>(Topic topic) async {
+    Future<Subscription<T>> subscribeTo<T extends GeneratedMessage>(pb.Topic topic) async {
         var targetTypeUrl = topic.target.type;
         var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
         if (builder == null) {
@@ -130,9 +137,9 @@ class BackendClient {
             .postMessage('subscription/create', topic)
             .then(_parseFirebaseSubscription);
 
-        EntitySubscription<T> entitySubscription = EntitySubscription.of(response, _database);
-        _activeSubscriptions.add(entitySubscription);
-        return entitySubscription;
+        Subscription<T> subscription = Subscription.of(response, _database);
+        _activeSubscriptions.add(subscription);
+        return subscription;
     }
 
     Ack _parseAck(http.Response response) {
@@ -162,7 +169,7 @@ class BackendClient {
         _activeSubscriptions.forEach(_keepUpSubscription);
     }
 
-    void _keepUpSubscription(EntitySubscription subscription) {
+    void _keepUpSubscription(Subscription subscription) {
         var subscriptionMessage = subscription.subscription;
         if (subscription.closed) {
             _cancel(subscriptionMessage);
@@ -172,11 +179,11 @@ class BackendClient {
         }
     }
 
-    void _keepUp(Subscription subscription) {
+    void _keepUp(pb.Subscription subscription) {
         _endpoint.postMessage('subscription/keep-up', subscription);
     }
 
-    void _cancel(Subscription subscription) {
+    void _cancel(pb.Subscription subscription) {
         _endpoint.postMessage('subscription/cancel', subscription);
     }
 }
