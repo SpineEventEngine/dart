@@ -18,23 +18,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'dart:convert';
+import 'package:spine_client/spine/web/firebase/client.pb.dart';
+import 'package:spine_client/src/json.dart';
+import 'package:test/test.dart';
 
-import 'package:protobuf/protobuf.dart';
+void main() {
+    group('Json utility should', () {
 
-import 'known_types.dart';
+        const nodePathValue = 'some-node-path';
+        const json = '{"value" : "${nodePathValue}"}';
 
-const _json = JsonCodec();
+        test('parse JSON string into a given message', () {
+            var result = NodePath();
+            parseInto(result, json);
+            expect(result.value, equals(nodePathValue));
+        });
 
-void parseInto(GeneratedMessage message, String json) {
-    var jsonMap = _json.decode(json);
-    message.mergeFromProto3Json(jsonMap,
-                                ignoreUnknownFields: true,
-                                typeRegistry: theKnownTypes.registry());
-}
-
-T parseIntoNewInstance<T extends GeneratedMessage>(BuilderInfo builder, String json) {
-    var msg = builder.createEmptyInstance();
-    parseInto(msg, json);
-    return msg;
+        test('parse JSON string into a new message instance created with the given builder', () {
+            var builderInfo = NodePath().info_;
+            NodePath result = parseIntoNewInstance(builderInfo, json);
+            expect(result.value, equals(nodePathValue));
+        });
+    });
 }

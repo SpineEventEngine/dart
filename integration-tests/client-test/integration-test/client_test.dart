@@ -48,7 +48,6 @@ void main() {
         setUp(() {
             var database = app.database();
             var firebase = WebFirebaseClient(database);
-//            var firebase = RestClient(fb_io.FirebaseClient.anonymous(), FIREBASE);
             client = BackendClient(BACKEND, firebase, typeRegistries: [testTypes.types()]);
             var actor = UserId();
             actor.value = newUuid();
@@ -65,22 +64,44 @@ void main() {
             await client.post(requestFactory.command().create(cmd));
             var query = requestFactory.query().all(Task());
             var tasks = await client.fetch<Task>(query).toList();
-            expect(tasks, hasLength(equals(1)));
-            var task = tasks.first;
-            expect(task.id, equals(taskId));
+            expect(tasks, hasLength(greaterThanOrEqualTo(1)));
+            var matchingById = tasks.where((task) => task.id == taskId);
+            expect(matchingById, hasLength(1));
         });
 
         test('subscribe to entity changes', () async {
+            // Subscribe to the `Task` changes.
             var topic = requestFactory.topic().all(Task());
             var entitySubscription = await client.subscribeTo(topic);
-            entitySubscription.itemAdded.listen((task) => print('task created'));
+
+            // Listen to the `itemAdded` event.
+            var taskCreated = false;
+            entitySubscription.itemAdded.listen((task) => taskCreated = true);
             var taskId = TaskId()
                 ..value = newUuid();
-            var cmd = CreateTask()
+
+            // Send `CreateTask` command.
+            var createTaskCmd = CreateTask()
                 ..id = taskId
                 ..name = 'Task name'
                 ..description = "long";
-            await client.post(requestFactory.command().create(cmd));
+            await client.post(requestFactory.command().create(createTaskCmd));
+
+            // Check the event is actually fired.
+            expect(taskCreated, isTrue);
+
+            // Listen to the `itemChanged` event.
+            var taskChanged = false;
+            entitySubscription.itemChanged.listen((task) => taskChanged = true);
+
+            // Send the `RenameTask` command.
+            var renameTaskCmd = RenameTask()
+            ..id = taskId
+            ..name = 'New task name';
+            await client.post(requestFactory.command().create(renameTaskCmd));
+
+            // Verify the event is actually fired.
+            expect(taskChanged, isTrue);
         });
     });
 }
