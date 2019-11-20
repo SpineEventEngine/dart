@@ -18,13 +18,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:firebase/firebase.dart' as fb;
 import 'package:spine_client/spine_client.dart';
 import 'package:spine_client/uuids.dart';
 import 'package:spine_client/web_firebase_client.dart';
 import 'package:test/test.dart';
 
 import 'endpoints.dart';
+import 'firebase_app.dart';
 import 'spine/web/test/given/commands.pb.dart';
 import 'spine/web/test/given/task.pb.dart';
 import 'types.dart' as testTypes;
@@ -32,21 +32,12 @@ import 'types.dart' as testTypes;
 @TestOn("browser")
 void main() {
 
-    var app = fb.initializeApp(
-        apiKey: "AIzaSyD8Nr2zrW9QFLbNS5Kg-Ank-QIZP_jo5pU",
-        authDomain: "spine-dev.firebaseapp.com",
-        databaseURL: "https://spine-dev.firebaseio.com",
-        projectId: "spine-dev",
-        storageBucket: "",
-        messagingSenderId: "165066236051"
-    );
-
     group('BackendClient should', () {
         ActorRequestFactory requestFactory;
         BackendClient client;
 
         setUp(() {
-            var database = app.database();
+            var database = FirebaseApp().database;
             var firebase = WebFirebaseClient(database);
             client = BackendClient(BACKEND, firebase, typeRegistries: [testTypes.types()]);
             var actor = UserId();
