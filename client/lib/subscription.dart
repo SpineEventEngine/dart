@@ -50,9 +50,9 @@ class Subscription<T extends GeneratedMessage> {
                  Stream<T> itemAdded,
                  Stream<T> itemChanged,
                  Stream<T> itemRemoved)
-            : itemAdded = checkIsBroadCast(itemAdded),
-              itemChanged = checkIsBroadCast(itemChanged),
-              itemRemoved = checkIsBroadCast(itemRemoved),
+            : itemAdded = _checkIsBroadCast(itemAdded),
+              itemChanged = _checkIsBroadCast(itemChanged),
+              itemRemoved = _checkIsBroadCast(itemRemoved),
               _closed = false;
 
     /// Creates a new instance which broadcasts updates from under the given Firebase node.
@@ -90,7 +90,7 @@ class Subscription<T extends GeneratedMessage> {
         _closed = true;
     }
 
-    static Stream<T> checkIsBroadCast<T>(Stream<T> stream) {
+    static Stream<T> _checkIsBroadCast<T>(Stream<T> stream) {
         if (!stream.isBroadcast) {
             throw ArgumentError(
                 'All streams passed to an EntitySubscription instance should be broadcast.');
