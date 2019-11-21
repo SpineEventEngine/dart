@@ -45,18 +45,23 @@ import 'subscription.dart';
 ///
 class BackendClient {
 
-    /// A period which is used to send a "subscription keep-up" request for all active
-    /// subscriptions.
-    ///
-    /// The Spine server cancels the stale subscriptions after some period of time. To prevent this
-    /// from happening to the active subscriptions of this client, we need to periodically send a
-    /// "keep-up" request to the corresponding endpoint.
-    ///
-    static final Duration subscriptionKeepUpPeriod = new Duration(minutes: 2);
-
     final HttpEndpoint _endpoint;
     final FirebaseClient _database;
     final List<Subscription> _activeSubscriptions = [];
+
+    /// A period with which the "subscription keep-up" request is sent for all active
+    /// subscriptions.
+    ///
+    /// The Spine server cancels stale subscriptions after some period of time. To prevent this
+    /// from happening we need to periodically send a "keep-up" request to the corresponding
+    /// endpoint.
+    ///
+    /// This property allows to configure the period with which the request is sent. It should have
+    /// a value at least no less than the subscription life span configured on the server.
+    ///
+    /// The default value is 2 minutes.
+    ///
+    Duration subscriptionKeepUpPeriod = new Duration(minutes: 2);
 
     /// Creates a new instance of `BackendClient`.
     ///
