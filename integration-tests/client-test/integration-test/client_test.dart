@@ -89,8 +89,8 @@ void main() {
 
             // Send the `RenameTask` command.
             var renameTaskCmd = RenameTask()
-            ..id = taskId
-            ..name = 'New task name';
+                ..id = taskId
+                ..name = 'New task name';
             await client.post(requestFactory.command().create(renameTaskCmd));
 
             // Verify the event is actually fired.
