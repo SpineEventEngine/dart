@@ -58,6 +58,12 @@
 ///     var client = BackendClient('https://example.org',
 ///                                firebase,
 ///                                typeRegistries: [myTypes.types()]);
+///
+///     // Listen for all `TaskListView` updates and display them.
+///     Subscription<TaskListView> subscription =
+///             await client.subscribeTo(requests.topic().all(TaskListView()));
+///     subscription.itemChanged.listen(taskListView => updateDisplay(taskListView));
+///
 ///     // Fetch all `TaskView` projections and mark all tasks as done.
 ///     client.fetch(requests.query().all(TaskView()))
 ///           .forEach((taskView) {
@@ -66,10 +72,6 @@
 ///                       ..who_completed = actorId;
 ///               client.post(requests.command().create(markDone));
 ///           });
-///     // Listen for all `TaskListView` updates and display them.
-///     Subscription<TaskListView> subscription =
-///             await client.subscribeTo(requests.topic().all(TaskListView()));
-///     subscription.itemChanged.listen(taskListView => updateDisplay(taskListView));
 /// }
 /// ```
 ///
