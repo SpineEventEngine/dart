@@ -54,16 +54,16 @@ class RestClient implements FirebaseClient {
 
     @override
     Stream<String> childAdded(String path) {
-      throw new UnimplementedError(_doesNotSupportSubscriptions);
+      throw UnimplementedError(_doesNotSupportSubscriptions);
     }
 
     @override
     Stream<String> childChanged(String path) {
-        throw new UnimplementedError(_doesNotSupportSubscriptions);
+        throw UnimplementedError(_doesNotSupportSubscriptions);
     }
 
     @override
     Stream<String> childRemoved(String path) {
-        throw new UnimplementedError(_doesNotSupportSubscriptions);
+        throw UnimplementedError(_doesNotSupportSubscriptions);
     }
 }

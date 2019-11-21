@@ -77,7 +77,7 @@ class Subscription<T extends GeneratedMessage> {
             .childRemoved(nodePath)
             .map((json) => parseIntoNewInstance<T>(builderInfo, json));
 
-        return new Subscription(subscription, itemAdded, itemChanged, itemRemoved);
+        return Subscription(subscription, itemAdded, itemChanged, itemRemoved);
     }
 
     bool get closed => _closed;
@@ -92,7 +92,7 @@ class Subscription<T extends GeneratedMessage> {
 
     static Stream<T> checkIsBroadCast<T>(Stream<T> stream) {
         if (!stream.isBroadcast) {
-            throw new ArgumentError(
+            throw ArgumentError(
                 'All streams passed to an EntitySubscription instance should be broadcast.');
         }
         return stream;
