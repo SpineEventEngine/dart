@@ -93,7 +93,7 @@ class Subscription<T extends GeneratedMessage> {
     static Stream<T> _checkIsBroadCast<T>(Stream<T> stream) {
         if (!stream.isBroadcast) {
             throw ArgumentError(
-                'All streams passed to an EntitySubscription instance should be broadcast.');
+                'All streams passed to an `EntitySubscription` instance should be broadcast.');
         }
         return stream;
     }
