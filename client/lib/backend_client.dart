@@ -45,6 +45,8 @@ import 'subscription.dart';
 ///
 class BackendClient {
 
+    static const Duration _defaultSubscriptionKeepUpPeriod = Duration(minutes: 2);
+
     final HttpEndpoint _endpoint;
     final FirebaseClient _database;
     final List<Subscription> _activeSubscriptions = [];
@@ -57,11 +59,11 @@ class BackendClient {
     /// endpoint.
     ///
     /// This property allows to configure the period with which the request is sent. It should have
-    /// a value at least no less than the subscription life span configured on the server.
+    /// a value at least no less than the subscription life span configured by the server.
     ///
     /// The default value is 2 minutes.
     ///
-    Duration subscriptionKeepUpPeriod = new Duration(minutes: 2);
+    final Duration subscriptionKeepUpPeriod;
 
     /// Creates a new instance of `BackendClient`.
     ///
@@ -83,7 +85,10 @@ class BackendClient {
     ///                            typeRegistries: [myTypes.types(), dependencyTypes.types()]);
     /// ```
     ///
-    BackendClient(String serverUrl, this._database, {List<dynamic> typeRegistries = const []})
+    BackendClient(String serverUrl,
+                  this._database,
+                  {List<dynamic> typeRegistries = const [],
+                   this.subscriptionKeepUpPeriod = _defaultSubscriptionKeepUpPeriod})
             : _endpoint = HttpEndpoint(serverUrl) {
         for (var registry in typeRegistries) {
             theKnownTypes.register(registry);
