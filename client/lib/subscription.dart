@@ -28,13 +28,12 @@ import 'package:spine_client/src/known_types.dart';
 /// A subscription for event or entity changes.
 ///
 /// The [itemAdded], [itemChanged] and [itemRemoved] streams reflect the changes of a corresponding
-/// type.
-///
-/// The streams are broadcast, i.e. can be listened to more than once, and receive all the state
-/// updates that happen on the server.
+/// event/entity type. The streams are broadcast ([Stream.isBroadcast]]), i.e. can have any number
+/// of listeners simultaneously.
 ///
 /// To stop receiving updates from the server, invoke [unsubscribe]. This will cancel the
-/// subscription both on the client and on the server, stopping the changes broadcast to Firebase.
+/// subscription both on the client and on the server, stopping the changes from being reflected to
+/// Firebase.
 ///
 class Subscription<T extends GeneratedMessage> {
 
