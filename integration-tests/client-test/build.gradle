@@ -32,6 +32,9 @@ final def integrationTestDir = './integration-test'
 
 task integrationTest(type: Exec) {
     final def pub = 'pub' + (Os.isFamily(Os.FAMILY_WINDOWS) ? '.bat' : '')
+
+    // Run tests in Chrome browser because they use a `WebFirebaseClient` which only works in web
+    // environment.
     commandLine pub, 'run', 'test', integrationTestDir, '-p', 'chrome'
 
     dependsOn 'resolveDependencies', ':test-app:appBeforeIntegrationTest'
