@@ -18,36 +18,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
+import 'dart:convert';
 
-apply from: "$rootDir/gradle/dart.gradle"
+import 'package:http/http.dart' as http;
+import 'package:protobuf/protobuf.dart';
+import 'package:spine_client/src/url.dart';
 
-dependencies {
-    testProtobuf project(':test-app')
+const _base64 = Base64Codec();
+const _protobufContentType = {'Content-Type': 'application/x-protobuf'};
+
+/// An HTTP endpoint located at some URL.
+///
+class HttpEndpoint {
+
+    final String _baseUrl;
+
+    HttpEndpoint(this._baseUrl);
+
+    /// Sends an HTTP POST request at the given path with the given message as request body.
+    ///
+    /// The given [path] will be concatenated with the [_baseUrl].
+    ///
+    Future<http.Response> postMessage(String path, GeneratedMessage message) async {
+        var bytes = message.writeToBuffer();
+        var url = Url.from(_baseUrl, path).stringUrl;
+        var response = await http.post(url,
+                                       body: _base64.encode(bytes),
+                                       headers: _protobufContentType);
+        return response;
+    }
 }
-
-tasks['testDart'].enabled false
-
-final def integrationTestDir = './integration-test'
-
-task integrationTest(type: Exec) {
-    final def pub = 'pub' + (Os.isFamily(Os.FAMILY_WINDOWS) ? '.bat' : '')
-
-    // Run tests in Chrome browser because they use a `WebFirebaseClient` which only works in web
-    // environment.
-    commandLine pub, 'run', 'test', integrationTestDir, '-p', 'chrome'
-
-    dependsOn 'resolveDependencies', ':test-app:appBeforeIntegrationTest'
-    finalizedBy ':test-app:appAfterIntegrationTest'
-}
-
-protoDart {
-    testDir.set project.layout.projectDirectory.dir(integrationTestDir)
-}
-
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/integration-test"
-}
-
-assemble.dependsOn 'generateDart'

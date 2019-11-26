@@ -19,51 +19,30 @@
  */
 
 import 'package:firebase/firebase.dart' as fb;
-import 'package:spine_client/firebase_client.dart';
 
-/// An implementation of [FirebaseClient] specific to browser JavaScript.
+/// A holder of the test Firebase App.
 ///
-/// See `RestClient` for a platform-agnostic implementation.
+/// Note that the app will only work under web environment, thus all the tests that use the app
+/// should be run in the browser.
 ///
-class WebFirebaseClient implements FirebaseClient {
+class FirebaseApp {
 
-    final fb.Database _db;
+    static final FirebaseApp _instance = FirebaseApp._internal();
 
-    WebFirebaseClient(this._db);
+    final fb.App firebaseApp = fb.initializeApp(
+        apiKey: "AIzaSyD8Nr2zrW9QFLbNS5Kg-Ank-QIZP_jo5pU",
+        authDomain: "spine-dev.firebaseapp.com",
+        databaseURL: "https://spine-dev.firebaseio.com",
+        projectId: "spine-dev",
+        storageBucket: "",
+        messagingSenderId: "165066236051"
+    );
 
-    @override
-    Stream<String> get(String path) async* {
-        yield* _db
-            .ref(path)
-            .onChildAdded
-            .map(_toJsonString);
+    factory FirebaseApp() {
+        return _instance;
     }
 
-    @override
-    Stream<String> childAdded(String path) {
-        return _db
-            .ref(path)
-            .onChildAdded
-            .map(_toJsonString);
-    }
+    fb.Database get database => firebaseApp.database();
 
-    @override
-    Stream<String> childChanged(String path) {
-        return _db
-            .ref(path)
-            .onChildChanged
-            .map(_toJsonString);
-    }
-
-    @override
-    Stream<String> childRemoved(String path) {
-        return _db
-            .ref(path)
-            .onChildRemoved
-            .map(_toJsonString);
-    }
-
-    String _toJsonString(event) {
-        return event.snapshot.toJson().toString();
-    }
+    FirebaseApp._internal();
 }

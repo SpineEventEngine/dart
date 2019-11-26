@@ -18,21 +18,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'dart:convert';
+import 'dart:async';
 
 import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
+import 'package:spine_client/src/http_endpoint.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
+import 'package:spine_client/spine/client/subscription.pb.dart' as pb;
 import 'package:spine_client/spine/core/ack.pb.dart';
 import 'package:spine_client/spine/core/command.pb.dart';
 import 'package:spine_client/spine/web/firebase/query/response.pb.dart';
+import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
+import 'package:spine_client/spine_client.dart';
+import 'package:spine_client/src/json.dart';
 import 'package:spine_client/src/known_types.dart';
-import 'package:spine_client/src/url.dart';
 
-const _base64 = Base64Codec();
-const _json = JsonCodec();
-const _contentType = { 'Content-Type': 'application/x-protobuf'};
+import 'subscription.dart';
 
 /// A client of a Spine-based web server.
 ///
@@ -43,12 +45,29 @@ const _contentType = { 'Content-Type': 'application/x-protobuf'};
 ///
 class BackendClient {
 
-    final String _baseUrl;
+    static const Duration _defaultSubscriptionKeepUpPeriod = Duration(minutes: 2);
+
+    final HttpEndpoint _endpoint;
     final FirebaseClient _database;
+    final List<Subscription> _activeSubscriptions = [];
+
+    /// A period with which the "subscription keep-up" request is sent for all active
+    /// subscriptions.
+    ///
+    /// The Spine server cancels stale subscriptions after some period of time. To prevent this
+    /// from happening we need to periodically send a "keep-up" request to the corresponding
+    /// endpoint.
+    ///
+    /// This property allows to configure the period with which the request is sent. It should have
+    /// a value at least no less than the subscription life span configured by the server.
+    ///
+    /// The default value is 2 minutes.
+    ///
+    final Duration subscriptionKeepUpPeriod;
 
     /// Creates a new instance of `BackendClient`.
     ///
-    /// The client connects to the Spine-based server by the given [_baseUrl] and reads query
+    /// The client connects to the Spine-based server at the given [_endpoint] and reads query
     /// responses from the given Firebase [_database].
     ///
     /// The client may accept [typeRegistries] defined by the client modules.
@@ -66,20 +85,23 @@ class BackendClient {
     ///                            typeRegistries: [myTypes.types(), dependencyTypes.types()]);
     /// ```
     ///
-    BackendClient(this._baseUrl, this._database, {List<dynamic> typeRegistries = const []}) {
+    BackendClient(String serverUrl,
+                  this._database,
+                  {List<dynamic> typeRegistries = const [],
+                   this.subscriptionKeepUpPeriod = _defaultSubscriptionKeepUpPeriod})
+            : _endpoint = HttpEndpoint(serverUrl) {
         for (var registry in typeRegistries) {
             theKnownTypes.register(registry);
         }
+        Timer.periodic(subscriptionKeepUpPeriod, (timer) => _keepUpSubscriptions());
     }
 
     /// Posts a given [Command] to the server.
     Future<Ack> post(Command command) {
-        var body = command.writeToBuffer();
-        return http
-            .post(Url.from(_baseUrl, 'command').stringUrl,
-                  body: _base64.encode(body),
-                  headers: _contentType)
+        var result = _endpoint
+            .postMessage('command', command)
             .then(_parseAck);
+        return result;
     }
 
     /// Obtains entities matching the given query from the server.
@@ -91,26 +113,44 @@ class BackendClient {
     /// occurs.
     ///
     Stream<T> fetch<T extends GeneratedMessage>(Query query) async* {
-        var body = query.writeToBuffer();
         var targetTypeUrl = query.target.type;
         var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
         if (builder == null) {
             throw ArgumentError.value(query, 'query', 'Target type `$targetTypeUrl` is unknown.');
         }
-        var qr = await http.post(Url.from(_baseUrl, 'query').stringUrl,
-                                 body: _base64.encode(body),
-                                 headers: _contentType)
+        var qr = await _endpoint
+            .postMessage('query', query)
             .then(_parseQueryResponse);
         yield* _database
             .get(qr.path)
             .take(qr.count.toInt())
-            .map((json) => _copyAndParse(builder, json));
+            .map((json) => parseIntoNewInstance(builder, json));
     }
 
-    T _copyAndParse<T extends GeneratedMessage>(BuilderInfo builderInfo, String json) {
-        var msg = builderInfo.createEmptyInstance();
-        _parseJson(msg, json);
-        return msg;
+    /// Subscribes to the changes of entities described by the given [topic].
+    ///
+    /// Sends a subscription request to the server and receives a path to the Firebase Realtime
+    /// Database node where the entity changes are reflected.
+    ///
+    /// Based on the given location in the database, builds a [Subscription] which allows to listen
+    /// to the entity or event changes in the convenient format of [Stream]s.
+    ///
+    /// Throws an exception if the query is invalid or if any kind of network or server error
+    /// occurs.
+    ///
+    Future<Subscription<T>> subscribeTo<T extends GeneratedMessage>(pb.Topic topic) async {
+        var targetTypeUrl = topic.target.type;
+        var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
+        if (builder == null) {
+            throw ArgumentError.value(topic, 'topic', 'Target type `$targetTypeUrl` is unknown.');
+        }
+        var response = await _endpoint
+            .postMessage('subscription/create', topic)
+            .then(_parseFirebaseSubscription);
+
+        Subscription<T> subscription = Subscription.of(response, _database);
+        _activeSubscriptions.add(subscription);
+        return subscription;
     }
 
     Ack _parseAck(http.Response response) {
@@ -125,15 +165,36 @@ class BackendClient {
         return queryResponse;
     }
 
-    void _parseInto(GeneratedMessage message, http.Response response) {
-        var json = response.body;
-        _parseJson(message, json);
+    FirebaseSubscription _parseFirebaseSubscription(http.Response response) {
+        var firebaseSubscription = FirebaseSubscription();
+        _parseInto(firebaseSubscription, response);
+        return firebaseSubscription;
     }
 
-    void _parseJson(GeneratedMessage message, String json) {
-        var jsonMap = _json.decode(json);
-        message.mergeFromProto3Json(jsonMap,
-                                    ignoreUnknownFields: true,
-                                    typeRegistry: theKnownTypes.registry());
+    void _parseInto(GeneratedMessage message, http.Response response) {
+        var json = response.body;
+        parseInto(message, json);
+    }
+
+    void _keepUpSubscriptions() {
+        _activeSubscriptions.forEach(_keepUpSubscription);
+    }
+
+    void _keepUpSubscription(Subscription subscription) {
+        var subscriptionMessage = subscription.subscription;
+        if (subscription.closed) {
+            _cancel(subscriptionMessage);
+            _activeSubscriptions.remove(subscription);
+        } else {
+            _keepUp(subscriptionMessage);
+        }
+    }
+
+    void _keepUp(pb.Subscription subscription) {
+        _endpoint.postMessage('subscription/keep-up', subscription);
+    }
+
+    void _cancel(pb.Subscription subscription) {
+        _endpoint.postMessage('subscription/cancel', subscription);
     }
 }

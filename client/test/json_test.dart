@@ -18,36 +18,26 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
+import 'package:spine_client/spine/web/firebase/client.pb.dart';
+import 'package:spine_client/src/json.dart';
+import 'package:test/test.dart';
 
-apply from: "$rootDir/gradle/dart.gradle"
+void main() {
+    group('Json utility should', () {
 
-dependencies {
-    testProtobuf project(':test-app')
+        const nodePathValue = 'some-node-path';
+        const json = '{"value" : "${nodePathValue}"}';
+
+        test('parse JSON string into a given message', () {
+            var result = NodePath();
+            parseInto(result, json);
+            expect(result.value, equals(nodePathValue));
+        });
+
+        test('parse JSON string into a new message instance created with the given builder', () {
+            var builderInfo = NodePath().info_;
+            NodePath result = parseIntoNewInstance(builderInfo, json);
+            expect(result.value, equals(nodePathValue));
+        });
+    });
 }
-
-tasks['testDart'].enabled false
-
-final def integrationTestDir = './integration-test'
-
-task integrationTest(type: Exec) {
-    final def pub = 'pub' + (Os.isFamily(Os.FAMILY_WINDOWS) ? '.bat' : '')
-
-    // Run tests in Chrome browser because they use a `WebFirebaseClient` which only works in web
-    // environment.
-    commandLine pub, 'run', 'test', integrationTestDir, '-p', 'chrome'
-
-    dependsOn 'resolveDependencies', ':test-app:appBeforeIntegrationTest'
-    finalizedBy ':test-app:appAfterIntegrationTest'
-}
-
-protoDart {
-    testDir.set project.layout.projectDirectory.dir(integrationTestDir)
-}
-
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/integration-test"
-}
-
-assemble.dependsOn 'generateDart'

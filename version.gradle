@@ -29,11 +29,11 @@
  * already in the root directory.
  */
 
-final def SPINE_VERSION = '1.1.7'
+final def SPINE_VERSION = '1.2.3'
 
 ext {
-    spineBaseVersion = '1.1.9'
+    spineBaseVersion = SPINE_VERSION
     versionToPublish = SPINE_VERSION
 
-    spineWebVersion = SPINE_VERSION
+    spineWebVersion = '1.2.1'
 }

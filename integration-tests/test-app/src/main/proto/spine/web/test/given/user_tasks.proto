@@ -21,5 +21,9 @@ message UserTasks {
 
     repeated TaskId tasks = 2;
 
-    google.protobuf.Timestamp last_updated = 3;
+    google.protobuf.Timestamp last_updated = 3 [(column) = true];
+
+    int32 task_count = 4 [(column) = true];
+
+    bool overloaded = 5 [(column) = true];
 }

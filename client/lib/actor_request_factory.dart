@@ -25,6 +25,7 @@ import 'package:spine_client/spine/core/tenant_id.pb.dart';
 import 'package:spine_client/spine/core/user_id.pb.dart';
 import 'package:spine_client/spine/time/time.pb.dart';
 import 'package:spine_client/time.dart' as time;
+import 'package:spine_client/topic_factory.dart';
 
 /// A factory for various requests fired from the client-side by an actor.
 class ActorRequestFactory {
@@ -47,6 +48,11 @@ class ActorRequestFactory {
     /// Creates a factory of queries to the server.
     QueryFactory query() {
         return QueryFactory(_context);
+    }
+
+    /// Creates a factory of topics to subscribe to.
+    TopicFactory topic() {
+        return TopicFactory(_context);
     }
 
     /// Creates a factory of commands to send to the server.

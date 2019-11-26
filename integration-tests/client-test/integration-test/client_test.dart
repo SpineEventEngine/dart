@@ -18,24 +18,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:firebase/firebase_io.dart' as fb;
-import 'package:spine_client/rest_firebase_client.dart';
 import 'package:spine_client/spine_client.dart';
 import 'package:spine_client/uuids.dart';
+import 'package:spine_client/web_firebase_client.dart';
 import 'package:test/test.dart';
 
 import 'endpoints.dart';
+import 'firebase_app.dart';
 import 'spine/web/test/given/commands.pb.dart';
 import 'spine/web/test/given/task.pb.dart';
 import 'types.dart' as testTypes;
 
+@TestOn("browser")
 void main() {
+
     group('BackendClient should', () {
         ActorRequestFactory requestFactory;
         BackendClient client;
 
         setUp(() {
-            var firebase = RestClient(fb.FirebaseClient.anonymous(), FIREBASE);
+            var database = FirebaseApp().database;
+            var firebase = WebFirebaseClient(database);
             client = BackendClient(BACKEND, firebase, typeRegistries: [testTypes.types()]);
             var actor = UserId();
             actor.value = newUuid();
@@ -52,9 +55,48 @@ void main() {
             await client.post(requestFactory.command().create(cmd));
             var query = requestFactory.query().all(Task());
             var tasks = await client.fetch<Task>(query).toList();
-            expect(tasks, hasLength(equals(1)));
-            var task = tasks.first;
-            expect(task.id, equals(taskId));
+            expect(tasks, hasLength(greaterThanOrEqualTo(1)));
+            var matchingById = tasks.where((task) => task.id == taskId);
+            expect(matchingById, hasLength(1));
+        });
+
+        test('subscribe to entity changes', () async {
+            // Subscribe to the `Task` changes.
+            var topic = requestFactory.topic().all(Task());
+            Subscription<Task> entitySubscription = await client.subscribeTo(topic);
+
+            // Listen to the `itemAdded` event.
+            var taskName = "";
+            Stream<Task> itemAdded = entitySubscription.itemAdded;
+            itemAdded.listen((task) => taskName = task.name);
+            var taskId = TaskId()
+                ..value = newUuid();
+
+            // Send `CreateTask` command.
+            var createTaskCmd = CreateTask()
+                ..id = taskId
+                ..name = 'Task name'
+                ..description = "long";
+            await client.post(requestFactory.command().create(createTaskCmd));
+
+            // Check the event is actually fired.
+            expect(taskName, equals(createTaskCmd.name));
+
+            // Listen to the `itemChanged` event.
+            var newTaskName = "";
+            Stream<Task> itemChanged = entitySubscription.itemChanged;
+            itemChanged.listen((task) => newTaskName = task.name);
+
+            // Send the `RenameTask` command.
+            var renameTaskCmd = RenameTask()
+                ..id = taskId
+                ..name = 'New task name';
+            await client.post(requestFactory.command().create(renameTaskCmd));
+
+            // Verify the event is actually fired.
+            expect(newTaskName, equals(renameTaskCmd.name));
+
+            entitySubscription.unsubscribe();
         });
     });
 }

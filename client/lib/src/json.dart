@@ -18,36 +18,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
+import 'dart:convert';
 
-apply from: "$rootDir/gradle/dart.gradle"
+import 'package:protobuf/protobuf.dart';
 
-dependencies {
-    testProtobuf project(':test-app')
+import 'known_types.dart';
+
+const _json = JsonCodec();
+
+/// Parses the given JSON string into a message.
+void parseInto(GeneratedMessage message, String json) {
+    var jsonMap = _json.decode(json);
+    message.mergeFromProto3Json(jsonMap,
+                                ignoreUnknownFields: true,
+                                typeRegistry: theKnownTypes.registry());
 }
 
-tasks['testDart'].enabled false
-
-final def integrationTestDir = './integration-test'
-
-task integrationTest(type: Exec) {
-    final def pub = 'pub' + (Os.isFamily(Os.FAMILY_WINDOWS) ? '.bat' : '')
-
-    // Run tests in Chrome browser because they use a `WebFirebaseClient` which only works in web
-    // environment.
-    commandLine pub, 'run', 'test', integrationTestDir, '-p', 'chrome'
-
-    dependsOn 'resolveDependencies', ':test-app:appBeforeIntegrationTest'
-    finalizedBy ':test-app:appAfterIntegrationTest'
+/// Parses the given JSON string into a new instance of the message described by the [builder].
+T parseIntoNewInstance<T extends GeneratedMessage>(BuilderInfo builder, String json) {
+    var msg = builder.createEmptyInstance();
+    parseInto(msg, json);
+    return msg;
 }
-
-protoDart {
-    testDir.set project.layout.projectDirectory.dir(integrationTestDir)
-}
-
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/integration-test"
-}
-
-assemble.dependsOn 'generateDart'
