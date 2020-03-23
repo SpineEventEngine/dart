@@ -9,6 +9,7 @@ env:
 
 before_install:
   - chmod +x gradlew
+  - chmod +x config/scripts/register-ssh-key.sh
 
   # Install Dart, `pub`, and the `protoc_plugin` pub package.
   - chmod +x ./config/scripts/update-apt.sh
