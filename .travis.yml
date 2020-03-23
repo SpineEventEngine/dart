@@ -29,6 +29,7 @@ before_install:
 script:
   - ./gradlew build --stacktrace
   - ./gradlew integrationTest
+  - ./gradlew updateGitHubPages
 
 deploy:
   skip_cleanup: false
