@@ -20,6 +20,7 @@
 
 package io.spine.web.test.given;
 
+import io.spine.web.firebase.query.FirebaseQueryResponse;
 import io.spine.web.query.QueryServlet;
 
 import javax.servlet.annotation.WebServlet;
@@ -31,7 +32,7 @@ import static io.spine.web.test.given.Server.application;
  */
 @WebServlet("/query")
 @SuppressWarnings("serial")
-public class TestQueryServlet extends QueryServlet {
+public class TestQueryServlet extends QueryServlet<FirebaseQueryResponse> {
 
     public TestQueryServlet() {
         super(application().queryBridge());

@@ -20,6 +20,7 @@
 
 package io.spine.web.test.given;
 
+import io.spine.core.Response;
 import io.spine.web.subscription.servlet.SubscriptionKeepUpServlet;
 
 import javax.servlet.annotation.WebServlet;
@@ -31,7 +32,7 @@ import static io.spine.web.test.given.Server.application;
  */
 @WebServlet("/subscription/keep-up")
 @SuppressWarnings("serial")
-public class TestSubscriptionKeepUpServlet extends SubscriptionKeepUpServlet {
+public class TestSubscriptionKeepUpServlet extends SubscriptionKeepUpServlet<Response> {
 
     public TestSubscriptionKeepUpServlet() {
         super(application().subscriptionBridge());
