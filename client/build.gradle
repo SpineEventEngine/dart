@@ -32,7 +32,7 @@ assemble.dependsOn 'generateDart'
 final File dartDocDir = Files.createTempDir()
 
 task dartDoc(type: Exec) {
-    commandLine 'dartdoc', '--output', "$projectDir/aaa", "$projectDir/lib/"
+    commandLine 'dartdoc', '--output', dartDocDir.path, "$projectDir/lib/"
 }
 
 afterEvaluate {
