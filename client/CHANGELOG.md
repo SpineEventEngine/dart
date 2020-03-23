@@ -8,4 +8,7 @@
  Addressed major suggestions of Pub related to the package maintenance.
  
 ## 0.1.2
+ Updates Spine and external dependencies.
+ 
+## 0.1.3
  Now the Dart doc is published to the [Spine site](https://spine.io/dart/reference/client). 
