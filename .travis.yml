@@ -6,6 +6,7 @@ jdk:
 env:
   global:
     - PATH="$PATH:/usr/lib/dart/bin"
+    - FORMAL_GIT_HUB_PAGES_AUTHOR: "spine-developers@teamdev.com"
 
 before_install:
   - chmod +x gradlew
