@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the Subscription class from the subscription library, for the Dart programming language.">
+  <title>Subscription class - subscription library - Dart API</title>
+  <!-- required because all the links are pseudo-absolute -->
+  <base href="..">
+
+  <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500,400i,400,300|Source+Sans+Pro:400,300,700" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="static-assets/github.css">
+  <link rel="stylesheet" href="static-assets/styles.css">
+  <link rel="icon" href="static-assets/favicon.png">
+  <!-- header placeholder -->
+</head>
+
+<body>
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <button id="sidenav-left-toggle" type="button">&nbsp;</button>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="index.html">spine_client</a></li>
+    <li><a href="subscription/subscription-library.html">subscription</a></li>
+    <li class="self-crumb">Subscription<span class="signature">&lt;<wbr><span class="type-parameter">T extends GeneratedMessage</span>&gt;</span> class</li>
+  </ol>
+  <div class="self-name">Subscription</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<main>
+
+  <div id="dartdoc-sidebar-left" class="col-xs-6 col-sm-3 col-md-2 sidebar sidebar-offcanvas-left">
+    <header id="header-search-sidebar" class="hidden-l">
+      <form class="search-sidebar" role="search">
+        <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+      </form>
+    </header>
+    
+    <ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+      <li><a href="index.html">spine_client</a></li>
+      <li><a href="subscription/subscription-library.html">subscription</a></li>
+      <li class="self-crumb">Subscription<span class="signature">&lt;<wbr><span class="type-parameter">T extends GeneratedMessage</span>&gt;</span> class</li>
+    </ol>
+    
+    <h5>subscription library</h5>
+    <ol>
+      <li class="section-title"><a href="subscription/subscription-library.html#classes">Classes</a></li>
+      <li><a href="subscription/Subscription-class.html">Subscription</a></li>
+    
+    
+    
+    
+    
+    
+    
+    
+    </ol>
+  </div>
+
+  <div id="dartdoc-main-content" class="col-xs-12 col-sm-9 col-md-8 main-content">
+      <div><h1><span class="kind-class">Subscription&lt;<wbr><span class="type-parameter">T extends GeneratedMessage</span>&gt;</span> class </h1></div>
+
+    <section class="desc markdown">
+      <p>A subscription for event or entity changes.</p>
+<p>The <a href="subscription/Subscription/itemAdded.html">itemAdded</a>, <a href="subscription/Subscription/itemChanged.html">itemChanged</a> and <a href="subscription/Subscription/itemRemoved.html">itemRemoved</a> streams reflect the changes of a corresponding
+event/entity type. The streams are broadcast (<code>Stream.isBroadcast</code>]), i.e. can have any number
+of listeners simultaneously.</p>
+<p>To stop receiving updates from the server, invoke <a href="subscription/Subscription/unsubscribe.html">unsubscribe</a>. This will cancel the
+subscription both on the client and on the server, stopping the changes from being reflected to
+Firebase.</p>
+    </section>
+    
+
+    <section class="summary offset-anchor" id="constructors">
+      <h2>Constructors</h2>
+
+      <dl class="constructor-summary-list">
+        <dt id="Subscription" class="callable">
+          <span class="name"><a href="subscription/Subscription/Subscription.html">Subscription</a></span><span class="signature">(<span class="parameter" id="-param-subscription"><span class="type-annotation"><a href="spine_client_subscription.pb/Subscription-class.html">Subscription</a></span> <span class="parameter-name">subscription</span>, </span> <span class="parameter" id="-param-itemAdded"><span class="type-annotation">Stream<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">itemAdded</span></span> <span class="parameter" id="-param-itemChanged"><span class="type-annotation">Stream<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">itemChanged</span></span> <span class="parameter" id="-param-itemRemoved"><span class="type-annotation">Stream<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">itemRemoved</span></span>)</span>
+        </dt>
+        <dd>
+          
+        </dd>
+        <dt id="Subscription.of" class="callable">
+          <span class="name"><a href="subscription/Subscription/Subscription.of.html">Subscription.of</a></span><span class="signature">(<span class="parameter" id="of-param-firebaseSubscription"><span class="type-annotation"><a href="spine_web_firebase_subscription_firebase_subscription.pb/FirebaseSubscription-class.html">FirebaseSubscription</a></span> <span class="parameter-name">firebaseSubscription</span>, </span> <span class="parameter" id="of-param-database"><span class="type-annotation"><a href="firebase_client/FirebaseClient-class.html">FirebaseClient</a></span> <span class="parameter-name">database</span></span>)</span>
+        </dt>
+        <dd>
+          Creates a new instance which broadcasts updates from under the given Firebase node.
+          <div class="constructor-modifier features">factory</div>
+        </dd>
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor" id="instance-properties">
+      <h2>Properties</h2>
+
+      <dl class="properties">
+        <dt id="closed" class="property">
+          <span class="name"><a href="subscription/Subscription/closed.html">closed</a></span>
+          <span class="signature">&#8594; bool</span>         
+        </dt>
+        <dd>
+          
+                  <div class="features">read-only</div>
+</dd>
+        <dt id="itemAdded" class="property">
+          <span class="name"><a href="subscription/Subscription/itemAdded.html">itemAdded</a></span>
+          <span class="signature">&#8594; Stream<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>         
+        </dt>
+        <dd>
+          
+                  <div class="features">final</div>
+</dd>
+        <dt id="itemChanged" class="property">
+          <span class="name"><a href="subscription/Subscription/itemChanged.html">itemChanged</a></span>
+          <span class="signature">&#8594; Stream<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>         
+        </dt>
+        <dd>
+          
+                  <div class="features">final</div>
+</dd>
+        <dt id="itemRemoved" class="property">
+          <span class="name"><a href="subscription/Subscription/itemRemoved.html">itemRemoved</a></span>
+          <span class="signature">&#8594; Stream<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>         
+        </dt>
+        <dd>
+          
+                  <div class="features">final</div>
+</dd>
+        <dt id="subscription" class="property">
+          <span class="name"><a href="subscription/Subscription/subscription.html">subscription</a></span>
+          <span class="signature">&#8594; <a href="spine_client_subscription.pb/Subscription-class.html">Subscription</a></span>         
+        </dt>
+        <dd>
+          
+                  <div class="features">final</div>
+</dd>
+        <dt id="hashCode" class="property inherited">
+          <span class="name"><a href="subscription/Subscription/hashCode.html">hashCode</a></span>
+          <span class="signature">&#8594; int</span>         
+        </dt>
+        <dd class="inherited">
+          The hash code for this object. <a href="subscription/Subscription/hashCode.html">[...]</a>
+                  <div class="features">read-only, inherited</div>
+</dd>
+        <dt id="runtimeType" class="property inherited">
+          <span class="name"><a href="subscription/Subscription/runtimeType.html">runtimeType</a></span>
+          <span class="signature">&#8594; Type</span>         
+        </dt>
+        <dd class="inherited">
+          A representation of the runtime type of the object.
+                  <div class="features">read-only, inherited</div>
+</dd>
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor" id="instance-methods">
+      <h2>Methods</h2>
+      <dl class="callables">
+        <dt id="unsubscribe" class="callable">
+          <span class="name"><a href="subscription/Subscription/unsubscribe.html">unsubscribe</a></span><span class="signature">(<wbr>)
+            <span class="returntype parameter">&#8594; void</span>
+          </span>
+                  </dt>
+        <dd>
+          Closes this subscription. <a href="subscription/Subscription/unsubscribe.html">[...]</a>
+                  
+</dd>
+        <dt id="noSuchMethod" class="callable inherited">
+          <span class="name"><a href="subscription/Subscription/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation">Invocation</span> <span class="parameter-name">invocation</span></span>)
+            <span class="returntype parameter">&#8594; dynamic</span>
+          </span>
+                  </dt>
+        <dd class="inherited">
+          Invoked when a non-existent method or property is accessed. <a href="subscription/Subscription/noSuchMethod.html">[...]</a>
+                  <div class="features">inherited</div>
+</dd>
+        <dt id="toString" class="callable inherited">
+          <span class="name"><a href="subscription/Subscription/toString.html">toString</a></span><span class="signature">(<wbr>)
+            <span class="returntype parameter">&#8594; String</span>
+          </span>
+                  </dt>
+        <dd class="inherited">
+          Returns a string representation of this object.
+                  <div class="features">inherited</div>
+</dd>
+      </dl>
+    </section>
+
+    <section class="summary offset-anchor inherited" id="operators">
+      <h2>Operators</h2>
+      <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+          <span class="name"><a href="subscription/Subscription/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation">dynamic</span> <span class="parameter-name">other</span></span>)
+            <span class="returntype parameter">&#8594; bool</span>
+          </span>
+                  </dt>
+        <dd class="inherited">
+          The equality operator. <a href="subscription/Subscription/operator_equals.html">[...]</a>
+                  <div class="features">inherited</div>
+</dd>
+      </dl>
+    </section>
+
+
+
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-right" class="col-xs-6 col-sm-6 col-md-2 sidebar sidebar-offcanvas-right">
+    <ol>
+    
+      <li class="section-title"><a href="subscription/Subscription-class.html#constructors">Constructors</a></li>
+      <li><a href="subscription/Subscription/Subscription.html">Subscription</a></li>
+      <li><a href="subscription/Subscription/Subscription.of.html">of</a></li>
+    
+      <li class="section-title">
+        <a href="subscription/Subscription-class.html#instance-properties">Properties</a>
+      </li>
+      <li><a href="subscription/Subscription/closed.html">closed</a></li>
+      <li><a href="subscription/Subscription/itemAdded.html">itemAdded</a></li>
+      <li><a href="subscription/Subscription/itemChanged.html">itemChanged</a></li>
+      <li><a href="subscription/Subscription/itemRemoved.html">itemRemoved</a></li>
+      <li><a href="subscription/Subscription/subscription.html">subscription</a></li>
+      <li class="inherited"><a href="subscription/Subscription/hashCode.html">hashCode</a></li>
+      <li class="inherited"><a href="subscription/Subscription/runtimeType.html">runtimeType</a></li>
+    
+      <li class="section-title"><a href="subscription/Subscription-class.html#instance-methods">Methods</a></li>
+      <li><a href="subscription/Subscription/unsubscribe.html">unsubscribe</a></li>
+      <li class="inherited"><a href="subscription/Subscription/noSuchMethod.html">noSuchMethod</a></li>
+      <li class="inherited"><a href="subscription/Subscription/toString.html">toString</a></li>
+    
+      <li class="section-title inherited"><a href="subscription/Subscription-class.html#operators">Operators</a></li>
+      <li class="inherited"><a href="subscription/Subscription/operator_equals.html">operator ==</a></li>
+    
+    
+    
+    
+    </ol>
+  </div><!--/.sidebar-offcanvas-->
+
+</main>
+
+<footer>
+  <span class="no-break">
+    spine_client
+      0.1.3
+  </span>
+
+  <!-- footer-text placeholder -->
+</footer>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="static-assets/typeahead.bundle.min.js"></script>
+<script src="static-assets/highlight.pack.js"></script>
+<script src="static-assets/URI.js"></script>
+<script src="static-assets/script.js"></script>
+<!-- footer placeholder -->
+
+</body>
+
+</html>
