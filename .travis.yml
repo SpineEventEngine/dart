@@ -28,9 +28,9 @@ before_install:
   - mv ./pub-credentials.json $HOME/.pub-cache/credentials.json
 
 script:
-  - ./gradlew build --stacktrace
-  - ./gradlew integrationTest
-  - ./gradlew updateGitHubPages
+#  - ./gradlew build --stacktrace
+#  - ./gradlew integrationTest
+  - ./gradlew updateGitHubPages --stacktrace
 
 deploy:
   skip_cleanup: false
