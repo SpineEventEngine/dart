@@ -79,7 +79,7 @@ class KnownTypesFactory {
         var validatorMap = Map<Expression, Expression>();
         var typeSet = TypeSet.topLevelOnly(_properties.types);
         for (var type in typeSet.types) {
-            var factory = ValidatorFactory(type.file, type.descriptor, _properties);
+            var factory = ValidatorFactory(type.file, type, _properties);
             var typeUrl = literalString(type.typeUrl);
             validatorMap[typeUrl] = factory.createValidator();
         }

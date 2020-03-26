@@ -106,7 +106,7 @@ class _Combination {
     FieldValidatorFactory _validatorFactory(FieldDescriptorProto field) {
         var factory = FieldValidatorFactory.forField(field, _validator);
         if (factory == null || !factory.supportsRequired()) {
-            throw StateError('Field `${_validator.type.name}.${field}` cannot be required.');
+            throw StateError('Field `${_validator.type.fullName}.${field}` cannot be required.');
         }
         return factory;
     }
@@ -114,10 +114,11 @@ class _Combination {
     FieldDescriptorProto _field(String name) {
         var type = _validator.type;
         FieldDescriptorProto field = type
+                .descriptor
                 .field
                 .where((t) => t.name == name)
                 .first;
-        ArgumentError.checkNotNull(field, '`${type.name}` does not declare field `${name}`.');
+        ArgumentError.checkNotNull(field, '`${type.fullName}` does not declare field `${name}`.');
         return field;
     }
 }

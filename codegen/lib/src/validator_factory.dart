@@ -27,6 +27,7 @@ import 'constraint_violation.dart';
 import 'field_validator_factory.dart';
 import 'imports.dart';
 import 'required_field_validation_factory.dart';
+import 'type.dart';
 
 const _violations = 'violations';
 const _msg = 'msg';
@@ -43,21 +44,17 @@ const _msg = 'msg';
 class ValidatorFactory {
 
     final FileDescriptorProto file;
-    final DescriptorProto type;
+    final MessageType type;
     final Properties properties;
 
     ValidatorFactory(this.file, this.type, this.properties);
 
-    String get fullTypeName => '${file.package}.${type.name}';
+    String get fullTypeName => type.fullName;
 
     ViolationConsumer get report =>
             (violation) => _violationList.property('add').call([violation]);
 
-    String get _fileName {
-        var endIndex = file.name.length - '.proto'.length;
-        var filePathWithoutExtension = file.name.substring(0, endIndex);
-        return filePathWithoutExtension + '.pb.dart';
-    }
+    String get _fileName => type.dartFilePath;
 
     Reference get _violationList => refer(_violations);
 
@@ -96,7 +93,7 @@ class ValidatorFactory {
     }
 
     Code _createRequiredFieldValidator() {
-        var options = type.options;
+        var options = type.descriptor.options;
         var option = Options.requiredField;
         if (options.hasExtension(option)) {
             var fields = options.getExtension(option);
@@ -110,7 +107,7 @@ class ValidatorFactory {
 
     Code _createFieldValidators() {
         var validations = <Code>[];
-        for (var field in type.field) {
+        for (var field in type.descriptor.field) {
             var validator = _createFieldValidator(field);
             if (validator != null) {
                 validations.add(validator);
@@ -157,7 +154,7 @@ class ValidatorFactory {
         refer(_msg).asA(_typeRef(properties.importPrefix));
 
     Reference _typeRef(String prefix) =>
-        refer(type.name, prefix.isNotEmpty ? '$prefix/$_fileName' : _fileName);
+        refer(type.dartClassName, prefix.isNotEmpty ? '$prefix/$_fileName' : _fileName);
 
     /// Obtains a Dart name of the given Protobuf field.
     ///
