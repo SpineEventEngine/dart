@@ -21,7 +21,7 @@ jobs:
         run: git submodule update --init --recursive
 
       - name: Customize pub cache path
-        run: echo "::set-env name=PUB_CACHE::%APPDATA%\PubCache"
+        run: ::set-env name=PUB_CACHE::%APPDATA%\PubCache
 
         # GitHub Actions reset environment variables upon each step. Therefore, update the env and
         # run checks in a single step.
