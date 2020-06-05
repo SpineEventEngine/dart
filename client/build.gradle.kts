@@ -23,6 +23,7 @@ import com.google.protobuf.gradle.*
 import io.spine.gradle.internal.Deps
 
 plugins {
+    java
     `codegen`
     `dart`
 }
@@ -30,9 +31,9 @@ plugins {
 apply {
     from(Deps.scripts.dartBuildTasks(project))
     from(Deps.scripts.pubPublishTasks(project))
+    from(Deps.scripts.javadocOptions(project))
+    from(Deps.scripts.updateGitHubPages(project))
 }
-
-//apply from: deps.scripts.updateGitHubPages
 
 val spineWebVersion: String by extra
 
@@ -51,9 +52,9 @@ val dartDoc by tasks.creating(Exec::class) {
 }
 
 afterEvaluate {
-//    generatedDocs += files(dartDocDir)
-//    tasks.updateGitHubPages.dependsOn("dartDoc")
-//    tasks.publish.dependsOn("updateGitHubPages")
+    extra["generatedDocs"] = files(dartDocDir)
+    tasks["updateGitHubPages"].dependsOn("dartDoc")
+    tasks["publish"].dependsOn("updateGitHubPages")
 }
 
 protobuf {
