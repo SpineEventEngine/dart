@@ -22,8 +22,8 @@ import com.google.protobuf.gradle.*
 import io.spine.gradle.internal.Deps
 
 plugins {
-    `codegen`
-    `dart`
+    codegen
+    dart
     id("io.spine.tools.proto-dart-plugin")
 }
 

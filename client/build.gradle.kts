@@ -24,8 +24,8 @@ import io.spine.gradle.internal.Deps
 
 plugins {
     java
-    `codegen`
-    `dart`
+    codegen
+    dart
 }
 
 apply {
