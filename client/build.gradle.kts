@@ -18,33 +18,53 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-buildscript { final scriptHandler ->
+import com.google.common.io.Files
+import com.google.protobuf.gradle.*
+import io.spine.gradle.internal.Deps
 
-    // As long as `buildscript` section is always evaluated first,
-    // we need to apply explicitly here.
-    apply from: "$rootDir/config/gradle/dependencies.gradle"
-    apply from: "$rootDir/version.gradle"
+plugins {
+    `codegen`
+    `dart`
+}
 
-    defaultRepositories(scriptHandler)
-    dependencies {
-        classpath deps.build.gradlePlugins.protobuf
-        classpath "io.spine.tools:spine-proto-dart-plugin:$spineBaseVersion"
+apply {
+    from(Deps.scripts.dartBuildTasks(project))
+    from(Deps.scripts.pubPublishTasks(project))
+}
+
+//apply from: deps.scripts.updateGitHubPages
+
+val spineWebVersion: String by extra
+
+dependencies {
+    protobuf("io.spine.gcloud:spine-firebase-web:$spineWebVersion")
+}
+
+tasks.assemble {
+    dependsOn("generateDart")
+}
+
+val dartDocDir = Files.createTempDir()
+
+val dartDoc by tasks.creating(Exec::class) {
+    commandLine("dartdoc", "--output", dartDocDir.path, "$projectDir/lib/")
+}
+
+afterEvaluate {
+//    generatedDocs += files(dartDocDir)
+//    tasks.updateGitHubPages.dependsOn("dartDoc")
+//    tasks.publish.dependsOn("updateGitHubPages")
+}
+
+protobuf {
+    generateProtoTasks {
+        all().forEach { task ->
+            task.plugins {
+                id("dart")
+            }
+            task.builtins {
+                remove("java")
+            }
+        }
     }
-
-    forceConfiguration(scriptHandler)
-}
-
-apply from: 'version.gradle'
-
-allprojects {
-    apply plugin: 'java'
-    defaultRepositories(project)
-}
-
-subprojects {
-    apply plugin: 'io.spine.tools.proto-dart-plugin'
-    apply plugin: 'com.google.protobuf'
-    apply plugin: 'maven-publish'
-
-    version = versionToPublish
 }

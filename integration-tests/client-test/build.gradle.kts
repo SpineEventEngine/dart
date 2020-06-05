@@ -19,35 +19,62 @@
  */
 
 import org.apache.tools.ant.taskdefs.condition.Os
+import io.spine.gradle.internal.Deps
+import com.google.protobuf.gradle.*
 
-apply from: "$rootDir/gradle/dart.gradle"
-
-dependencies {
-    testProtobuf project(':test-app')
+plugins {
+    `codegen`
+    `dart`
+    id("io.spine.tools.proto-dart-plugin")
 }
 
-tasks['testDart'].enabled false
+apply {
+    from(Deps.scripts.dartBuildTasks(project))
+    from(Deps.scripts.pubPublishTasks(project))
+}
 
-final def integrationTestDir = './integration-test'
 
-task integrationTest(type: Exec) {
-    final def pub = 'pub' + (Os.isFamily(Os.FAMILY_WINDOWS) ? '.bat' : '')
+dependencies {
+    testProtobuf(project(":test-app"))
+}
+
+tasks["testDart"].enabled = false
+
+val integrationTestDir = "./integration-test"
+
+val integrationTest by tasks.creating(Exec::class) {
+    val pub = "pub" + if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""
 
     // Run tests in Chrome browser because they use a `WebFirebaseClient` which only works in web
     // environment.
-    commandLine pub, 'run', 'test', integrationTestDir, '-p', 'chrome'
+    commandLine(pub, "run", "test", integrationTestDir, "-p", "chrome")
 
-    dependsOn 'resolveDependencies', ':test-app:appBeforeIntegrationTest'
-    finalizedBy ':test-app:appAfterIntegrationTest'
+    dependsOn("resolveDependencies", ":test-app:appBeforeIntegrationTest")
+    finalizedBy(":test-app:appAfterIntegrationTest")
 }
 
 protoDart {
-    testDir.set project.layout.projectDirectory.dir(integrationTestDir)
+    testDir.set(project.layout.projectDirectory.dir(integrationTestDir))
 }
 
-generateDart {
+tasks.generateDart {
     descriptor = protoDart.testDescriptorSet
     target = "$projectDir/integration-test"
 }
 
-assemble.dependsOn 'generateDart'
+tasks.assemble {
+    dependsOn("generateDart")
+}
+
+protobuf {
+    generateProtoTasks {
+        all().forEach { task ->
+            task.plugins {
+                id("dart")
+            }
+            task.builtins {
+                remove("java")
+            }
+        }
+    }
+}

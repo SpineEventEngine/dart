@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -18,25 +18,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.common.io.Files
+plugins {
+    `kotlin-dsl`
+}
 
-apply from: "$rootDir/gradle/dart.gradle"
-apply from: deps.scripts.updateGitHubPages
+repositories {
+    mavenLocal()
+    jcenter()
+}
+
+val jacksonVersion = "2.11.0"
 
 dependencies {
-    protobuf "io.spine.gcloud:spine-firebase-web:$spineWebVersion"
-}
-
-assemble.dependsOn 'generateDart'
-
-final File dartDocDir = Files.createTempDir()
-
-task dartDoc(type: Exec) {
-    commandLine 'dartdoc', '--output', dartDocDir.path, "$projectDir/lib/"
-}
-
-afterEvaluate {
-    generatedDocs += files(dartDocDir)
-    tasks.updateGitHubPages.dependsOn('dartDoc')
-    tasks.publish.dependsOn('updateGitHubPages')
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
 }

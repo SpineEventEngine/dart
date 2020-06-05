@@ -18,34 +18,52 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-apply from: deps.scripts.dartBuildTasks
-apply from: deps.scripts.pubPublishTasks
-apply from: "$rootDir/gradle/codegen.gradle"
+import com.google.protobuf.gradle.*
+import io.spine.gradle.internal.Deps
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+plugins {
+    `codegen`
+    `dart`
+    id("io.spine.tools.proto-dart-plugin")
+}
 
-defaultRepositories(project)
+apply {
+    from(Deps.scripts.dartBuildTasks(project))
+    from(Deps.scripts.pubPublishTasks(project))
+}
+
+val spineBaseVersion: String by extra
+
+dependencies {
+    protobuf("io.spine:spine-base:$spineBaseVersion")
+    protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
+    Deps.build.protobuf.forEach { protobuf(it) }
+
+    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
+    //  resolved, all types must be compiled in a single batch.
+
+    testProtobuf("io.spine:spine-base:$spineBaseVersion")
+    testProtobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
+    Deps.build.protobuf.forEach { testProtobuf(it) }
+}
+
+tasks["testDart"].dependsOn("generateDart")
+
+tasks.generateDart {
+    descriptor = protoDart.testDescriptorSet
+    target = "$projectDir/test"
+    standardTypesPackage = "dart_code_gen"
+}
 
 protobuf {
     generateProtoTasks {
-        all().each { final task ->
+        all().forEach { task ->
             task.plugins {
-                dart {}
+                id("dart")
             }
-
             task.builtins {
-                remove java
+                remove("java")
             }
         }
     }
 }
-
-task cleanProto(type: Delete) {
-
-    delete += ["$projectDir/proto", "$projectDir/generated"]
-}
-
-clean.dependsOn 'cleanProto'
-
-tasks.withType(JavaCompile)*.enabled false

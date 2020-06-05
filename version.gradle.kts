@@ -18,15 +18,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-rootProject.name = 'spine-dart'
+/**
+ * Declares the version of the artifacts to publish and versions of
+ * project-specific general dependencies.
+ *
+ * This file is used in both module `build.gradle.kts` scripts and in the integration tests,
+ * as we want to manage the versions in a single source.
+ *
+ * This file is copied to the root of the project ONLY if there's no file with such a name
+ * already in the root directory.
+ */
 
-def integrationTest(final String name) {
-    include name
-    project(":$name").projectDir = new File("$rootDir/integration-tests/$name")
-}
-
-include 'client'
-include 'codegen'
-
-integrationTest 'test-app'
-integrationTest 'client-test'
+val spineBaseVersion: String by extra("1.5.12")
+val spineWebVersion: String by extra("1.5.14")
+val versionToPublish: String by extra("1.5.14")
