@@ -35,6 +35,10 @@ if (windows) {
 
 val command = "$pubCache/dart_code_gen$scriptExtension"
 
+if (!file(command).exists()) {
+    logger.warn("Cannot locate `dart_code_gen` under `$command`.")
+}
+
 fun composeCommandLine(descriptor: File, targetDir: String, standardTypesPackage: String) =
         listOf(
                 command,
