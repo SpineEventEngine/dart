@@ -23,8 +23,8 @@ import org.gradle.api.tasks.Internal
 import java.io.File
 
 val windows = Os.isFamily(Os.FAMILY_WINDOWS)
-lateinit var pubCache: String
-lateinit var scriptExtension: String
+var pubCache: String
+var scriptExtension: String
 if (windows) {
     pubCache = "${System.getenv("APPDATA")}/Pub/Cache/bin"
     scriptExtension = ".bat"
