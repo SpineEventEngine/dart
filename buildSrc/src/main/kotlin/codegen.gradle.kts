@@ -60,6 +60,7 @@ open class GenerateDart : Exec() {
 }
 
 val generateDart by tasks.creating(GenerateDart::class) {
+    @Suppress("UNCHECKED_CAST")
     descriptor = project.extensions["protoDart"].withGroovyBuilder { getProperty("mainDescriptorSet") } as Property<File>
     target = "$projectDir/lib"
     standardTypesPackage = "spine_client"
