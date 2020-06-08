@@ -42,23 +42,6 @@ buildscript {
     resolution.forceConfiguration(configurations)
 }
 
-val windows = org.apache.tools.ant.taskdefs.condition.Os.isFamily(org.apache.tools.ant.taskdefs.condition.Os.FAMILY_WINDOWS)
-var pubCache: String = if (windows) {
-    "${System.getenv("LOCALAPPDATA")}\\Pub\\Cache"
-} else {
-    "${System.getProperty("user.home")}/.pub-cache/bin"
-}
-
-logger.warn("Pub cache at $pubCache ${if(File(pubCache).exists()) "exists" else "DOES NOT exist"}.")
-
-var pubCache1: String = if (windows) {
-    "${System.getenv("APPDATA")}\\Pub\\Cache"
-} else {
-    "${System.getProperty("user.home")}/.pub-cache/bin"
-}
-
-logger.warn("Pub cache at $pubCache1 ${if(File(pubCache1).exists()) "exists" else "DOES NOT exist"}.")
-
 allprojects {
     apply(plugin = "java")
     apply(from = "$rootDir/version.gradle.kts")
