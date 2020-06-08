@@ -44,7 +44,7 @@ buildscript {
 
 val windows = org.apache.tools.ant.taskdefs.condition.Os.isFamily(org.apache.tools.ant.taskdefs.condition.Os.FAMILY_WINDOWS)
 var pubCache: String = if (windows) {
-    "${System.getenv("LOCALAPPDATA")}\\Pub\\Cache\\bin"
+    "${System.getenv("LOCALAPPDATA")}\\Pub\\Cache"
 } else {
     "${System.getProperty("user.home")}/.pub-cache/bin"
 }
@@ -52,7 +52,7 @@ var pubCache: String = if (windows) {
 logger.warn("Pub cache at $pubCache ${if(File(pubCache).exists()) "exists" else "DOES NOT exist"}.")
 
 var pubCache1: String = if (windows) {
-    "${System.getenv("APPDATA")}\\Pub\\Cache\\bin"
+    "${System.getenv("APPDATA")}\\Pub\\Cache"
 } else {
     "${System.getProperty("user.home")}/.pub-cache/bin"
 }
