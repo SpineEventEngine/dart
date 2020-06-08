@@ -26,7 +26,7 @@ val windows = Os.isFamily(Os.FAMILY_WINDOWS)
 var pubCache: String
 var scriptExtension: String
 if (windows) {
-    pubCache = "${System.getenv("APPDATA")}/Pub/Cache/bin"
+    pubCache = "${System.getenv("LOCALAPPDATA")}/Pub/Cache/bin"
     scriptExtension = ".bat"
 } else {
     pubCache = "${System.getProperty("user.home")}/.pub-cache/bin"
@@ -59,7 +59,7 @@ open class GenerateDart : Exec() {
     var standardTypesPackage: String = ""
 }
 
-val generateDart by tasks.creating(GenerateDart::class) {
+tasks.create("generateDart", GenerateDart::class) {
     @Suppress("UNCHECKED_CAST")
     descriptor = project.extensions["protoDart"].withGroovyBuilder { getProperty("mainDescriptorSet") } as Property<File>
     target = "$projectDir/lib"
