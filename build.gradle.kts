@@ -51,6 +51,14 @@ var pubCache: String = if (windows) {
 
 logger.warn("Pub cache at $pubCache ${if(File(pubCache).exists()) "exists" else "DOES NOT exist"}.")
 
+var pubCache1: String = if (windows) {
+    "${System.getenv("APPDATA")}/Pub/Cache/bin"
+} else {
+    "${System.getProperty("user.home")}/.pub-cache/bin"
+}
+
+logger.warn("Pub cache at $pubCache1 ${if(File(pubCache1).exists()) "exists" else "DOES NOT exist"}.")
+
 allprojects {
     apply(plugin = "java")
     apply(from = "$rootDir/version.gradle.kts")
