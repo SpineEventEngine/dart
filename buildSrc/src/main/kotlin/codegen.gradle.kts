@@ -48,7 +48,9 @@ fun composeCommandLine(descriptor: File, targetDir: String, standardTypesPackage
                 "--import-prefix", "."
         )
 
-
+/**
+ * Task which launches Dart code generation from Protobuf.
+ */
 open class GenerateDart : Exec() {
 
     @Internal
