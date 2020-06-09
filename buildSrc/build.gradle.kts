@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -18,33 +18,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-buildscript { final scriptHandler ->
-
-    // As long as `buildscript` section is always evaluated first,
-    // we need to apply explicitly here.
-    apply from: "$rootDir/config/gradle/dependencies.gradle"
-    apply from: "$rootDir/version.gradle"
-
-    defaultRepositories(scriptHandler)
-    dependencies {
-        classpath deps.build.gradlePlugins.protobuf
-        classpath "io.spine.tools:spine-proto-dart-plugin:$spineBaseVersion"
-    }
-
-    forceConfiguration(scriptHandler)
+plugins {
+    `kotlin-dsl`
 }
 
-apply from: 'version.gradle'
-
-allprojects {
-    apply plugin: 'java'
-    defaultRepositories(project)
+repositories {
+    mavenLocal()
+    jcenter()
 }
 
-subprojects {
-    apply plugin: 'io.spine.tools.proto-dart-plugin'
-    apply plugin: 'com.google.protobuf'
-    apply plugin: 'maven-publish'
+val jacksonVersion = "2.11.0"
 
-    version = versionToPublish
+dependencies {
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
 }

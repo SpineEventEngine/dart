@@ -19,24 +19,53 @@
  */
 
 import com.google.common.io.Files
+import com.google.protobuf.gradle.*
+import io.spine.gradle.internal.Deps
 
-apply from: "$rootDir/gradle/dart.gradle"
-apply from: deps.scripts.updateGitHubPages
-
-dependencies {
-    protobuf "io.spine.gcloud:spine-firebase-web:$spineWebVersion"
+plugins {
+    java
+    codegen
+    dart
 }
 
-assemble.dependsOn 'generateDart'
+apply {
+    from(Deps.scripts.dartBuildTasks(project))
+    from(Deps.scripts.pubPublishTasks(project))
+    from(Deps.scripts.javadocOptions(project))
+    from(Deps.scripts.updateGitHubPages(project))
+}
 
-final File dartDocDir = Files.createTempDir()
+val spineWebVersion: String by extra
 
-task dartDoc(type: Exec) {
-    commandLine 'dartdoc', '--output', dartDocDir.path, "$projectDir/lib/"
+dependencies {
+    protobuf("io.spine.gcloud:spine-firebase-web:$spineWebVersion")
+}
+
+tasks.assemble {
+    dependsOn("generateDart")
+}
+
+val dartDocDir = Files.createTempDir()
+
+val dartDoc by tasks.creating(Exec::class) {
+    commandLine("dartdoc", "--output", dartDocDir.path, "$projectDir/lib/")
 }
 
 afterEvaluate {
-    generatedDocs += files(dartDocDir)
-    tasks.updateGitHubPages.dependsOn('dartDoc')
-    tasks.publish.dependsOn('updateGitHubPages')
+    extra["generatedDocs"] = files(dartDocDir)
+    tasks["updateGitHubPages"].dependsOn("dartDoc")
+    tasks["publish"].dependsOn("updateGitHubPages")
+}
+
+protobuf {
+    generateProtoTasks {
+        all().forEach { task ->
+            task.plugins {
+                id("dart")
+            }
+            task.builtins {
+                remove("java")
+            }
+        }
+    }
 }

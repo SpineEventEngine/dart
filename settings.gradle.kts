@@ -18,26 +18,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-apply from: "$rootDir/gradle/dart.gradle"
+rootProject.name = "spine-dart"
 
-task copyDartProtobuf(type: Copy) {
-    from protoDart
+fun integrationTest(name: String) {
+    include(name)
+    project(":$name").projectDir = File("$rootDir/integration-tests/$name")
 }
 
-dependencies {
-    final def protobufDefinitions = [deps.build.protobuf,
-                                     "io.spine:spine-base:$spineBaseVersion",
-                                     "io.spine.tools:spine-tool-base:$spineBaseVersion"]
-    protobuf protobufDefinitions
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-    testProtobuf protobufDefinitions
-}
+include("client")
+include("codegen")
 
-tasks['testDart'].dependsOn 'generateDart'
-
-generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
-    standardTypesPackage = 'dart_code_gen'
-}
+integrationTest("test-app")
+integrationTest("client-test")

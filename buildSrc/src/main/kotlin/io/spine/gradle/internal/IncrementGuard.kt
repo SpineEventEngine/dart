@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -18,22 +18,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+package io.spine.gradle.internal
+
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+
 /**
- * Declares the version of the artifacts to publish and versions of
- * project-specific general dependencies.
+ * Gradle plugin which adds a [CheckVersionIncrement] task.
  *
- * This file is used in both module `build.gradle` scripts and in the integration tests,
- * as we want to manage the versions in a single source.
- * 
- * This file is copied to the root of the project ONLY if there's no file with such a name
- * already in the root directory.
+ * The task is called `checkVersionIncrement` inserted before the `check` task.
  */
+class IncrementGuard : Plugin<Project> {
 
-final def SPINE_VERSION = '1.5.3'
+    companion object {
+        const val taskName = "checkVersionIncrement"
+    }
 
-ext {
-    spineBaseVersion = '1.5.1'
-    versionToPublish = SPINE_VERSION
+    override fun apply(target: Project) {
+        val tasks = target.tasks
+        tasks.register(taskName, CheckVersionIncrement::class.java) {
+            repository = PublishingRepos.cloudRepo
+            tasks.getByName("check").dependsOn(this)
 
-    spineWebVersion = SPINE_VERSION
+            shouldRunAfter("test")
+        }
+    }
 }
