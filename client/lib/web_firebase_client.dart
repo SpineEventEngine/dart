@@ -63,7 +63,7 @@ class WebFirebaseClient implements FirebaseClient {
             .map(_toJsonString);
     }
 
-    String _toJsonString(event) {
+    String _toJsonString(fb.QueryEvent event) {
         return event.snapshot.toJson().toString();
     }
 }
