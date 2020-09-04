@@ -30,6 +30,7 @@ import 'package:sprintf/sprintf.dart';
 ///
 Optional<ValidationError> validate(GeneratedMessage message) {
     ArgumentError.checkNotNull(message, 'message');
+    message.freeze();
     var validate = theKnownTypes.validatorFor(message);
     if (validate == null) {
         return Optional.empty();
@@ -44,6 +45,7 @@ Optional<ValidationError> validate(GeneratedMessage message) {
 /// Validates the given message according to the constrains defined in Protobuf and throws
 /// an [InvalidMessageError] if the [message] is invalid.
 void checkValid(GeneratedMessage message) {
+    message.freeze();
     var error = validate(message);
     error.ifPresent((e) => throw InvalidMessageError._(e));
 }

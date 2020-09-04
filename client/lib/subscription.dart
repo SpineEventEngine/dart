@@ -52,11 +52,14 @@ class Subscription<T extends GeneratedMessage> {
             : itemAdded = _checkIsBroadCast(itemAdded),
               itemChanged = _checkIsBroadCast(itemChanged),
               itemRemoved = _checkIsBroadCast(itemRemoved),
-              _closed = false;
+              _closed = false {
+        this.subscription.freeze();
+    }
 
     /// Creates a new instance which broadcasts updates from under the given Firebase node.
     factory Subscription.of(FirebaseSubscription firebaseSubscription,
                             FirebaseClient database) {
+        firebaseSubscription.freeze();
         var subscription = firebaseSubscription.subscription;
         var typeUrl = subscription.topic.target.type;
         var builderInfo = theKnownTypes.findBuilderInfo(typeUrl);

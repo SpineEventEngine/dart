@@ -68,7 +68,7 @@ class ActorRequestFactory {
             ..tenantId = this.tenant ?? TenantId.getDefault()
             ..zoneOffset = zoneOffset ?? time.zoneOffset()
             ..zoneId = zoneId ?? time.guessZoneId();
-        return ctx;
+        return ctx.freeze();
     }
 }
 

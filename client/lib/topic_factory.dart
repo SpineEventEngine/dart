@@ -34,27 +34,29 @@ class TopicFactory {
 
     /// Creates a topic which matches entities of the given type with the specified IDs.
     Topic byIds(GeneratedMessage instance, List<Any> ids) {
+        instance.freeze();
         var topic = Topic();
         topic
             ..id = _newId()
             ..target = targetByIds(instance, ids)
             ..context = _context();
-        return topic;
+        return topic.freeze();
     }
 
     /// Creates a topic which matches all entities of the given type.
     Topic all(GeneratedMessage instance) {
+        instance.freeze();
         var topic = Topic();
         topic
             ..id = _newId()
             ..target = targetAll(instance)
             ..context = _context();
-        return topic;
+        return topic.freeze();
     }
 
     TopicId _newId() {
         var id = TopicId();
         id.value = newUuid(prefix: 'q-');
-        return id;
+        return id.freeze();
     }
 }

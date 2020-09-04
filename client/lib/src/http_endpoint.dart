@@ -40,7 +40,7 @@ class HttpEndpoint {
     /// The given [path] will be concatenated with the [_baseUrl].
     ///
     Future<http.Response> postMessage(String path, GeneratedMessage message) async {
-        var bytes = message.writeToBuffer();
+        var bytes = message.freeze().writeToBuffer();
         var url = Url.from(_baseUrl, path).stringUrl;
         var response = await http.post(url,
                                        body: _base64.encode(bytes),

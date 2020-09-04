@@ -40,18 +40,18 @@ class CommandFactory {
             ..id = _newId()
             ..message = pack(message)
             ..context = _buildContext();
-        return cmd;
+        return cmd.freeze();
     }
 
     CommandContext _buildContext() {
         var ctx = CommandContext();
         ctx.actorContext = _context();
-        return ctx;
+        return ctx.freeze();
     }
 
     CommandId _newId() {
         var id = CommandId();
         id.uuid = newUuid();
-        return id;
+        return id.freeze();
     }
 }

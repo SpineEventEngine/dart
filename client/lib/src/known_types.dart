@@ -61,7 +61,7 @@ class KnownTypes {
 
     /// Obtains a validator function for the given message.
     ValidationError Function(GeneratedMessage) validatorFor(GeneratedMessage message) {
-        var typeUrl = typeUrlOf(message);
+        var typeUrl = typeUrlOf(message.freeze());
         return _validators[typeUrl];
     }
 

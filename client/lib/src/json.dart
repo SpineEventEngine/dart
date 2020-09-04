@@ -32,6 +32,7 @@ void parseInto(GeneratedMessage message, String json) {
     message.mergeFromProto3Json(jsonMap,
                                 ignoreUnknownFields: true,
                                 typeRegistry: theKnownTypes.registry());
+    message.freeze();
 }
 
 /// Parses the given JSON string into a new instance of the message described by the [builder].

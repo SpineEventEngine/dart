@@ -31,13 +31,14 @@ const _prefixSeparator = '/';
 /// unknown, an error is thrown.
 ///
 GeneratedMessage unpack(Any any) {
+    any.freeze();
     var typeUrl = any.typeUrl;
     var builder = theKnownTypes.findBuilderInfo(typeUrl);
     if (builder == null) {
         throw ArgumentError('Cannot unpack unknown type `$typeUrl`.');
     }
     var emptyInstance = builder.createEmptyInstance();
-    return any.unpackInto(emptyInstance);
+    return any.unpackInto(emptyInstance).freeze();
 }
 
 /// Packs the given [message] into an [Any].
@@ -46,10 +47,12 @@ GeneratedMessage unpack(Any any) {
 /// thrown.
 ///
 Any pack(GeneratedMessage message) {
-    return Any.pack(message, typeUrlPrefix: _typeUrlPrefix(message));
+    message.freeze();
+    return Any.pack(message, typeUrlPrefix: _typeUrlPrefix(message)).freeze();
 }
 
 String _typeUrlPrefix(GeneratedMessage message) {
+    message.freeze();
     var typeUrl = theKnownTypes.typeUrlOf(message);
     if (typeUrl == null) {
         throw ArgumentError('Cannot pack message of unknown type `${message.runtimeType}`.');

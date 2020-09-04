@@ -23,7 +23,7 @@ import 'package:spine_client/spine/time/time.pb.dart';
 
 /// Obtains a [Timestamp] with the current time.
 Timestamp now() {
-    return Timestamp.fromDateTime(DateTime.now());
+    return Timestamp.fromDateTime(DateTime.now()).freeze();
 }
 
 /// Obtains the current time zone offset.
@@ -32,7 +32,7 @@ ZoneOffset zoneOffset() {
     var zoneOffset = dateTime.timeZoneOffset;
     var offset = ZoneOffset();
     offset.amountSeconds = zoneOffset.inSeconds;
-    return offset;
+    return offset.freeze();
 }
 
 /// Obtains an identifier string for the current time zone.
@@ -47,5 +47,5 @@ ZoneId guessZoneId() {
     var zoneName = dateTime.timeZoneName;
     var zoneId = ZoneId();
     zoneId.value = zoneName;
-    return zoneId;
+    return zoneId.freeze();
 }

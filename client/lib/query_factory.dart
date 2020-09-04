@@ -34,27 +34,29 @@ class QueryFactory {
 
     /// Creates a query which matches all entities of the given type with the given IDs.
     Query byIds(GeneratedMessage instance, List<Any> ids) {
+        instance.freeze();
         var query = Query();
         query
             ..id = _newId()
             ..target = targetByIds(instance, ids)
             ..context = _context();
-        return query;
+        return query.freeze();
     }
 
     /// Creates a query which matches all entities of the given type.
     Query all(GeneratedMessage instance) {
+        instance.freeze();
         var query = Query();
         query
             ..id = _newId()
             ..target = targetAll(instance)
             ..context = _context();
-        return query;
+        return query.freeze();
     }
 
     QueryId _newId() {
         var id = QueryId();
         id.value = newUuid(prefix: 'q-');
-        return id;
+        return id.freeze();
     }
 }
