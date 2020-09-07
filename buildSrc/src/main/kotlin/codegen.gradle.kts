@@ -43,6 +43,7 @@ fun composeCommandLine(descriptor: File, targetDir: String, standardTypesPackage
         listOf(
                 command,
                 "--descriptor", "${file(descriptor)}",
+                "--src", "${projectDir}/lib/src",
                 "--destination", "$targetDir/types.dart",
                 "--standard-types", standardTypesPackage,
                 "--import-prefix", "."

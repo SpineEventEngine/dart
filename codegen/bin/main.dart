@@ -22,11 +22,13 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:dart_code_gen/dart_code_gen.dart' as dart_code_gen;
+import 'package:dart_code_gen/prebuilt_types.dart' as prebuilt;
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
 import 'package:protobuf/protobuf.dart';
 
 const String descriptorArgument = 'descriptor';
+const String srcArgument = 'src';
 const String destinationArgument = 'destination';
 const String stdPackageArgument = 'standard-types';
 const String importPrefixArgument = 'import-prefix';
@@ -45,11 +47,12 @@ main(List<String> arguments) {
                        'registries and validation code.');
         stdout.writeln(parser.usage);
     } else {
-        _launch_code_gen(args);
+        _launch_validation_gen(args);
+        _launch_proto_gen(args);
     }
 }
 
-void _launch_code_gen(ArgResults args) {
+void _launch_validation_gen(ArgResults args) {
     var descriptorPath = _getRequired(args, descriptorArgument);
     var destinationPath = _getRequired(args, destinationArgument);
     var stdPackage = args[stdPackageArgument];
@@ -67,7 +70,26 @@ void _launch_code_gen(ArgResults args) {
     var dartCode = dart_code_gen.generate(properties);
     destinationFile.writeAsStringSync(dartCode, flush: true);
     if (shouldPrint) {
-        stdout.write(dartCode);
+        stdout.writeln(dartCode);
+    }
+}
+
+void _launch_proto_gen(ArgResults args) {
+    var descriptorPath = _getRequired(args, descriptorArgument);
+    var descFile = File(descriptorPath);
+    _checkExists(descFile);
+
+    var shouldPrint = args[stdoutFlag];
+    FileDescriptorSet descriptors = _parseDescriptors(descFile);
+    var files = prebuilt.generate(descriptors);
+    var path = args[srcArgument];
+    for (var file in files) {
+        var destinationFile = File('${path}/${file.name}');
+        _ensureExists(destinationFile);
+        destinationFile.writeAsStringSync(file.content, flush: true);
+        if (shouldPrint) {
+            stdout.writeln(file.content);
+        }
     }
 }
 
@@ -109,6 +131,8 @@ ArgParser _createParser() {
     var parser = ArgParser();
     parser.addOption(descriptorArgument,
                      help: 'Path to the file descriptor set file. This argument is required.');
+    parser.addOption(srcArgument,
+                     help: 'Path to the `lib/src` directory. This argument is required');
     parser.addOption(destinationArgument,
                      help: 'Path to the destination file. This argument is required.');
     parser.addOption(stdPackageArgument,
@@ -116,7 +140,7 @@ ArgParser _createParser() {
                            'and basic Spine types.',
                      defaultsTo: 'spine_client');
     parser.addOption(importPrefixArgument,
-                     help: 'Path prefix for imports of types which are vaidated.',
+                     help: 'Path prefix for imports of types which are validated.',
                      defaultsTo: '');
     parser.addFlag(stdoutFlag,
                    defaultsTo: false,
