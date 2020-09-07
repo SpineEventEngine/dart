@@ -44,8 +44,8 @@ PrebuiltFile _generate(MessageType type) {
         b.name = className;
         b.factory = true;
         b.optionalParameters.add(Parameter((param) {
-            param.type = refer('void Function<$builderName>');
-            param.name = 'updates';
+            param.type = refer('void updates($builderName b)');
+            param.name = '';
         }));
         b.redirect = refer('_\$$className');
     });
@@ -58,13 +58,22 @@ PrebuiltFile _generate(MessageType type) {
             ..add(builderCtor);
     });
     var lib = Library((b) {
-        b.directives.add(Directive.import(type.dartFilePath));
+        b.directives
+            ..add(Directive.import(type.dartFilePath))
+            ..add(Directive.part('$className.g.dart'));
         b.body.add(cls);
     });
     var emitter = DartEmitter(Allocator.simplePrefixing());
     var formatter = DartFormatter();
-    var content = formatter.format(lib.accept(emitter).toString());
-    return PrebuiltFile('$className.dart', content);
+    try {
+        var code = lib.accept(emitter).toString();
+        print(code);
+        var content = formatter.format(code);
+        return PrebuiltFile('$className.dart', content);
+    } catch (e) {
+        rethrow;
+    }
+
 }
 
 class PrebuiltFile {
