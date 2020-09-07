@@ -60,20 +60,14 @@ PrebuiltFile _generate(MessageType type) {
     var lib = Library((b) {
         b.directives
             ..add(Directive.import(type.dartFilePath))
-            ..add(Directive.part('$className.g.dart'));
+            ..add(Directive.part('$className.proto.g.dart'));
         b.body.add(cls);
     });
     var emitter = DartEmitter(Allocator.simplePrefixing());
     var formatter = DartFormatter();
-    try {
-        var code = lib.accept(emitter).toString();
-        print(code);
-        var content = formatter.format(code);
-        return PrebuiltFile('$className.dart', content);
-    } catch (e) {
-        rethrow;
-    }
-
+    var code = lib.accept(emitter).toString();
+    var content = formatter.format(code);
+    return PrebuiltFile('$className.proto.dart', content);
 }
 
 class PrebuiltFile {
