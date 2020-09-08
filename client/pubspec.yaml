@@ -7,15 +7,17 @@ environment:
   sdk: '>=2.5.0 <3.0.0'
 
 dependencies:
-  protobuf: ^1.0.0
+  protobuf: ^1.0.1
   http: ^0.12.0+2
-  uuid: ^2.0.2
-  firebase: ^5.0.4
-  fixnum: ^0.10.9
-  sprintf: ^4.0.2
-  optional: ^3.1.0
+  uuid: ^2.2.2
+  firebase: ^7.3.0
+  fixnum: ^0.10.11
+  sprintf: ^4.1.0
+  optional: ^5.0.0
 
 dev_dependencies:
+  build_runner: ^1.10.1
+  built_value_generator: ^7.1.0
   pedantic: ^1.7.0
   test: ^1.6.0
-  dartdoc: ^0.30.2
+  dartdoc: ^0.32.3
