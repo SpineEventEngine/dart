@@ -35,16 +35,17 @@ List<PrebuiltFile> generate(FileDescriptorSet descriptors) {
 
 PrebuiltFile _generate(MessageType type) {
     var className = type.dartClassName;
-    var builderName = '${className}Builder';
+    var builderRef = refer('${className}Builder');
     var privateCtor = Constructor((b) {
         b.name = '_';
-
     });
     var builderCtor = Constructor((b) {
         b.name = className;
         b.factory = true;
         b.optionalParameters.add(Parameter((param) {
-            param.type = refer('void updates($builderName b)');
+            param.type = FunctionType((type) {
+                type.requiredParameters.add(builderRef);
+            });
             param.name = '';
         }));
         b.redirect = refer('_\$$className');
@@ -52,14 +53,19 @@ PrebuiltFile _generate(MessageType type) {
     var cls = Class((b) {
         b.name = className;
         b.abstract = true;
-        b.extend = refer('Built<$className, $builderName>');
+        b.implements.add(TypeReference((ref) {
+            ref.symbol = 'Built';
+            ref.types
+                ..add(refer(className))
+                ..add(builderRef);
+        }));
         b.constructors
             ..add(privateCtor)
             ..add(builderCtor);
     });
     var lib = Library((b) {
         b.directives
-            ..add(Directive.import(type.dartFilePath))
+            ..add(Directive.import('package:built_value/built_value.dart'))
             ..add(Directive.part('$className.proto.g.dart'));
         b.body.add(cls);
     });
