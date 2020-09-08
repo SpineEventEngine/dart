@@ -43,7 +43,7 @@ fun composeCommandLine(descriptor: File, targetDir: String, standardTypesPackage
         listOf(
                 command,
                 "--descriptor", "${file(descriptor)}",
-                "--src", "${projectDir}/lib/src",
+                "--immutable-types", "${projectDir}/lib/model",
                 "--destination", "$targetDir/types.dart",
                 "--standard-types", standardTypesPackage,
                 "--import-prefix", "."
@@ -62,11 +62,23 @@ open class GenerateDart : Exec() {
     var standardTypesPackage: String = ""
 }
 
-tasks.create("generateDart", GenerateDart::class) {
+val pub = "pub" + if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""
+
+val pubGet by tasks.creating(Exec::class) {
+    commandLine(pub, "get")
+}
+
+val generateDart by tasks.creating(GenerateDart::class) {
     @Suppress("UNCHECKED_CAST")
     descriptor = project.extensions["protoDart"].withGroovyBuilder { getProperty("mainDescriptorSet") } as Property<File>
     target = "$projectDir/lib"
     standardTypesPackage = "spine_client"
+}
+
+val launchBuilder by tasks.creating(Exec::class) {
+    commandLine(pub, "run", "build_runner", "build")
+    dependsOn(generateDart, pubGet)
+    generateDart.finalizedBy(this)
 }
 
 afterEvaluate {

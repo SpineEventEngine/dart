@@ -28,7 +28,7 @@ import 'package:dart_code_gen/spine/options.pb.dart';
 import 'package:protobuf/protobuf.dart';
 
 const String descriptorArgument = 'descriptor';
-const String srcArgument = 'src';
+const String immutableTypesArgument = 'immutable-types';
 const String destinationArgument = 'destination';
 const String stdPackageArgument = 'standard-types';
 const String importPrefixArgument = 'import-prefix';
@@ -75,6 +75,10 @@ void _launch_validation_gen(ArgResults args) {
 }
 
 void _launch_proto_gen(ArgResults args) {
+    if (!args.options.contains(immutableTypesArgument)) {
+        return;
+    }
+    var path = args[immutableTypesArgument];
     var descriptorPath = _getRequired(args, descriptorArgument);
     var descFile = File(descriptorPath);
     _checkExists(descFile);
@@ -82,7 +86,6 @@ void _launch_proto_gen(ArgResults args) {
     var shouldPrint = args[stdoutFlag];
     FileDescriptorSet descriptors = _parseDescriptors(descFile);
     var files = prebuilt.generate(descriptors);
-    var path = args[srcArgument];
     for (var file in files) {
         var destinationFile = File('${path}/${file.name}');
         _ensureExists(destinationFile);
@@ -131,7 +134,7 @@ ArgParser _createParser() {
     var parser = ArgParser();
     parser.addOption(descriptorArgument,
                      help: 'Path to the file descriptor set file. This argument is required.');
-    parser.addOption(srcArgument,
+    parser.addOption(immutableTypesArgument,
                      help: 'Path to the `lib/src` directory. This argument is required');
     parser.addOption(destinationArgument,
                      help: 'Path to the destination file. This argument is required.');

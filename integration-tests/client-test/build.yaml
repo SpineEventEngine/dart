@@ -1,0 +1,14 @@
+targets:
+  $default:
+    builders:
+      "built_value":
+
+builders:
+  built_value:
+    target: ":client-test"
+    import: "package:built_value_generator/builder.dart"
+    builder_factories:
+      - "builtValue"
+    build_extensions:
+      ".proto.dart": [".g.dart"]
+    build_to: "source"
