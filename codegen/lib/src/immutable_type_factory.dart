@@ -21,26 +21,15 @@
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_code_gen/src/type.dart';
 
-const _BUILT_VALUE = 'package:built_value/built_value.dart';
 
 class ImmutableTypeFactory {
 
     final MessageType _type;
     final _className;
 
-    ImmutableTypeFactory(this._type) : _className = _type.dartClassName;
+    ImmutableTypeFactory(this._type) : _className = _type.dartClassName + "AAA";
 
-    Library generate() {
-        var lib = Library((b) {
-            b.directives
-                ..add(Directive.import(_BUILT_VALUE))
-                ..add(Directive.part('$_className.proto.g.dart'));
-            b.body.add(_buildClass());
-        });
-        return lib;
-    }
-
-    Class _buildClass() {
+    Class generate() {
         var getters = _type.fields.map(_buildField);
         var builderRef = refer('${_className}Builder');
         var cls = Class((b) {

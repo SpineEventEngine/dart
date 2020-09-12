@@ -18,12 +18,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:dart_code_gen/dart_code_gen.dart' as dart_code_gen;
-import 'package:dart_code_gen/prebuilt_types.dart' as prebuilt;
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
+import 'package:dart_code_gen/prebuilt_types.dart' as prebuilt;
+import 'package:dart_code_gen/prebuilt_types.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
 import 'package:protobuf/protobuf.dart';
 
@@ -35,6 +37,9 @@ const String importPrefixArgument = 'import-prefix';
 
 const String stdoutFlag = 'stdout';
 const String helpFlag = 'help';
+
+final RegExp _importCore = RegExp('^import [\'"]dart:core[\'"] as \\\$core.+');
+final RegExp _coreImportPrefix = RegExp('\\\$core\.');
 
 /// Launches the Dart code generator.
 ///
@@ -87,13 +92,49 @@ void _launch_proto_gen(ArgResults args) {
     FileDescriptorSet descriptors = _parseDescriptors(descFile);
     var files = prebuilt.generate(descriptors);
     for (var file in files) {
-        var destinationFile = File('${path}/${file.name}');
-        _ensureExists(destinationFile);
-        destinationFile.writeAsStringSync(file.content, flush: true);
-        if (shouldPrint) {
-            stdout.writeln(file.content);
+        _process_file(path, file, descriptors, shouldPrint);
+    }
+}
+
+void _process_file(path, PrebuiltFile file, FileDescriptorSet descriptors, shouldPrint) {
+    var destinationFile = File('${path}/${file.name}');
+    _checkExists(destinationFile);
+    var generatedContent = destinationFile.readAsStringSync();
+    var renamed = prebuilt.renameClasses(generatedContent, file.name, descriptors);
+    var newContent = renamed + ('\n' * 3) + file.content;
+    var lines = LineSplitter().convert(newContent);
+    var sortedLines = _sortStatements(lines);
+    destinationFile.writeAsStringSync(sortedLines.join('\n'), flush: true);
+    if (shouldPrint) {
+        stdout.writeln(file.content);
+    }
+}
+
+List<String> _sortStatements(List<String> codeLines) {
+    List<String> imports = [];
+    List<String> parts = [];
+    List<String> otherCode = [];
+    for (var line in codeLines) {
+        if (line.startsWith('import') || line.startsWith('export')) {
+            if (!_importCore.hasMatch(line)) {
+                imports.add(line);
+            }
+
+        } else if (line.startsWith('part')) {
+            parts.add(line);
+        } else {
+            otherCode.add(_cleanOfCorePrefix(line));
         }
     }
+    return List<String>()
+        ..addAll(imports)
+        ..add('')
+        ..addAll(parts)
+        ..addAll(otherCode);
+}
+
+String _cleanOfCorePrefix(String line) {
+    return line.replaceAll(_coreImportPrefix, '');
 }
 
 dynamic _getRequired(ArgResults args, String name) {

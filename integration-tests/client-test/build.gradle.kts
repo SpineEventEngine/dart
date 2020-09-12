@@ -60,6 +60,7 @@ protoDart {
 tasks.generateDart {
     descriptor = protoDart.testDescriptorSet
     target = "$projectDir/integration-test"
+    generateImmutableTypes = false
 }
 
 tasks.assemble {

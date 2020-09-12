@@ -25,23 +25,42 @@ import 'package:dart_style/dart_style.dart';
 import 'google/protobuf/descriptor.pb.dart';
 import 'src/type.dart';
 
+const _BUILT_VALUE = 'package:built_value/built_value.dart';
+
+String renameClasses(String generatedCode, String fileName, FileDescriptorSet descriptors) {
+    return generatedCode;
+}
+
 List<PrebuiltFile> generate(FileDescriptorSet descriptors) {
-    var types = TypeSet.of(descriptors);
     var files = List<PrebuiltFile>();
-    for (var type in types.types) {
-        files.add(_generate(type));
+    for (var file in descriptors.file) {
+        var types = TypeSet.fromFile(file).types;
+        if (types.isNotEmpty) {
+            var classes = types.map(_generate);
+            var library = Library((lib) {
+                lib.directives
+                    ..add(Directive.import(_BUILT_VALUE))
+                    ..add(Directive.part('${types.first.fileNameNoExtension}.pb.g.dart'));
+                lib.body.addAll(classes);
+            });
+            files.add(PrebuiltFile(types.first.dartFilePath, _emit(library)));
+        }
     }
     return files;
 }
 
-PrebuiltFile _generate(MessageType type) {
-    var factory = ImmutableTypeFactory(type);
-    var lib = factory.generate();
+String _emit(Library lib) {
     var emitter = DartEmitter(Allocator.simplePrefixing());
     var formatter = DartFormatter();
     var code = lib.accept(emitter).toString();
     var content = formatter.format(code);
-    return PrebuiltFile('${type.dartClassName}.proto.dart', content);
+    return content;
+}
+
+Class _generate(MessageType type) {
+    var factory = ImmutableTypeFactory(type);
+    var cls = factory.generate();
+    return cls;
 }
 
 class PrebuiltFile {

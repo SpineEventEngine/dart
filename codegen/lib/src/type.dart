@@ -21,8 +21,8 @@
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
 
-const _protoExtension = 'proto';
-const _pbDartExtension = 'pb.dart';
+const _protoExtension = '.proto';
+const _pbDartExtension = '.pb.dart';
 const _standardTypeUrlPrefix = 'type.googleapis.com';
 
 /// A Protobuf message type.
@@ -67,6 +67,18 @@ class MessageType {
         var protoFilePath = file.name;
         var extensionIndex = protoFilePath.length - _protoExtension.length;
         var dartPath = protoFilePath.substring(0, extensionIndex) + _pbDartExtension;
+        return dartPath;
+    }
+
+    /// The name of the declaring Proto file, without an extension.
+    ///
+    /// For example, if this type is declared in `spine/net/url.proto`, returns `url`.
+    ///
+    String get fileNameNoExtension {
+        var protoFilePath = file.name;
+        var nameStartIndex = protoFilePath.lastIndexOf('/') + 1;
+        var extensionIndex = protoFilePath.length - _protoExtension.length;
+        var dartPath = protoFilePath.substring(nameStartIndex, extensionIndex);
         return dartPath;
     }
 
@@ -235,11 +247,8 @@ class TypeSet {
         var typeSet = <MessageType>{};
         var files = fileSet.file;
         for (var file in files) {
-            for (var type in file.messageType) {
-                var messageType = MessageType._fromFile(file, type);
-                typeSet.add(messageType);
-                typeSet.addAll(messageType.allChildDeclarations().types);
-            }
+            var fileTypes = _collectTypes(file);
+            typeSet.addAll(fileTypes);
         }
         return TypeSet._(typeSet);
     }
@@ -256,5 +265,20 @@ class TypeSet {
             }
         }
         return TypeSet._(typeSet);
+    }
+
+    /// Obtains all the message types declared in the given file.
+    factory TypeSet.fromFile(FileDescriptorProto fileDescriptor) {
+        return TypeSet._(_collectTypes(fileDescriptor));
+    }
+
+    static Set<MessageType> _collectTypes(FileDescriptorProto fileDescriptor) {
+        var typeSet = <MessageType>{};
+        for (var type in fileDescriptor.messageType) {
+            var messageType = MessageType._fromFile(fileDescriptor, type);
+            typeSet.add(messageType);
+            typeSet.addAll(messageType.allChildDeclarations().types);
+        }
+        return typeSet;
     }
 }
