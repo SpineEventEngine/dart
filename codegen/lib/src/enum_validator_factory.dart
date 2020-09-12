@@ -19,8 +19,8 @@
  */
 
 import 'package:code_builder/code_builder.dart';
-import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/src/field_validator_factory.dart';
+import 'package:dart_code_gen/src/type.dart';
 import 'package:dart_code_gen/src/validator_factory.dart';
 
 import 'field_validator_factory.dart';
@@ -33,7 +33,7 @@ const _minNonEmptyEnumValue = 1;
 ///
 class EnumValidatorFactory extends SingularFieldValidatorFactory {
 
-    EnumValidatorFactory(ValidatorFactory validatorFactory, FieldDescriptorProto field)
+    EnumValidatorFactory(ValidatorFactory validatorFactory, FieldDeclaration field)
         : super(validatorFactory, field);
 
     @override

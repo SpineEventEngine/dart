@@ -80,6 +80,11 @@ class MessageType {
         return "$prefix/$fullName";
     }
 
+    List<FieldDeclaration> get fields {
+        var fields = descriptor.field.map((descriptor) => FieldDeclaration(this, descriptor));
+        return List.from(fields);
+    }
+
     /// Obtains all the nested declarations of this type, including deeper levels of nesting.
     TypeSet allChildDeclarations() {
         var children = <MessageType>{};
@@ -108,6 +113,109 @@ class MessageType {
 
     String _childDartName(String simpleName) {
         return '${dartClassName}_${simpleName}';
+    }
+}
+
+class FieldDeclaration {
+
+    // A list of all Dart keywords.
+    //
+    // See https://dart.dev/guides/language/language-tour#keywords.
+    //
+    static const List<String> _KEYWORDS = [
+        'abstract',
+        'else',
+        'import',
+        'super',
+        'as',
+        'enum',
+        'in',
+        'switch',
+        'assert',
+        'export',
+        'interface',
+        'sync',
+        'async',
+        'extends',
+        'is',
+        'this',
+        'await',
+        'extension',
+        'library',
+        'throw',
+        'break',
+        'external',
+        'mixin',
+        'true',
+        'case',
+        'factory',
+        'new',
+        'try',
+        'catch',
+        'false',
+        'null',
+        'typedef',
+        'class',
+        'final',
+        'on',
+        'var',
+        'const',
+        'finally',
+        'operator',
+        'void',
+        'continue',
+        'for',
+        'part',
+        'while',
+        'covariant',
+        'Function',
+        'rethrow',
+        'with',
+        'default',
+        'get',
+        'return',
+        'yield',
+        'deferred',
+        'hide',
+        'set',
+        'do',
+        'if',
+        'show',
+        'dynamic',
+        'implements',
+        'static'
+    ];
+
+    final MessageType declaringType;
+    final FieldDescriptorProto descriptor;
+    final String protoName;
+    final String dartName;
+
+    FieldDeclaration(this.declaringType, this.descriptor) :
+            protoName = descriptor.name,
+            dartName = _dartName(descriptor);
+
+    static String _dartName(FieldDescriptorProto descriptor) {
+        var protoName = descriptor.name;
+        var words = protoName.split('_');
+        var first = words[0];
+        var capitalized = List.of(words.map(_capitalize));
+        capitalized[0] = first;
+        return capitalized.join('');
+    }
+
+    static String _capitalize(String word) {
+        return word.isEmpty
+            ? word
+            : '${word[0].toUpperCase()}${word.substring(1)}';
+    }
+
+    String get escapedDartName {
+        if (_KEYWORDS.contains(dartName)) {
+            return '${dartName}_${descriptor.number}';
+        } else {
+            return dartName;
+        }
     }
 }
 

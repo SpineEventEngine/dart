@@ -19,8 +19,8 @@
  */
 
 import 'package:code_builder/code_builder.dart';
+import 'package:dart_code_gen/src/type.dart';
 
-import '../google/protobuf/descriptor.pb.dart';
 import 'constraint_violation.dart';
 import 'field_validator_factory.dart';
 import 'validator_factory.dart';
@@ -103,7 +103,7 @@ class _Combination {
         return factory.notSetCondition()(fieldAccess);
     }
 
-    FieldValidatorFactory _validatorFactory(FieldDescriptorProto field) {
+    FieldValidatorFactory _validatorFactory(FieldDeclaration field) {
         var factory = FieldValidatorFactory.forField(field, _validator);
         if (factory == null || !factory.supportsRequired()) {
             throw StateError('Field `${_validator.type.fullName}.${field}` cannot be required.');
@@ -111,12 +111,11 @@ class _Combination {
         return factory;
     }
 
-    FieldDescriptorProto _field(String name) {
+    FieldDeclaration _field(String name) {
         var type = _validator.type;
-        FieldDescriptorProto field = type
-                .descriptor
-                .field
-                .where((t) => t.name == name)
+        FieldDeclaration field = type
+                .fields
+                .where((t) => t.protoName == name)
                 .first;
         ArgumentError.checkNotNull(field, '`${type.fullName}` does not declare field `${name}`.');
         return field;
