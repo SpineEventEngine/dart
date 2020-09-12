@@ -19,6 +19,7 @@
  */
 
 import 'package:code_builder/code_builder.dart';
+import 'package:dart_code_gen/src/immutable_type_factory.dart';
 import 'package:dart_style/dart_style.dart';
 
 import 'google/protobuf/descriptor.pb.dart';
@@ -34,46 +35,13 @@ List<PrebuiltFile> generate(FileDescriptorSet descriptors) {
 }
 
 PrebuiltFile _generate(MessageType type) {
-    var className = type.dartClassName;
-    var builderRef = refer('${className}Builder');
-    var privateCtor = Constructor((b) {
-        b.name = '_';
-    });
-    var builderCtor = Constructor((b) {
-        b.name = className;
-        b.factory = true;
-        b.optionalParameters.add(Parameter((param) {
-            param.type = FunctionType((type) {
-                type.requiredParameters.add(builderRef);
-            });
-            param.name = '';
-        }));
-        b.redirect = refer('_\$$className');
-    });
-    var cls = Class((b) {
-        b.name = className;
-        b.abstract = true;
-        b.implements.add(TypeReference((ref) {
-            ref.symbol = 'Built';
-            ref.types
-                ..add(refer(className))
-                ..add(builderRef);
-        }));
-        b.constructors
-            ..add(privateCtor)
-            ..add(builderCtor);
-    });
-    var lib = Library((b) {
-        b.directives
-            ..add(Directive.import('package:built_value/built_value.dart'))
-            ..add(Directive.part('$className.proto.g.dart'));
-        b.body.add(cls);
-    });
+    var factory = ImmutableTypeFactory(type);
+    var lib = factory.generate();
     var emitter = DartEmitter(Allocator.simplePrefixing());
     var formatter = DartFormatter();
     var code = lib.accept(emitter).toString();
     var content = formatter.format(code);
-    return PrebuiltFile('$className.proto.dart', content);
+    return PrebuiltFile('${type.dartClassName}.proto.dart', content);
 }
 
 class PrebuiltFile {
