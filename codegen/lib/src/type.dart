@@ -122,7 +122,7 @@ class FieldDeclaration {
     //
     // See https://dart.dev/guides/language/language-tour#keywords.
     //
-    static const List<String> _KEYWORDS = [
+    static const List<String> _DART_KEYWORDS = [
         'abstract',
         'else',
         'import',
@@ -186,6 +186,10 @@ class FieldDeclaration {
         'static'
     ];
 
+    static const List<String> _BUILT_VALUE_RESERVED = [
+        'update'
+    ];
+
     final MessageType declaringType;
     final FieldDescriptorProto descriptor;
     final String protoName;
@@ -211,7 +215,7 @@ class FieldDeclaration {
     }
 
     String get escapedDartName {
-        if (_KEYWORDS.contains(dartName)) {
+        if (_DART_KEYWORDS.contains(dartName) || _BUILT_VALUE_RESERVED.contains(dartName)) {
             return '${dartName}_${descriptor.number}';
         } else {
             return dartName;
