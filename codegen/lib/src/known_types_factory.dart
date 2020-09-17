@@ -54,7 +54,7 @@ class KnownTypesFactory {
         var importPrefix = _properties.importPrefix;
         var urlToBuilderMap = <Expression, Expression>{};
         var defaultToUrlMap = <Expression, Expression>{};
-        for (var type in typeSet.types) {
+        for (var type in typeSet.messageTypes) {
             var typeRef = refer(type.dartClassName, "${importPrefix}/${type.dartFilePath}");
             var ctorCall = typeRef.newInstance([]);
             var builderInfoAccessor = ctorCall.property('info_');
@@ -78,7 +78,7 @@ class KnownTypesFactory {
     Field _createValidatorMap() {
         var validatorMap = Map<Expression, Expression>();
         var typeSet = TypeSet.topLevelOnly(_properties.types);
-        for (var type in typeSet.types) {
+        for (var type in typeSet.messageTypes) {
             var factory = ValidatorFactory(type.file, type, _properties);
             var typeUrl = literalString(type.typeUrl);
             validatorMap[typeUrl] = factory.createValidator();

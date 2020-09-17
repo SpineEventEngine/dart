@@ -19,15 +19,19 @@
  */
 
 import 'package:code_builder/code_builder.dart';
+import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/src/type.dart';
 
+const String _builtCollection = 'package:built_collection/built_collection.dart';
+const String _int64 = 'package:fixnum/fixnum.dart';
 
 class ImmutableTypeFactory {
 
     final MessageType _type;
+    final TypeSet _knownTypes;
     final _className;
 
-    ImmutableTypeFactory(this._type) : _className = _type.dartClassName + "AAA";
+    ImmutableTypeFactory(this._type, this._knownTypes) : _className = _type.dartClassName + "AAA";
 
     Class generate() {
         var getters = _type.fields.map(_buildField);
@@ -49,7 +53,7 @@ class ImmutableTypeFactory {
             b.name = field.escapedDartName;
             b.annotations.add(refer('nullable'));
             b.type = MethodType.getter;
-            b.returns = refer('String');
+            b.returns = _typeOf(field, _knownTypes);
         });
     }
 
@@ -86,5 +90,65 @@ class ImmutableTypeFactory {
         return FunctionType((type) {
             type.requiredParameters.add(builderRef);
         });
+    }
+
+    Reference _typeOf(FieldDeclaration field, TypeSet knownTypes) {
+        var descriptor = field.descriptor;
+        var type = descriptor.type;
+        Reference ref = null;
+        if (field.isMap) {
+            ref = refer('BuiltMap', _builtCollection);
+        } else {
+            switch (type) {
+                case FieldDescriptorProto_Type.TYPE_BOOL:
+                    ref = refer('bool');
+                    break;
+                case FieldDescriptorProto_Type.TYPE_BYTES:
+                    ref = refer('BuiltList<int>', _builtCollection);
+                    break;
+                case FieldDescriptorProto_Type.TYPE_DOUBLE:
+                case FieldDescriptorProto_Type.TYPE_FLOAT:
+                    ref = refer('double');
+                    break;
+                case FieldDescriptorProto_Type.TYPE_INT32:
+                case FieldDescriptorProto_Type.TYPE_UINT32:
+                case FieldDescriptorProto_Type.TYPE_SINT32:
+                case FieldDescriptorProto_Type.TYPE_FIXED32:
+                case FieldDescriptorProto_Type.TYPE_SFIXED32:
+                    ref = refer('int');
+                    break;
+                case FieldDescriptorProto_Type.TYPE_INT64:
+                case FieldDescriptorProto_Type.TYPE_UINT64:
+                case FieldDescriptorProto_Type.TYPE_SINT64:
+                case FieldDescriptorProto_Type.TYPE_FIXED64:
+                case FieldDescriptorProto_Type.TYPE_SFIXED64:
+                    ref = refer('Int64', _int64);
+                    break;
+                case FieldDescriptorProto_Type.TYPE_STRING:
+                    ref = refer('String');
+                    break;
+                case FieldDescriptorProto_Type.TYPE_MESSAGE:
+                case FieldDescriptorProto_Type.TYPE_ENUM:
+                    var messageClass = knownTypes.findByName(descriptor.typeName);
+                    var file = messageClass.dartFilePath;
+                    if (file == field.declaringType.dartFilePath) {
+                        ref = refer(messageClass.dartClassName);
+                    } else {
+                        var path = messageClass.dartPathRelativeTo(field.declaringType);
+                        ref = refer(messageClass.dartClassName, path);
+                    }
+                    break;
+            }
+            if (field.isRepeated) {
+                ref = TypeReference((type) => type
+                                ..symbol = 'BuiltList'
+                                ..types.add(ref)
+                                ..url = _builtCollection);
+            }
+        }
+        if (ref == null) {
+            throw Exception('Unknown type `${type}`.');
+        }
+        return ref;
     }
 }

@@ -33,10 +33,11 @@ String renameClasses(String generatedCode, String fileName, FileDescriptorSet de
 
 List<PrebuiltFile> generate(FileDescriptorSet descriptors) {
     var files = List<PrebuiltFile>();
+    var knownTypes = TypeSet.of(descriptors);
     for (var file in descriptors.file) {
-        var types = TypeSet.fromFile(file).types;
+        var types = TypeSet.fromFile(file).messageTypes;
         if (types.isNotEmpty) {
-            var classes = types.map(_generate);
+            var classes = types.map((t) => _generate(t, knownTypes));
             var library = Library((lib) {
                 lib.directives
                     ..add(Directive.import(_BUILT_VALUE))
@@ -57,8 +58,8 @@ String _emit(Library lib) {
     return content;
 }
 
-Class _generate(MessageType type) {
-    var factory = ImmutableTypeFactory(type);
+Class _generate(MessageType type, TypeSet knownTypes) {
+    var factory = ImmutableTypeFactory(type, knownTypes);
     var cls = factory.generate();
     return cls;
 }

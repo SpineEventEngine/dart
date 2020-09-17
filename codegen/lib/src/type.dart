@@ -20,19 +20,18 @@
 
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
+import 'package:path/path.dart';
 
 const _protoExtension = '.proto';
 const _pbDartExtension = '.pb.dart';
 const _standardTypeUrlPrefix = 'type.googleapis.com';
 
-/// A Protobuf message type.
-class MessageType {
+const _libraryPathSeparator = '/';
+
+abstract class Type {
 
     /// The file which defines this type.
     final FileDescriptorProto file;
-
-    /// The descriptor of this type.
-    final DescriptorProto descriptor;
 
     /// The full Protobuf name of this type.
     ///
@@ -46,18 +45,7 @@ class MessageType {
     ///
     final String dartClassName;
 
-    MessageType._(this.file, this.descriptor, this.fullName, this.dartClassName);
-
-    /// Creates a `MessageType` from the given descriptor and file assuming the message declaration
-    /// is top-level, i.e. the type is not nested within another type.
-    MessageType._fromFile(FileDescriptorProto file, DescriptorProto descriptor) :
-            file = file,
-            descriptor = descriptor,
-            fullName = _fullName(file, descriptor),
-            dartClassName = descriptor.name;
-
-    static String _fullName(FileDescriptorProto file, DescriptorProto descriptor) =>
-        "${file.package}.${descriptor.name}";
+    Type._(this.file, this.fullName, this.dartClassName);
 
     /// Relative path to the file which contains the Dart class for this message type.
     ///
@@ -92,6 +80,47 @@ class MessageType {
         return "$prefix/$fullName";
     }
 
+    String dartPathRelativeTo(Type otherType) {
+        var relativeDirPath = relative(_dirPath, from: otherType._dirPath);
+        return relativeDirPath + _libraryPathSeparator + _dartFileName;
+        // var thisPath = dartFilePath.split(_libraryPathSeparator);
+        // var thisDirPath = thisPath.sublist(0, thisPath.length - 1);
+        // var otherPath =  otherType.dartFilePath;
+        // var relativeRidPath = relative(thisDirPath.join(_libraryPathSeparator), from: otherPath);
+        // return relativeRidPath + _libraryPathSeparator + thisPath[thisPath.length - 1];
+    }
+
+    String get _dirPath {
+        var thisPath = dartFilePath;
+        var thisPathElements = thisPath.split(_libraryPathSeparator);
+        if (thisPathElements.length <= 1) {
+            return thisPath;
+        } else {
+            return thisPathElements.sublist(0, thisPathElements.length - 1)
+                                   .join(_libraryPathSeparator);
+        }
+    }
+
+    String get _dartFileName => dartFilePath.split(_libraryPathSeparator).last;
+}
+
+/// A Protobuf message type.
+class MessageType extends Type {
+
+    /// The descriptor of this type.
+    final DescriptorProto descriptor;
+
+    MessageType._(file, this.descriptor, fullName, dartClassName) :
+            super._(file, fullName, dartClassName);
+
+    /// Creates a `MessageType` from the given descriptor and file assuming the message declaration
+    /// is top-level, i.e. the type is not nested within another type.
+    MessageType._fromFile(FileDescriptorProto file, this.descriptor) :
+            super._(file, _fullName(file, descriptor), descriptor.name);
+
+    static String _fullName(FileDescriptorProto file, DescriptorProto descriptor) =>
+        "${file.package}.${descriptor.name}";
+
     List<FieldDeclaration> get fields {
         var fields = descriptor.field.map((descriptor) => FieldDeclaration(this, descriptor));
         return List.from(fields);
@@ -99,24 +128,37 @@ class MessageType {
 
     /// Obtains all the nested declarations of this type, including deeper levels of nesting.
     TypeSet allChildDeclarations() {
-        var children = <MessageType>{};
-        for (var child in _nestedDeclarations()) {
-            children.add(child);
-            children.addAll(child.allChildDeclarations()
-                                 .types);
+        var messages = <MessageType>{};
+        var enums = <EnumType>{};
+        enums.addAll(_nestedEnumDeclarations());
+        for (var child in _nestedMessageDeclarations()) {
+            messages.add(child);
+            var grandchildren = child.allChildDeclarations();
+            messages.addAll(grandchildren.messageTypes);
+            enums.addAll(grandchildren.enumTypes);
         }
-        return TypeSet._(children);
+        return TypeSet._(messages, enums);
     }
 
     /// Obtains the message declarations nested in this type.
-    Iterable<MessageType> _nestedDeclarations() =>
+    Iterable<MessageType> _nestedMessageDeclarations() =>
         descriptor.nestedType
                   .where((desc) => !desc.options.mapEntry)
-                  .map((desc) => _child(desc));
+                  .map((desc) => _childMessage(desc));
 
-    MessageType _child(DescriptorProto descriptor) {
+    /// Obtains the message declarations nested in this type.
+    Iterable<EnumType> _nestedEnumDeclarations() =>
+        descriptor.enumType
+                  .map((desc) => _childEnum(desc));
+
+    MessageType _childMessage(DescriptorProto descriptor) {
         var name = descriptor.name;
         return MessageType._(file, descriptor, _childProtoName(name), _childDartName(name));
+    }
+
+    EnumType _childEnum(EnumDescriptorProto descriptor) {
+        var name = descriptor.name;
+        return EnumType._(file, descriptor, _childProtoName(name), _childDartName(name));
     }
 
     String _childProtoName(String simpleName) {
@@ -126,6 +168,23 @@ class MessageType {
     String _childDartName(String simpleName) {
         return '${dartClassName}_${simpleName}';
     }
+}
+
+class EnumType extends Type {
+
+    /// The descriptor of this type.
+    final EnumDescriptorProto descriptor;
+
+    EnumType._(file, this.descriptor, fullName, dartClassName) :
+            super._(file, fullName, dartClassName);
+
+    /// Creates a `MessageType` from the given descriptor and file assuming the message declaration
+    /// is top-level, i.e. the type is not nested within another type.
+    EnumType._fromFile(FileDescriptorProto file, this.descriptor) :
+            super._(file, _fullName(file, descriptor), descriptor.name);
+
+    static String _fullName(FileDescriptorProto file, EnumDescriptorProto descriptor) =>
+        "${file.package}.${descriptor.name}";
 }
 
 class FieldDeclaration {
@@ -233,52 +292,106 @@ class FieldDeclaration {
             return dartName;
         }
     }
+
+    bool get isRepeated =>
+        descriptor.label == FieldDescriptorProto_Label.LABEL_REPEATED;
+
+    bool get isMap {
+        if (!isRepeated) {
+            return false;
+        }
+        if (descriptor.type != FieldDescriptorProto_Type.TYPE_MESSAGE) {
+            return false;
+        }
+        var mapEntryTypeName = _capitalize(dartName) + 'Entry';
+        return _simpleName(descriptor.typeName) == mapEntryTypeName;
+    }
+
+    String _simpleName(String fullName) {
+        var start = fullName.lastIndexOf('.') + 1;
+        return fullName.substring(start);
+    }
 }
 
 /// A set of Protobuf message types.
 class TypeSet {
 
-    final Set<MessageType> types;
+    final Set<MessageType> messageTypes;
+    final Set<EnumType> enumTypes;
 
-    TypeSet._(this.types);
+    TypeSet._(this.messageTypes, this.enumTypes);
 
     /// Obtains all the message types declared in files of the given [fileSet].
     factory TypeSet.of(FileDescriptorSet fileSet) {
-        var typeSet = <MessageType>{};
+        var messages = <MessageType>{};
+        var enums = <EnumType>{};
         var files = fileSet.file;
         for (var file in files) {
-            var fileTypes = _collectTypes(file);
-            typeSet.addAll(fileTypes);
+            _collectTypes(file, messages, enums);
         }
-        return TypeSet._(typeSet);
+        return TypeSet._(messages, enums);
     }
 
     /// Obtains all the top-level message types declared in files of the given [fileSet].
     factory TypeSet.topLevelOnly(FileDescriptorSet fileSet) {
-        var typeSet = <MessageType>{};
+        var messages = <MessageType>{};
+        var enums = <EnumType>{};
         var files = fileSet.file;
         for (var file in files) {
-            for (var type in file.messageType) {
-                var messageType = MessageType._fromFile(file, type);
-                typeSet.add(messageType);
-                typeSet.addAll(messageType._nestedDeclarations());
-            }
+            var messageTypes = file.messageType.map((type) => MessageType._fromFile(file, type));
+            messages.addAll(messageTypes);
+            enums.addAll(_topLevelEnumTypes(file));
         }
-        return TypeSet._(typeSet);
+        return TypeSet._(messages, enums);
     }
 
     /// Obtains all the message types declared in the given file.
     factory TypeSet.fromFile(FileDescriptorProto fileDescriptor) {
-        return TypeSet._(_collectTypes(fileDescriptor));
+        var messages = <MessageType>{};
+        var enums = <EnumType>{};
+        _collectTypes(fileDescriptor, messages, enums);
+        return TypeSet._(messages, enums);
     }
 
-    static Set<MessageType> _collectTypes(FileDescriptorProto fileDescriptor) {
-        var typeSet = <MessageType>{};
+    static void _collectTypes(FileDescriptorProto fileDescriptor,
+                              Set<MessageType> messages,
+                              Set<EnumType> enums) {
         for (var type in fileDescriptor.messageType) {
             var messageType = MessageType._fromFile(fileDescriptor, type);
-            typeSet.add(messageType);
-            typeSet.addAll(messageType.allChildDeclarations().types);
+            messages.add(messageType);
+            var children = messageType.allChildDeclarations();
+            messages.addAll(children.messageTypes);
+            enums.addAll(children.enumTypes);
         }
-        return typeSet;
+        enums.addAll(_topLevelEnumTypes(fileDescriptor));
+    }
+
+    static Iterable<EnumType> _topLevelEnumTypes(FileDescriptorProto file) {
+        var enumTypes = file.enumType.map((type) => EnumType._fromFile(file, type));
+        return enumTypes;
+    }
+
+    /// Find a `Type` by the given name.
+    ///
+    /// Throws an exception if the type cannot be found.
+    ///
+    Type findByName(String typeName) {
+        var criterion = _noLeadingDot(typeName);
+        var allTypes = <Type>{}
+                    ..addAll(messageTypes)
+                    ..addAll(enumTypes);
+        var type = allTypes.firstWhere(
+                (element) => _noLeadingDot(element.fullName) == criterion,
+                orElse: () => throw Exception('Message type `${criterion}` is unknown.')
+        );
+        return type;
+    }
+
+    String _noLeadingDot(String value) {
+        if (value.length > 1 && value.startsWith('.')) {
+            return value.substring(1);
+        } else {
+            return value;
+        }
     }
 }
