@@ -102,6 +102,11 @@ abstract class Type {
     }
 
     String get _dartFileName => dartFilePath.split(_libraryPathSeparator).last;
+
+    @override
+    String toString() {
+        return fullName;
+    }
 }
 
 /// A Protobuf message type.
