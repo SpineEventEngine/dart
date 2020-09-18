@@ -83,11 +83,6 @@ abstract class Type {
     String dartPathRelativeTo(Type otherType) {
         var relativeDirPath = relative(_dirPath, from: otherType._dirPath);
         return relativeDirPath + _libraryPathSeparator + _dartFileName;
-        // var thisPath = dartFilePath.split(_libraryPathSeparator);
-        // var thisDirPath = thisPath.sublist(0, thisPath.length - 1);
-        // var otherPath =  otherType.dartFilePath;
-        // var relativeRidPath = relative(thisDirPath.join(_libraryPathSeparator), from: otherPath);
-        // return relativeRidPath + _libraryPathSeparator + thisPath[thisPath.length - 1];
     }
 
     String get _dirPath {
