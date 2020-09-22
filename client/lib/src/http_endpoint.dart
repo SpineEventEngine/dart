@@ -21,7 +21,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:protobuf/protobuf.dart';
+import 'package:spine_client/message.dart';
 import 'package:spine_client/src/url.dart';
 
 const _base64 = Base64Codec();
@@ -39,8 +39,8 @@ class HttpEndpoint {
     ///
     /// The given [path] will be concatenated with the [_baseUrl].
     ///
-    Future<http.Response> postMessage(String path, GeneratedMessage message) async {
-        var bytes = message.freeze().writeToBuffer();
+    Future<http.Response> postMessage(String path, Message message) async {
+        var bytes = message.writeToBuffer();
         var url = Url.from(_baseUrl, path).stringUrl;
         var response = await http.post(url,
                                        body: _base64.encode(bytes),

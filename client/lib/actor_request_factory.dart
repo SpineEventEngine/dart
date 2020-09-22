@@ -61,14 +61,13 @@ class ActorRequestFactory {
     }
 
     ActorContext _context() {
-        var ctx = ActorContext();
-        ctx
+        return ActorContext((b) => b
             ..actor = this.actor
             ..timestamp = time.now()
-            ..tenantId = this.tenant ?? TenantId.getDefault()
+            ..tenantId = this.tenant ?? TenantId.defaultInstance
             ..zoneOffset = zoneOffset ?? time.zoneOffset()
-            ..zoneId = zoneId ?? time.guessZoneId();
-        return ctx.freeze();
+            ..zoneId = zoneId ?? time.guessZoneId()
+        );
     }
 }
 

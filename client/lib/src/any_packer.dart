@@ -20,6 +20,7 @@
 
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/google/protobuf/any.pb.dart';
+import 'package:spine_client/message.dart';
 import 'package:spine_client/src/known_types.dart';
 
 /// Separates the type URL prefix from the type name.
@@ -30,15 +31,15 @@ const _prefixSeparator = '/';
 /// The message type is inferred from the [Any.typeUrl] via the [KnownTypes]. If the type is
 /// unknown, an error is thrown.
 ///
-GeneratedMessage unpack(Any any) {
-    any.freeze();
+Message unpack(Any any) {
     var typeUrl = any.typeUrl;
     var builder = theKnownTypes.findBuilderInfo(typeUrl);
     if (builder == null) {
         throw ArgumentError('Cannot unpack unknown type `$typeUrl`.');
     }
     var emptyInstance = builder.createEmptyInstance();
-    return any.unpackInto(emptyInstance).freeze();
+    var generatedMessage = any.getAsMutable().unpackInto(emptyInstance);
+    return theKnownTypes.fromMutable(generatedMessage);
 }
 
 /// Packs the given [message] into an [Any].

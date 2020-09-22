@@ -100,13 +100,16 @@ void _process_file(path, PrebuiltFile file, FileDescriptorSet descriptors, shoul
     var destinationFile = File('${path}/${file.name}');
     _checkExists(destinationFile);
     var generatedContent = destinationFile.readAsStringSync();
-    var renamed = prebuilt.renameClasses(generatedContent, file.name, descriptors);
-    var newContent = renamed + ('\n' * 3) + file.content;
+    for (var sub in file.substitutions.entries) {
+        var pattern = RegExp('\\b${sub.key}\\b');
+        generatedContent = generatedContent.replaceAll(pattern, sub.value);
+  }
+    var newContent = generatedContent + file.additions;
     var lines = LineSplitter().convert(newContent);
     var sortedLines = _sortStatements(lines);
     destinationFile.writeAsStringSync(sortedLines.join('\n'), flush: true);
     if (shouldPrint) {
-        stdout.writeln(file.content);
+        stdout.writeln(file.additions);
     }
 }
 

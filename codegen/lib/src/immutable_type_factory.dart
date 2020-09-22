@@ -24,25 +24,35 @@ import 'package:dart_code_gen/src/type.dart';
 
 const String _builtCollection = 'package:built_collection/built_collection.dart';
 const String _int64 = 'package:fixnum/fixnum.dart';
+const String _message = 'package:spine_client/message.dart';
 
 class ImmutableTypeFactory {
 
     final MessageType _type;
     final TypeSet _knownTypes;
-    final _className;
+    final String _className;
 
-    ImmutableTypeFactory(this._type, this._knownTypes) : _className = _type.dartClassName + "AAA";
+    ImmutableTypeFactory(this._type, this._knownTypes) : _className = _type.dartClassName;
 
     Class generate() {
         var getters = _type.fields.map(_buildField);
+        var message = TypeReference((b) => b
+            ..symbol = 'Message'
+            ..url = _message
+            ..types.add(refer(_type.dartClassName))
+            ..types.add(refer(_type.dartMutableClassName))
+        );
         var builderRef = refer('${_className}Builder');
         var cls = Class((b) {
             b.name = _className;
             b.abstract = true;
+            b.extend = message;
             b.implements.add(_builtRef(builderRef));
+            b.fields.add(_defaultInstance());
             b.constructors
                 ..add(_privateCtor())
-                ..add(_builderCtor(builderRef));
+                ..add(_builderCtor(builderRef))
+                ..add(_copyCtor());
             b.methods.addAll(getters);
         });
         return cls;
@@ -66,6 +76,15 @@ class ImmutableTypeFactory {
         });
     }
 
+    Field _defaultInstance() {
+        return Field((b) => b
+            ..name = 'defaultInstance'
+            ..type = refer(_className)
+            ..static = true
+            ..assignment = Code('$_className()')
+        );
+    }
+
     Constructor _privateCtor() {
         var privateCtor = Constructor((b) {
             b.name = '_';
@@ -75,7 +94,6 @@ class ImmutableTypeFactory {
 
     Constructor _builderCtor(Reference builderRef) {
         var builderCtor = Constructor((b) {
-            b.name = _className;
             b.factory = true;
             b.optionalParameters.add(Parameter((param) {
                 param.type = _updatesFuncType(builderRef);
@@ -84,6 +102,43 @@ class ImmutableTypeFactory {
             b.redirect = refer('_\$$_className');
         });
         return builderCtor;
+    }
+
+    Constructor _copyCtor() {
+        var paramName = 'message';
+        var builderParamName = 'b';
+        var builderCtor = Constructor((b) {
+            b.factory = true;
+            b.name = 'from';
+            b.requiredParameters.add(Parameter((param) {
+                param.type = refer(_type.dartMutableClassName);
+                param.name = paramName;
+            }));
+            b.body = Code('''
+                return ${_type.dartClassName}(($builderParamName) => $builderParamName
+                    ${_initFields('b', paramName)}
+                );
+            ''');
+        });
+        return builderCtor;
+    }
+
+    String _initFields(String target, String source) {
+        var code = StringBuffer();
+        for (var field in _type.fields) {
+            String operator;
+            if (field.isMap) {
+                operator = '.putAll';
+            } else if (field.isRepeated) {
+                operator = '.addAll';
+            } else {
+                operator = ' = ';
+            }
+            code.writeln(
+                '..$target.${field.escapedDartName}$operator($source.${field.escapedDartName})'
+            );
+        }
+        return code.toString();
     }
 
     Reference _updatesFuncType(Reference builderRef) {

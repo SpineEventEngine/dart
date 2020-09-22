@@ -18,6 +18,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'package:built_collection/built_collection.dart';
 import 'package:optional/optional.dart';
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/validate/validation_error.pb.dart';
@@ -61,11 +62,9 @@ class InvalidMessageError extends Error {
     final ValidationError asValidationError;
 
     /// The constraint violations which caused the error.
-    List<ConstraintViolation> get violations => asValidationError.constraintViolation;
+    BuiltList<ConstraintViolation> get violations => asValidationError.constraintViolation;
 
-    InvalidMessageError._(this.asValidationError) {
-        asValidationError.freeze();
-    }
+    InvalidMessageError._(this.asValidationError);
 
     @override
     String toString() =>

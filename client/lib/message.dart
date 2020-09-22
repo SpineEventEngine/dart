@@ -18,22 +18,28 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'dart:typed_data';
+
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/src/known_types.dart';
 import 'package:spine_client/src/validate.dart';
 
 abstract class Message<T extends Message<T, M>, M extends GeneratedMessage> {
 
-    M mutable();
-
-    String typeUrl() {
-        theKnownTypes.typeUrlOf(mutable());
+    M getAsMutable() {
+        return null;
     }
+
+    String getTypeUrl() {
+        return theKnownTypes.typeUrlOf(getAsMutable());
+    }
+
+    Uint8List writeToBuffer() => getAsMutable().writeToBuffer();
 }
 
 abstract class ValidatingBuilder<T extends Message<T, M>, M extends GeneratedMessage> {
 
-    M mutableMessage();
+    M mutableMessage() => build().getAsMutable();
 
     void validate() {
         var msg = mutableMessage();

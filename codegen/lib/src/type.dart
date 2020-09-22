@@ -110,16 +110,28 @@ class MessageType extends Type {
     /// The descriptor of this type.
     final DescriptorProto descriptor;
 
-    MessageType._(file, this.descriptor, fullName, dartClassName) :
+    /// The name of the Dart class generated for this type.
+    ///
+    /// For example, `MutableUri_Protocol`.
+    ///
+    final String dartMutableClassName;
+
+    MessageType._(file, this.descriptor, fullName, dartClassName, this.dartMutableClassName) :
             super._(file, fullName, dartClassName);
 
     /// Creates a `MessageType` from the given descriptor and file assuming the message declaration
     /// is top-level, i.e. the type is not nested within another type.
-    MessageType._fromFile(FileDescriptorProto file, this.descriptor) :
-            super._(file, _fullName(file, descriptor), descriptor.name);
+    MessageType._fromFile(FileDescriptorProto file, DescriptorProto descriptor)
+        : this._(file,
+                 descriptor,
+                 _fullName(file, descriptor),
+                 descriptor.name,
+                 _mutableClassName(descriptor));
 
     static String _fullName(FileDescriptorProto file, DescriptorProto descriptor) =>
-        "${file.package}.${descriptor.name}";
+        '${file.package}.${descriptor.name}';
+
+    static String _mutableClassName(DescriptorProto descriptor) => 'Mutable${descriptor.name}';
 
     List<FieldDeclaration> get fields {
         var fields = descriptor.field.map((descriptor) => FieldDeclaration(this, descriptor));
@@ -153,7 +165,11 @@ class MessageType extends Type {
 
     MessageType _childMessage(DescriptorProto descriptor) {
         var name = descriptor.name;
-        return MessageType._(file, descriptor, _childProtoName(name), _childDartName(name));
+        return MessageType._(file,
+                             descriptor,
+                             _childProtoName(name),
+                             _childDartName(name),
+                             _privateChildDartName(name));
     }
 
     EnumType _childEnum(EnumDescriptorProto descriptor) {
@@ -167,6 +183,10 @@ class MessageType extends Type {
 
     String _childDartName(String simpleName) {
         return '${dartClassName}_${simpleName}';
+    }
+
+    String _privateChildDartName(String simpleName) {
+        return '${dartMutableClassName}_${simpleName}';
     }
 }
 

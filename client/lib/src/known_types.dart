@@ -19,6 +19,7 @@
  */
 
 import 'package:protobuf/protobuf.dart';
+import 'package:spine_client/message.dart';
 import 'package:spine_client/spine/validate/validation_error.pb.dart';
 import 'package:spine_client/types.dart' as standardTypes;
 
@@ -63,6 +64,10 @@ class KnownTypes {
     ValidationError Function(GeneratedMessage) validatorFor(GeneratedMessage message) {
         var typeUrl = typeUrlOf(message.freeze());
         return _validators[typeUrl];
+    }
+
+    Message<M, P> fromMutable<M extends Message<M, P>, P extends GeneratedMessage>(P message) {
+        return null; // TODO:2020-09-21:dmytro.dashenkov: Implement.
     }
 
     /// Constructs a registry for JSON parsing.

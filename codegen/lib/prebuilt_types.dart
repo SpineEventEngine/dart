@@ -25,15 +25,36 @@ import 'package:dart_style/dart_style.dart';
 import 'google/protobuf/descriptor.pb.dart';
 import 'src/type.dart';
 
+const String _generatedBySpine =
+'''
+
+// The code beneath is added by the Spine Dart code generation tool.
+// Please do not edit this manually.
+
+''';
+
 const _BUILT_VALUE = 'package:built_value/built_value.dart';
 
 String renameClasses(String generatedCode, String fileName, FileDescriptorSet descriptors) {
+    var file = descriptors.file.firstWhere(
+            (file) => file.name == fileName,
+            orElse: () => throw Exception('File `$fileName` is not in the descriptor set.')
+    );
+    var types = TypeSet.fromFile(file);
+    for (var type in types.messageTypes) {
+        var pattern = RegExp('\b${type.dartClassName}\b');
+        generatedCode.replaceAll(pattern, type.dartMutableClassName);
+    }
     return generatedCode;
 }
 
 List<PrebuiltFile> generate(FileDescriptorSet descriptors) {
     var files = List<PrebuiltFile>();
     var knownTypes = TypeSet.of(descriptors);
+    var substitutions = Map<String, String>();
+    for (MessageType type in knownTypes.messageTypes) {
+        substitutions[type.dartClassName] = type.dartMutableClassName;
+    }
     for (var file in descriptors.file) {
         var types = TypeSet.fromFile(file).messageTypes;
         if (types.isNotEmpty) {
@@ -44,7 +65,8 @@ List<PrebuiltFile> generate(FileDescriptorSet descriptors) {
                     ..add(Directive.part('${types.first.fileNameNoExtension}.pb.g.dart'));
                 lib.body.addAll(classes);
             });
-            files.add(PrebuiltFile(types.first.dartFilePath, _emit(library)));
+            var content = _generatedBySpine + _emit(library);
+            files.add(PrebuiltFile(types.first.dartFilePath, content, substitutions));
         }
     }
     return files;
@@ -67,7 +89,8 @@ Class _generate(MessageType type, TypeSet knownTypes) {
 class PrebuiltFile {
 
     final String name;
-    final String content;
+    final String additions;
+    final Map<String, String> substitutions;
 
-    PrebuiltFile(this.name, this.content);
+    PrebuiltFile(this.name, this.additions, this.substitutions);
 }
