@@ -82,8 +82,8 @@ class FieldValidatorFactory {
     bool supportsRequired() => true;
 
     /// Creates a new validation rule with the given parameters.
-    Rule newRule(LazyCondition condition, LazyViolation violation) {
-        return Rule._(condition, violation, validatorFactory.report);
+    Rule newRule(LazyCondition condition, LazyViolation violation, {LazyPreparation preparation}) {
+        return Rule._(condition, violation, validatorFactory.report, preparation: preparation);
     }
 
     /// Creates a validation for the `(required)` constraint.
@@ -158,8 +158,7 @@ class SingularFieldValidatorFactory extends FieldValidatorFactory {
     @override
     Code createFieldValidator(Expression fieldValue) {
         var statements = rules()
-            .map((r) => r._eval(fieldValue))
-            .map((expression) => expression.statement);
+            .map((r) => r._eval(fieldValue));
         return statements.isNotEmpty
                ? Block.of(statements)
                : null;
@@ -182,7 +181,7 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
 
     @override
     Code createFieldValidator(Expression field) {
-        var validation = <Expression>[];
+        var validation = <Code>[];
         if (isRequired()) {
             var requiredRule = createRequiredRule();
             validation.add(requiredRule._eval(field));
@@ -194,22 +193,23 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
         if (validateElements != null || validateDistinctList != null) {
             var valueList = field.isA(refer('Map'))
                                  .conditional(field.asA(refer('dynamic')).property('values'), field)
-                                 .assignVar(values);
+                                 .assignVar(values)
+                                 .statement;
             validation.add(valueList);
             if (validateDistinctList != null) {
                 validation.add(validateDistinctList);
             }
             if (validateElements != null) {
-                validation.add(validateElements);
+                validation.add(validateElements.statement);
             }
         }
-        return Block.of(validation.map((expression) => expression.statement));
+        return Block.of(validation);
     }
 
     @override
     LazyCondition notSetCondition() => (v) => v.property('isEmpty');
 
-    Expression _validateDistinct(Reference valuesRef) {
+    Code _validateDistinct(Reference valuesRef) {
         var options = field.options;
         var option = Options.distinct;
         if (options.hasExtension(option) && options.getExtension(option)) {
@@ -261,6 +261,7 @@ class Rule {
     final LazyCondition _condition;
     final LazyViolation _violation;
     final ViolationConsumer _violationConsumer;
+    final LazyPreparation _preparation;
 
     /// Creates a new rule.
     ///
@@ -273,7 +274,11 @@ class Rule {
     /// `ConstraintViolation` and produces an expression which registers the violation with
     /// a [ValidatorFactory].
     ///
-    Rule._(this._condition, this._violation, this._violationConsumer);
+    Rule._(this._condition,
+           this._violation,
+           this._violationConsumer,
+           {LazyPreparation preparation = null})
+        : _preparation = preparation;
 
     /// Produces a ternary operator which creates a new violation if the string is empty.
     ///
@@ -286,11 +291,19 @@ class Rule {
     /// `code_builder` does not support `if` statements, so a ternary conditional operator has to
     /// be used.
     ///
-    Expression _eval(Expression fieldValue) {
+    Code _eval(Expression fieldValue) {
         var ternaryOperator = _condition(fieldValue).conditional(
             _violationConsumer(_violation(fieldValue)),
-            literalNull);
-        return ternaryOperator;
+            literalNull
+        ).statement;
+        if (_preparation != null) {
+            return Block.of([
+                _preparation.call(fieldValue),
+                ternaryOperator
+            ]);
+        } else {
+            return ternaryOperator;
+        }
     }
 }
 
@@ -304,3 +317,5 @@ typedef Expression LazyViolation(Expression fieldValue);
 ///  - `false` if the constraint obeyed.
 ///
 typedef Expression LazyCondition(Expression fieldValue);
+
+typedef Code LazyPreparation(Expression fieldValue);
