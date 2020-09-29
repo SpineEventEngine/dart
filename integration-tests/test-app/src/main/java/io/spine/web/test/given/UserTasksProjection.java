@@ -20,7 +20,6 @@
 
 package io.spine.web.test.given;
 
-import com.google.protobuf.Timestamp;
 import io.spine.core.Subscribe;
 import io.spine.core.UserId;
 import io.spine.server.entity.storage.Column;
@@ -35,8 +34,7 @@ import java.util.List;
  * {@linkplain Column columns} allowing ordering and filtering when user tasks are queried.
  */
 public class UserTasksProjection
-        extends Projection<UserId, UserTasks, UserTasks.Builder>
-        implements UserTasksWithColumns {
+        extends Projection<UserId, UserTasks, UserTasks.Builder> {
 
     protected UserTasksProjection(UserId id) {
         super(id);
@@ -64,21 +62,6 @@ public class UserTasksProjection
         }
 
         builder().setLastUpdated(event.getWhen());
-    }
-
-    @Override
-    public Timestamp getLastUpdated() {
-        return state().getLastUpdated();
-    }
-
-    @Override
-    public int getTaskCount() {
-        return state().getTasksCount();
-    }
-
-    @Override
-    public boolean getOverloaded() {
-        return state().getTasksCount() > 1;
     }
 
     private boolean reassignedFromThisUser(TaskReassigned event) {
