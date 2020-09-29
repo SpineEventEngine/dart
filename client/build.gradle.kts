@@ -35,14 +35,21 @@ apply {
     from(Deps.scripts.updateGitHubPages(project))
 }
 
+val spineBaseVersion: String by extra
 val spineWebVersion: String by extra
 
 dependencies {
     protobuf("io.spine.gcloud:spine-firebase-web:$spineWebVersion")
+
+    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
+    //  resolved, all types must be compiled in a single batch.
+
+    testProtobuf("io.spine:spine-base:$spineBaseVersion")
+    testProtobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
 }
 
 tasks.assemble {
-    dependsOn("generateDart")
+    dependsOn("generateDart", "generateTestDart")
 }
 
 val dartDocDir = Files.createTempDir()

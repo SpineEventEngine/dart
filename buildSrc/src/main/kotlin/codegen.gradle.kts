@@ -19,7 +19,6 @@
  */
 
 import org.apache.tools.ant.taskdefs.condition.Os
-import org.gradle.api.tasks.Internal
 import java.io.File
 
 val windows = Os.isFamily(Os.FAMILY_WINDOWS)
@@ -61,11 +60,22 @@ open class GenerateDart : Exec() {
     var standardTypesPackage: String = ""
 }
 
-tasks.create("generateDart", GenerateDart::class) {
+val generateDartName = "generateDart"
+
+tasks.create(generateDartName, GenerateDart::class) {
     @Suppress("UNCHECKED_CAST")
     descriptor = project.extensions["protoDart"].withGroovyBuilder { getProperty("mainDescriptorSet") } as Property<File>
     target = "$projectDir/lib"
     standardTypesPackage = "spine_client"
+}
+
+tasks.create("generateTestDart", GenerateDart::class) {
+    @Suppress("UNCHECKED_CAST")
+    descriptor = project.extensions["protoDart"].withGroovyBuilder { getProperty("testDescriptorSet") } as Property<File>
+    target = "$projectDir/test"
+    standardTypesPackage = "spine_client"
+
+    shouldRunAfter("${project.path}:$generateDartName")
 }
 
 afterEvaluate {
