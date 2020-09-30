@@ -307,10 +307,10 @@ class Rule {
     }
 }
 
-/// A function of a field value expresion to a `ConstraintViolation` expression.
+/// A function of a field value expression to a `ConstraintViolation` expression.
 typedef Expression LazyViolation(Expression fieldValue);
 
-/// A function of a field value expresion to a boolean expression representing a constraint.
+/// A function of a field value expression to a boolean expression representing a constraint.
 ///
 /// The resulting expression should return a `bool`:
 ///  - `true` if the constraint is violated;
@@ -318,6 +318,6 @@ typedef Expression LazyViolation(Expression fieldValue);
 ///
 typedef Expression LazyCondition(Expression fieldValue);
 
-/// A function of a field value expresion to code which prepares context before the constraint
+/// A function of a field value expression to code which prepares context before the constraint
 /// check.
 typedef Code LazyPreparation(Expression fieldValue);
