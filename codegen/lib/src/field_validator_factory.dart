@@ -318,4 +318,6 @@ typedef Expression LazyViolation(Expression fieldValue);
 ///
 typedef Expression LazyCondition(Expression fieldValue);
 
+/// A function of a field value expresion to code which prepares context before the constraint
+/// check.
 typedef Code LazyPreparation(Expression fieldValue);
