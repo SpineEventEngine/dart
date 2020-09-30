@@ -79,3 +79,17 @@ message LotteryTicket {
 
     uint32 magic_number = 2 [(range) = "[1..69]"];
 }
+
+message TaskId {
+
+    string value = 1 [(required) = true, (pattern).regex = "\\w{20}"];
+}
+
+message WorkInProgressSnapshot {
+
+    map<string, TaskId> assignment = 1 [(validate) = true];
+
+    LocalTime when = 2 [(validate) = true];
+
+    repeated TaskId backlog = 3 [(validate) = true];
+}

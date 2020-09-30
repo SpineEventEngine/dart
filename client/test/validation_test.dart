@@ -20,6 +20,7 @@
 
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/validate/validation_error.pb.dart';
+import 'package:spine_client/src/known_types.dart';
 import 'package:test/test.dart';
 
 import 'google/protobuf/empty.pb.dart';
@@ -31,6 +32,10 @@ import 'types.dart' as types;
 
 void main() {
     group('Generated validators should', () {
+        setUpAll(() {
+            theKnownTypes.register(types.types());
+        });
+
         test('ignore types which should not be validated', () {
             assertValid(Empty());
         });
@@ -200,6 +205,40 @@ void main() {
                 var prefixOnly = PersonName()
                     ..honorificPrefix = 'Dr.';
                 assertInvalid(prefixOnly);
+            });
+
+            test('validate singular message fields', () {
+                var validSnapshot = WorkInProgressSnapshot();
+                validSnapshot.when = LocalTime()
+                    ..hours = 13
+                    ..minutes = 0;
+                assertValid(validSnapshot);
+
+                var invalidSnapshot = WorkInProgressSnapshot();
+                invalidSnapshot.when = LocalTime()
+                    ..hours = 73
+                    ..minutes = 1000;
+                assertInvalid(invalidSnapshot);
+            });
+
+            test('validate repeated message fields', () {
+                var validSnapshot = WorkInProgressSnapshot();
+                validSnapshot.backlog.add(TaskId()..value = 'a' * 20);
+                assertValid(validSnapshot);
+
+                var invalidSnapshot = WorkInProgressSnapshot();
+                invalidSnapshot.backlog.add(TaskId()..value = 'wrong characters');
+                assertInvalid(invalidSnapshot);
+            });
+
+            test('validate map message fields', () {
+                var validSnapshot = WorkInProgressSnapshot();
+                validSnapshot.assignment['John'] = TaskId()..value = 'b' * 20;
+                assertValid(validSnapshot);
+
+                var invalidSnapshot = WorkInProgressSnapshot();
+                invalidSnapshot.assignment['Hank'] = TaskId()..value = 'wrong characters';
+                assertInvalid(invalidSnapshot);
             });
         });
     });
