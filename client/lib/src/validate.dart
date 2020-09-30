@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -18,6 +18,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'package:built_collection/built_collection.dart';
 import 'package:optional/optional.dart';
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/validate/validation_error.pb.dart';
@@ -30,6 +31,7 @@ import 'package:sprintf/sprintf.dart';
 ///
 Optional<ValidationError> validate(GeneratedMessage message) {
     ArgumentError.checkNotNull(message, 'message');
+    message.freeze();
     var validate = theKnownTypes.validatorFor(message);
     if (validate == null) {
         return Optional.empty();
@@ -44,6 +46,7 @@ Optional<ValidationError> validate(GeneratedMessage message) {
 /// Validates the given message according to the constrains defined in Protobuf and throws
 /// an [InvalidMessageError] if the [message] is invalid.
 void checkValid(GeneratedMessage message) {
+    message.freeze();
     var error = validate(message);
     error.ifPresent((e) => throw InvalidMessageError._(e));
 }
@@ -59,11 +62,9 @@ class InvalidMessageError extends Error {
     final ValidationError asValidationError;
 
     /// The constraint violations which caused the error.
-    List<ConstraintViolation> get violations => asValidationError.constraintViolation;
+    BuiltList<ConstraintViolation> get violations => asValidationError.constraintViolation;
 
-    InvalidMessageError._(this.asValidationError) {
-        asValidationError.freeze();
-    }
+    InvalidMessageError._(this.asValidationError);
 
     @override
     String toString() =>

@@ -18,23 +18,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package io.spine.web.test.given;
+import 'dart:typed_data';
 
-import io.spine.web.firebase.query.FirebaseQueryResponse;
-import io.spine.web.query.QueryServlet;
+import 'package:protobuf/protobuf.dart';
+import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/src/validate.dart';
 
-import javax.servlet.annotation.WebServlet;
+abstract class Message<T extends Message<T, M>, M extends GeneratedMessage> {
 
-import static io.spine.web.test.given.Server.application;
+    M getAsMutable() {
+        return null;
+    }
 
-/**
- * The query side endpoint of the application.
- */
-@WebServlet("/query")
-@SuppressWarnings("serial")
-public class TestQueryServlet extends QueryServlet<FirebaseQueryResponse> {
+    String getTypeUrl() {
+        return theKnownTypes.typeUrlOf(getAsMutable());
+    }
 
-    public TestQueryServlet() {
-        super(application().queryBridge());
+    Uint8List writeToBuffer() => getAsMutable().writeToBuffer();
+}
+
+abstract class ValidatingBuilder<T extends Message<T, M>, M extends GeneratedMessage> {
+
+    M mutableMessage() => build().getAsMutable();
+
+    void validate() {
+        var msg = mutableMessage();
+        checkValid(msg);
+    }
+
+    T build();
+
+    T vBuild() {
+        validate();
+        return build();
     }
 }

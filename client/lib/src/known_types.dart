@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -19,6 +19,7 @@
  */
 
 import 'package:protobuf/protobuf.dart';
+import 'package:spine_client/message.dart';
 import 'package:spine_client/spine/validate/validation_error.pb.dart';
 import 'package:spine_client/types.dart' as standardTypes;
 
@@ -61,8 +62,12 @@ class KnownTypes {
 
     /// Obtains a validator function for the given message.
     ValidationError Function(GeneratedMessage) validatorFor(GeneratedMessage message) {
-        var typeUrl = typeUrlOf(message);
+        var typeUrl = typeUrlOf(message.freeze());
         return _validators[typeUrl];
+    }
+
+    Message<M, P> fromMutable<M extends Message<M, P>, P extends GeneratedMessage>(P message) {
+        return null; // TODO:2020-09-21:dmytro.dashenkov: Implement.
     }
 
     /// Constructs a registry for JSON parsing.

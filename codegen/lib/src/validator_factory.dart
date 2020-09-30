@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -107,7 +107,7 @@ class ValidatorFactory {
 
     Code _createFieldValidators() {
         var validations = <Code>[];
-        for (var field in type.descriptor.field) {
+        for (var field in type.fields) {
             var validator = _createFieldValidator(field);
             if (validator != null) {
                 validations.add(validator);
@@ -137,7 +137,7 @@ class ValidatorFactory {
     ///
     /// See [FieldValidatorFactory] for more on field validation.
     ///
-    Code _createFieldValidator(FieldDescriptorProto field) {
+    Code _createFieldValidator(FieldDeclaration field) {
         var factory = FieldValidatorFactory.forField(field, this);
         if (factory != null) {
             var fieldValue = accessField(field);
@@ -147,8 +147,8 @@ class ValidatorFactory {
         }
     }
 
-    Expression accessField(FieldDescriptorProto field) =>
-        _typedMessage.property(_fieldName(field));
+    Expression accessField(FieldDeclaration field) =>
+        _typedMessage.property(field.dartName);
 
     Expression get _typedMessage =>
         refer(_msg).asA(_typeRef(properties.importPrefix));

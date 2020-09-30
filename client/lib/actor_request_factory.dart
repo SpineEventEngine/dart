@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -61,14 +61,13 @@ class ActorRequestFactory {
     }
 
     ActorContext _context() {
-        var ctx = ActorContext();
-        ctx
+        return ActorContext((b) => b
             ..actor = this.actor
             ..timestamp = time.now()
-            ..tenantId = this.tenant ?? TenantId.getDefault()
+            ..tenantId = this.tenant ?? TenantId.defaultInstance
             ..zoneOffset = zoneOffset ?? time.zoneOffset()
-            ..zoneId = zoneId ?? time.guessZoneId();
-        return ctx;
+            ..zoneId = zoneId ?? time.guessZoneId()
+        );
     }
 }
 

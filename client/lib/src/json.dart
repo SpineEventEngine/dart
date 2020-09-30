@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -21,10 +21,17 @@
 import 'dart:convert';
 
 import 'package:protobuf/protobuf.dart';
+import 'package:spine_client/message.dart';
 
 import 'known_types.dart';
 
 const _json = JsonCodec();
+
+M parseAs<M extends Message<M, P>, P extends GeneratedMessage>(M defaultInstance, String json) {
+    P mutable = defaultInstance.getAsMutable();
+    parseInto(mutable, json);
+    return theKnownTypes.fromMutable<M, P>(mutable);
+}
 
 /// Parses the given JSON string into a message.
 void parseInto(GeneratedMessage message, String json) {
@@ -32,6 +39,7 @@ void parseInto(GeneratedMessage message, String json) {
     message.mergeFromProto3Json(jsonMap,
                                 ignoreUnknownFields: true,
                                 typeRegistry: theKnownTypes.registry());
+    message.freeze();
 }
 
 /// Parses the given JSON string into a new instance of the message described by the [builder].

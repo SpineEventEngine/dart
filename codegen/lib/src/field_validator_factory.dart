@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -22,6 +22,7 @@ import 'package:code_builder/code_builder.dart';
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
 import 'package:dart_code_gen/src/bytes_validator_factory.dart';
+import 'package:dart_code_gen/src/type.dart';
 
 import 'constraint_violation.dart';
 import 'enum_validator_factory.dart';
@@ -38,7 +39,7 @@ class FieldValidatorFactory {
     final ValidatorFactory validatorFactory;
 
     /// The field to validate.
-    final FieldDescriptorProto field;
+    final FieldDeclaration field;
 
     FieldValidatorFactory(this.validatorFactory, this.field);
 
@@ -46,9 +47,9 @@ class FieldValidatorFactory {
     ///
     /// May return `null` to signify that no validation is required for the given field.
     ///
-    factory FieldValidatorFactory.forField(FieldDescriptorProto field, ValidatorFactory factory) {
+    factory FieldValidatorFactory.forField(FieldDeclaration field, ValidatorFactory factory) {
         var singularFactory = SingularFieldValidatorFactory._forType(field, factory);
-        var repeated = field.label == FieldDescriptorProto_Label.LABEL_REPEATED;
+        var repeated = field.descriptor.label == FieldDescriptorProto_Label.LABEL_REPEATED;
         if (repeated) {
             return RepeatedFieldValidatorFactory(factory, field, singularFactory);
         } else {
@@ -70,7 +71,7 @@ class FieldValidatorFactory {
     /// Returns `true` if the field is required and `false` if it is optional.
     ///
     bool isRequired() {
-        var options = field.options;
+        var options = field.descriptor.options;
         return options.hasExtension(Options.required)
             && options.getExtension(Options.required);
     }
@@ -103,7 +104,7 @@ class FieldValidatorFactory {
     Expression _requiredMissing() {
         return violationRef.call([literalString('Field must be set.'),
                                   literalString(validatorFactory.fullTypeName),
-                                  literalList([field.name])]);
+                                  literalList([field.protoName])]);
     }
 }
 
@@ -111,12 +112,12 @@ class FieldValidatorFactory {
 ///
 class SingularFieldValidatorFactory extends FieldValidatorFactory {
 
-    SingularFieldValidatorFactory(ValidatorFactory validatorFactory, FieldDescriptorProto field)
+    SingularFieldValidatorFactory(ValidatorFactory validatorFactory, FieldDeclaration field)
         : super(validatorFactory, field);
 
-    factory SingularFieldValidatorFactory._forType(FieldDescriptorProto field,
+    factory SingularFieldValidatorFactory._forType(FieldDeclaration field,
                                                    ValidatorFactory factory) {
-        var type = field.type;
+        var type = field.descriptor.type;
         switch (type) {
             case FieldDescriptorProto_Type.TYPE_STRING:
                 return StringValidatorFactory(factory, field);
@@ -176,7 +177,7 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
     final FieldValidatorFactory _singular;
 
     RepeatedFieldValidatorFactory(ValidatorFactory validatorFactory,
-                                  FieldDescriptorProto field,
+                                  FieldDeclaration field,
                                   this._singular)
         : super(validatorFactory, field);
 
@@ -187,7 +188,7 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
             var requiredRule = createRequiredRule();
             validation.add(requiredRule._eval(field));
         }
-        var values = 'values_${this.field.name}';
+        var values = 'values_${this.field.protoName}';
         var valuesRef = refer(values);
         var validateDistinctList = _validateDistinct(valuesRef);
         var validateElements = _validateEachElement(valuesRef);
@@ -210,7 +211,7 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
     LazyCondition notSetCondition() => (v) => v.property('isEmpty');
 
     Expression _validateDistinct(Reference valuesRef) {
-        var options = field.options;
+        var options = field.descriptor.options;
         var option = Options.distinct;
         if (options.hasExtension(option) && options.getExtension(option)) {
             var length = 'length';
@@ -220,7 +221,7 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
             LazyViolation violation = (v) =>
                 violationRef.call([literalString('Collection must be distinct.'),
                                       literalString(validatorFactory.fullTypeName),
-                                      literalList([field.name])]);
+                                      literalList([field.protoName])]);
             var distinctRule = newRule(condition, violation);
             return distinctRule._eval(valuesRef);
         } else {

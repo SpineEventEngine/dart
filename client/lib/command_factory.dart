@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -40,18 +40,18 @@ class CommandFactory {
             ..id = _newId()
             ..message = pack(message)
             ..context = _buildContext();
-        return cmd;
+        return cmd.freeze();
     }
 
     CommandContext _buildContext() {
         var ctx = CommandContext();
         ctx.actorContext = _context();
-        return ctx;
+        return ctx.freeze();
     }
 
     CommandId _newId() {
         var id = CommandId();
         id.uuid = newUuid();
-        return id;
+        return id.freeze();
     }
 }

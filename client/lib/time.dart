@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -23,15 +23,16 @@ import 'package:spine_client/spine/time/time.pb.dart';
 
 /// Obtains a [Timestamp] with the current time.
 Timestamp now() {
-    return Timestamp.fromDateTime(DateTime.now());
+    return Timestamp.from(
+        MutableTimestamp.fromDateTime(DateTime.now())
+    );
 }
 
 /// Obtains the current time zone offset.
 ZoneOffset zoneOffset() {
     var dateTime = DateTime.now();
     var zoneOffset = dateTime.timeZoneOffset;
-    var offset = ZoneOffset();
-    offset.amountSeconds = zoneOffset.inSeconds;
+    var offset = ZoneOffset((b) => b.amountSeconds = zoneOffset.inSeconds);
     return offset;
 }
 
@@ -45,7 +46,6 @@ ZoneOffset zoneOffset() {
 ZoneId guessZoneId() {
     var dateTime = DateTime.now();
     var zoneName = dateTime.timeZoneName;
-    var zoneId = ZoneId();
-    zoneId.value = zoneName;
+    var zoneId = ZoneId((b) => b.value = zoneName);
     return zoneId;
 }

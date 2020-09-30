@@ -39,14 +39,24 @@ if (!file(command).exists()) {
     logger.warn("Cannot locate `dart_code_gen` under `$command`.")
 }
 
-fun composeCommandLine(descriptor: File, targetDir: String, standardTypesPackage: String) =
-        listOf(
-                command,
-                "--descriptor", "${file(descriptor)}",
-                "--destination", "$targetDir/types.dart",
-                "--standard-types", standardTypesPackage,
-                "--import-prefix", "."
-        )
+fun composeCommandLine(descriptor: File,
+                       targetDir: String,
+                       standardTypesPackage: String,
+                       generateImmutableTypes: Boolean): List<String> {
+    val args = mutableListOf(
+            command,
+            "--descriptor", descriptor.path,
+            "--destination", "$targetDir/types.dart",
+            "--standard-types", standardTypesPackage,
+            "--import-prefix", "."
+    )
+    if (generateImmutableTypes) {
+        args.add("--immutable-types")
+        args.add(targetDir)
+    }
+    return args
+}
+
 
 /**
  * Task which launches Dart code generation from Protobuf.
@@ -59,19 +69,36 @@ open class GenerateDart : Exec() {
     var target: String = ""
     @Internal
     var standardTypesPackage: String = ""
+    @Internal
+    var generateImmutableTypes: Boolean = true
 }
 
-tasks.create("generateDart", GenerateDart::class) {
+val pub = "pub" + if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""
+
+val pubGet by tasks.creating(Exec::class) {
+    commandLine(pub, "get")
+}
+
+val generateDart by tasks.creating(GenerateDart::class) {
     @Suppress("UNCHECKED_CAST")
     descriptor = project.extensions["protoDart"].withGroovyBuilder { getProperty("mainDescriptorSet") } as Property<File>
     target = "$projectDir/lib"
     standardTypesPackage = "spine_client"
 }
 
+val launchBuilder by tasks.creating(Exec::class) {
+    commandLine(pub, "run", "build_runner", "build")
+    dependsOn(generateDart, pubGet)
+    generateDart.finalizedBy(this)
+}
+
 afterEvaluate {
     tasks.withType(GenerateDart::class) {
         inputs.file(descriptor)
-        commandLine(composeCommandLine(file(descriptor.get()), target, standardTypesPackage))
+        commandLine(composeCommandLine(file(descriptor.get()),
+                                       target,
+                                       standardTypesPackage,
+                                       generateImmutableTypes))
         dependsOn(":codegen:activateLocally")
     }
 }

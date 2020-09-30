@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -21,6 +21,7 @@
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
+import 'package:dart_code_gen/src/type.dart';
 
 import 'constraint_violation.dart';
 import 'field_validator_factory.dart';
@@ -32,12 +33,12 @@ import 'validator_factory.dart';
 ///
 class StringValidatorFactory extends SingularFieldValidatorFactory {
 
-    StringValidatorFactory(ValidatorFactory validatorFactory, FieldDescriptorProto field)
+    StringValidatorFactory(ValidatorFactory validatorFactory, FieldDeclaration field)
         : super(validatorFactory, field);
 
     @override
     Iterable<Rule> rules() {
-        var options = field.options;
+        var options = field.descriptor.options;
         var rules = <Rule>[];
         if (isRequired()) {
             rules.add(createRequiredRule());
@@ -73,6 +74,6 @@ class StringValidatorFactory extends SingularFieldValidatorFactory {
         var message = 'String must match the regular expression `$pattern`';
         return violationRef.call([literalString(message, raw: true),
                                   literalString(validatorFactory.fullTypeName),
-                                  literalList([field.name])]);
+                                  literalList([field.protoName])]);
     }
 }

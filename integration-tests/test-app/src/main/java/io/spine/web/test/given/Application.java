@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -20,7 +20,6 @@
 
 package io.spine.web.test.given;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
@@ -92,10 +91,8 @@ final class Application {
 
         // Same credentials but represented with different Java objects.
         GoogleCredentials credentials;
-        GoogleCredential credential;
         try {
             credentials = GoogleCredentials.fromStream(googleCredentialsFile.open());
-            credential = GoogleCredential.fromStream(googleCredentialsFile.open());
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -107,7 +104,7 @@ final class Application {
         FirebaseApp.initializeApp(options);
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
-        FirebaseCredentials firebaseCredentials = fromGoogleCredentials(credential);
+        FirebaseCredentials firebaseCredentials = fromGoogleCredentials(credentials);
         FirebaseClient firebaseClient = remoteClient(database, firebaseCredentials);
         return new TidyClient(firebaseClient);
     }

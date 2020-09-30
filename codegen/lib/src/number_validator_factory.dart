@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -21,6 +21,7 @@
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
+import 'package:dart_code_gen/src/type.dart';
 
 import 'constraint_violation.dart';
 import 'field_validator_factory.dart';
@@ -38,7 +39,7 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
     final String _wrapperType;
 
     NumberValidatorFactory(ValidatorFactory validatorFactory,
-                           FieldDescriptorProto field,
+                           FieldDeclaration field,
                            this._wrapperType)
         : super(validatorFactory, field);
 
@@ -49,7 +50,7 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
     @override
     Iterable<Rule> rules() {
         var rules = <Rule>[];
-        var options = field.options;
+        var options = field.descriptor.options;
         if (options.hasExtension(Options.min)) {
             Rule min = _minRule(options);
             rules.add(min);
@@ -139,7 +140,7 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
         var any = refer('Any', protoAnyImport(standardPackage)).property('pack').call([floatValue]);
         return violationRef.call([literalString('Number is out of bound.'),
                                   literalString(validatorFactory.fullTypeName),
-                                  literalList([field.name]),
+                                  literalList([field.protoName]),
                                   any]);
     }
 }
@@ -149,19 +150,19 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
 class DoubleValidatorFactory extends NumberValidatorFactory<double> {
 
     DoubleValidatorFactory._(ValidatorFactory validatorFactory,
-                             FieldDescriptorProto field,
+                             FieldDeclaration field,
                              String wrapperType)
         : super(validatorFactory, field, wrapperType);
 
     /// Creates a new validator factory for a `float` field.
     factory DoubleValidatorFactory.forFloat(ValidatorFactory validatorFactory,
-                                            FieldDescriptorProto field) {
+                                            FieldDeclaration field) {
         return DoubleValidatorFactory._(validatorFactory, field, 'FloatValue');
     }
 
     /// Creates a new validator factory for a `double` field.
     factory DoubleValidatorFactory.forDouble(ValidatorFactory validatorFactory,
-                                             FieldDescriptorProto field) {
+                                             FieldDeclaration field) {
         return DoubleValidatorFactory._(validatorFactory, field, 'DoubleValue');
     }
 
@@ -174,7 +175,7 @@ class DoubleValidatorFactory extends NumberValidatorFactory<double> {
 class IntValidatorFactory extends NumberValidatorFactory<int> {
 
     IntValidatorFactory._(ValidatorFactory validatorFactory,
-                          FieldDescriptorProto field,
+                          FieldDeclaration field,
                           String wrapperType)
         : super(validatorFactory, field, wrapperType);
 
@@ -184,7 +185,7 @@ class IntValidatorFactory extends NumberValidatorFactory<int> {
     /// by this factory.
     ///
     factory IntValidatorFactory.forInt32(ValidatorFactory validatorFactory,
-                                         FieldDescriptorProto field) {
+                                         FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'Int32Value');
     }
 
@@ -194,19 +195,19 @@ class IntValidatorFactory extends NumberValidatorFactory<int> {
     /// by this factory.
     ///
     factory IntValidatorFactory.forInt64(ValidatorFactory validatorFactory,
-                                         FieldDescriptorProto field) {
+                                         FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'Int64Value');
     }
 
     /// Creates a new validator factory for a unsigned 32-bit integer.
     factory IntValidatorFactory.forUInt32(ValidatorFactory validatorFactory,
-                                          FieldDescriptorProto field) {
+                                          FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'UInt32Value');
     }
 
     /// Creates a new validator factory for a unsigned 64-bit integer.
     factory IntValidatorFactory.forUInt64(ValidatorFactory validatorFactory,
-                                          FieldDescriptorProto field) {
+                                          FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'UInt64Value');
     }
 

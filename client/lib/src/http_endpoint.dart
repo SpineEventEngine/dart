@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -21,7 +21,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:protobuf/protobuf.dart';
+import 'package:spine_client/message.dart';
 import 'package:spine_client/src/url.dart';
 
 const _base64 = Base64Codec();
@@ -39,7 +39,7 @@ class HttpEndpoint {
     ///
     /// The given [path] will be concatenated with the [_baseUrl].
     ///
-    Future<http.Response> postMessage(String path, GeneratedMessage message) async {
+    Future<http.Response> postMessage(String path, Message message) async {
         var bytes = message.writeToBuffer();
         var url = Url.from(_baseUrl, path).stringUrl;
         var response = await http.post(url,

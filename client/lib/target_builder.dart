@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -25,23 +25,34 @@ import 'package:spine_client/src/known_types.dart';
 
 /// Creates a target which matches all messages of type.
 Target targetAll(GeneratedMessage instance) {
+    instance.freeze();
     var target = Target();
     target
         ..type = _typeUrl(instance)
         ..includeAll = true;
-    return target;
+    return target.freeze();
 }
 
 /// Creates a target which matches messages with the given IDs.
 Target targetByIds(GeneratedMessage instance, List<Any> ids) {
+    instance.freeze();
+    _freeze(ids);
     var target = Target();
     target.type = _typeUrl(instance);
     var filters = TargetFilters();
     var idFilter = IdFilter();
     idFilter.id.addAll(ids);
-    filters.idFilter = idFilter;
-    target.filters = filters;
-    return target;
+    filters.idFilter = idFilter.freeze();
+    target.filters = filters.freeze();
+    return target.freeze();
+}
+
+_freeze(List<Any> ids) {
+    ids.forEach(_freezeAny);
+}
+
+_freezeAny(Any any) {
+    any.freeze();
 }
 
 String _typeUrl(GeneratedMessage message) {

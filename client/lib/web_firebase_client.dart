@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -63,7 +63,7 @@ class WebFirebaseClient implements FirebaseClient {
             .map(_toJsonString);
     }
 
-    String _toJsonString(event) {
+    String _toJsonString(fb.QueryEvent event) {
         return event.snapshot.toJson().toString();
     }
 }

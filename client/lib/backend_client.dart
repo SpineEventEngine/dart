@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -23,6 +23,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
+import 'package:spine_client/message.dart';
 import 'package:spine_client/src/http_endpoint.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/spine/client/subscription.pb.dart' as pb;
@@ -153,27 +154,18 @@ class BackendClient {
         return subscription;
     }
 
-    Ack _parseAck(http.Response response) {
-        var ack = Ack();
-        _parseInto(ack, response);
-        return ack;
-    }
+    Ack _parseAck(http.Response response) =>
+        _parse(Ack.defaultInstance, response);
 
-    FirebaseQueryResponse _parseQueryResponse(http.Response response) {
-        var queryResponse = FirebaseQueryResponse();
-        _parseInto(queryResponse, response);
-        return queryResponse;
-    }
+    FirebaseQueryResponse _parseQueryResponse(http.Response response) =>
+        _parse(FirebaseQueryResponse.defaultInstance, response);
 
-    FirebaseSubscription _parseFirebaseSubscription(http.Response response) {
-        var firebaseSubscription = FirebaseSubscription();
-        _parseInto(firebaseSubscription, response);
-        return firebaseSubscription;
-    }
+    FirebaseSubscription _parseFirebaseSubscription(http.Response response) =>
+        _parse(FirebaseSubscription.defaultInstance, response);
 
-    void _parseInto(GeneratedMessage message, http.Response response) {
+    M _parse<M extends Message<M, P>, P extends GeneratedMessage>(M defaultInstance, http.Response response) {
         var json = response.body;
-        parseInto(message, json);
+        return parseAs(defaultInstance, json);
     }
 
     void _keepUpSubscriptions() {

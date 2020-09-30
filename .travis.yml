@@ -35,7 +35,7 @@ script:
 deploy:
   skip_cleanup: false
   provider: script
-  script: bash config/publish-artifacts.sh
+  script: bash config/scripts/publish-artifacts.sh
   on:
     branch: master
     condition: $TRAVIS_PULL_REQUEST == "false"
