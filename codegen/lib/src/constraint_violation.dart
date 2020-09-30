@@ -37,7 +37,7 @@ const _violation = '_violation';
 const violationRef = Reference(_violation);
 
 const actualValueArg = 'actualValue';
-const childConstrainsArg = 'childConstrains';
+const childConstrainsArg = 'childConstraints';
 
 Reference violationTypeRef(String standardPackage) =>
     Reference(_violationType, validationErrorImport(standardPackage));

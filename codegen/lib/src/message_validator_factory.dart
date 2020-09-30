@@ -60,7 +60,7 @@ class MessageValidatorFactory extends SingularFieldValidatorFactory {
     }
 
     Rule _createValidateRule() {
-        var violationsVar = 'violationsOf${field.name}';
+        var violationsVar = 'violationsOf_${field.name}';
         return newRule((fieldValue) => _isValidExpression(fieldValue, refer(violationsVar)),
                        (fieldValue) => _produceViolation(refer(violationsVar)),
           preparation: (fieldValue) => _produceChildViolations(violationsVar, fieldValue));
