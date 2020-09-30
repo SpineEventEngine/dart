@@ -37,7 +37,7 @@ const _violation = '_violation';
 const violationRef = Reference(_violation);
 
 const actualValueArg = 'actualValue';
-const childConstrainsArg = 'childConstraints';
+const childConstraintsArg = 'childConstraints';
 
 Reference violationTypeRef(String standardPackage) =>
     Reference(_violationType, validationErrorImport(standardPackage));
@@ -80,7 +80,7 @@ createViolationFactory(String standardPackage) {
         var childConstrainsParam = Parameter((b) => b
             ..named = true
             ..type = listOfViolations
-            ..name = childConstrainsArg
+            ..name = childConstraintsArg
         );
         b.name = _violation;
         b.requiredParameters

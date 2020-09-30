@@ -92,7 +92,7 @@ class MessageValidatorFactory extends SingularFieldValidatorFactory {
             literalString(validatorFactory.fullTypeName),
             literalList([field.name])
         ], {
-            childConstrainsArg: violationsVar.property('value').property('constraintViolation')
+            childConstraintsArg: violationsVar.property('value').property('constraintViolation')
         });
     }
 }
