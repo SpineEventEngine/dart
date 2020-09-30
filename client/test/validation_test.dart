@@ -207,7 +207,7 @@ void main() {
                 assertInvalid(prefixOnly);
             });
 
-            test('validate singular message fields', () {
+            test('singular message fields', () {
                 var validSnapshot = WorkInProgressSnapshot();
                 validSnapshot.when = LocalTime()
                     ..hours = 13
@@ -221,7 +221,7 @@ void main() {
                 assertInvalid(invalidSnapshot);
             });
 
-            test('validate repeated message fields', () {
+            test('repeated message fields', () {
                 var validSnapshot = WorkInProgressSnapshot();
                 validSnapshot.backlog.add(TaskId()..value = 'a' * 20);
                 assertValid(validSnapshot);
@@ -231,7 +231,7 @@ void main() {
                 assertInvalid(invalidSnapshot);
             });
 
-            test('validate map message fields', () {
+            test('map message fields', () {
                 var validSnapshot = WorkInProgressSnapshot();
                 validSnapshot.assignment['John'] = TaskId()..value = 'b' * 20;
                 assertValid(validSnapshot);
