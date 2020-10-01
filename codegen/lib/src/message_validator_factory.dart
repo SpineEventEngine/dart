@@ -53,12 +53,14 @@ class MessageValidatorFactory extends SingularFieldValidatorFactory {
     LazyCondition notSetCondition() =>
             (v) => v.property('createEmptyInstance').call([]).equalTo(v);
 
+    /// Checks if the field should be validated according to the `(validate)` option.
     bool _shouldValidate() {
         var options = field.options;
         return options.hasExtension(Options.validate)
             && options.getExtension(Options.validate);
     }
 
+    /// Constructs a [Rule] for validating the field message value.
     Rule _createValidateRule() {
         var violationsVar = 'violationsOf_${field.name}';
         return newRule((fieldValue) => _isValidExpression(fieldValue, refer(violationsVar)),
@@ -68,12 +70,13 @@ class MessageValidatorFactory extends SingularFieldValidatorFactory {
 
     Expression _isValidExpression(Expression fieldValue, Expression fieldViolationsList) {
         var notSet = notSetCondition().call(fieldValue);
-        var isSet = _brackets(notSet).negate();
+        var isSet = _parentheses(notSet).negate();
         var hasViolations = fieldViolationsList.property('isPresent');
         return isSet.and(hasViolations);
     }
 
-    Expression _brackets(Expression content) {
+    /// Creates an expression which inboxes the given [content] into parentheses.
+    Expression _parentheses(Expression content) {
         return CodeExpression(Block.of([
             const Code('('),
             content.code,
