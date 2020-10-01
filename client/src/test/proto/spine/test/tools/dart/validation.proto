@@ -85,11 +85,19 @@ message TaskId {
     string value = 1 [(required) = true, (pattern).regex = "\\w{20}"];
 }
 
+// A snapshot of task assignments at a point in time.
 message WorkInProgressSnapshot {
 
+    // Task assignments.
+    //
+    // The keys are the `UserId.value` strings of the assignees. The values are
+    // the task IDs.
+    //
     map<string, TaskId> assignment = 1 [(validate) = true];
 
+    // When the snapshot was taken.
     LocalTime when = 2 [(validate) = true];
 
+    // IDs of tasks which are not yet assigned but are to be done in the nearest future.
     repeated TaskId backlog = 3 [(validate) = true];
 }
