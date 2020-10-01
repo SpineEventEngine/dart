@@ -24,7 +24,7 @@ import 'package:spine_client/spine/validate/validation_error.pb.dart';
 import 'package:spine_client/src/known_types.dart';
 import 'package:sprintf/sprintf.dart';
 
-/// Validates the given message according to the constrains defined in Protobuf.
+/// Validates the given message according to the constraints defined in Protobuf.
 ///
 /// Returns a [ValidationError] if the [message] is invalid, otherwise returns `null`.
 ///
@@ -41,7 +41,7 @@ Optional<ValidationError> validate(GeneratedMessage message) {
     return Optional.of(error);
 }
 
-/// Validates the given message according to the constrains defined in Protobuf and throws
+/// Validates the given message according to the constraints defined in Protobuf and throws
 /// an [InvalidMessageError] if the [message] is invalid.
 void checkValid(GeneratedMessage message) {
     var error = validate(message);

@@ -60,7 +60,7 @@ class FieldValidatorFactory {
     ///
     /// The validator obtains the field value via the given [fieldValue] expression.
     ///
-    /// If any constrains violations are discovered, they are registered with
+    /// If any constraint violations are discovered, they are registered with
     /// the [validatorFactory].
     ///
     Code createFieldValidator(Expression fieldValue) => null;
@@ -75,7 +75,7 @@ class FieldValidatorFactory {
             && options.getExtension(Options.required);
     }
 
-    /// Determines if this field type supports `(required)` and related constrains.
+    /// Determines if this field type supports `(required)` and related constraints.
     ///
     /// `true` by default.
     ///
@@ -152,7 +152,7 @@ class SingularFieldValidatorFactory extends FieldValidatorFactory {
     ///
     /// The validator obtains the field value via the given [fieldValue] expression.
     ///
-    /// If any constrains violations are discovered, they are added to
+    /// If any constraint violations are discovered, they are added to
     /// the [ValidatorFactory.violationList] of the [validatorFactory].
     ///
     @override

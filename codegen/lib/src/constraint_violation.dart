@@ -77,7 +77,7 @@ createViolationFactory(String standardPackage) {
             ..symbol = 'List'
             ..types.add(violationTypeRef(standardPackage))
         );
-        var childConstrainsParam = Parameter((b) => b
+        var childConstraintsParam = Parameter((b) => b
             ..named = true
             ..type = listOfViolations
             ..name = childConstraintsArg
@@ -89,7 +89,7 @@ createViolationFactory(String standardPackage) {
             ..add(fieldPathParam);
         b.optionalParameters
             ..add(actualValueParam)
-            ..add(childConstrainsParam);
+            ..add(childConstraintsParam);
         var path = 'path';
         var type = violationTypeRef(standardPackage);
         b..returns = type
