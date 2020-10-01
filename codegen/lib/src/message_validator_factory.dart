@@ -18,12 +18,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'package:code_builder/code_builder.dart';
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
+import 'package:dart_code_gen/spine/options.pb.dart';
+import 'package:dart_code_gen/src/constraint_violation.dart';
 import 'package:dart_code_gen/src/field_validator_factory.dart';
 import 'package:dart_code_gen/src/validator_factory.dart';
 
 import 'field_validator_factory.dart';
 import 'validator_factory.dart';
+
+const String _validateLib = 'package:spine_client/validate.dart';
 
 /// A [FieldValidatorFactory] for message fields.
 ///
@@ -38,10 +43,59 @@ class MessageValidatorFactory extends SingularFieldValidatorFactory {
         if (isRequired()) {
             rules.add(createRequiredRule());
         }
+        if (_shouldValidate()) {
+            rules.add(_createValidateRule());
+        }
         return rules;
     }
 
     @override
     LazyCondition notSetCondition() =>
             (v) => v.property('createEmptyInstance').call([]).equalTo(v);
+
+    /// Checks if the field should be validated according to the `(validate)` option.
+    bool _shouldValidate() {
+        var options = field.options;
+        return options.hasExtension(Options.validate)
+            && options.getExtension(Options.validate);
+    }
+
+    /// Constructs a [Rule] for validating the field message value.
+    Rule _createValidateRule() {
+        var violationsVar = 'violationsOf_${field.name}';
+        return newRule((fieldValue) => _isValidExpression(fieldValue, refer(violationsVar)),
+                       (fieldValue) => _produceViolation(refer(violationsVar)),
+          preparation: (fieldValue) => _produceChildViolations(violationsVar, fieldValue));
+    }
+
+    Expression _isValidExpression(Expression fieldValue, Expression fieldViolationsList) {
+        var notSet = notSetCondition().call(fieldValue);
+        var isSet = _parentheses(notSet).negate();
+        var hasViolations = fieldViolationsList.property('isPresent');
+        return isSet.and(hasViolations);
+    }
+
+    /// Creates an expression which inboxes the given [content] into parentheses.
+    Expression _parentheses(Expression content) {
+        return CodeExpression(Block.of([
+            const Code('('),
+            content.code,
+            const Code(')')
+        ]));
+    }
+
+    Code _produceChildViolations(String targetViolationsVar, Expression fieldValue) {
+        var violationsCall = refer('validate', _validateLib).call([fieldValue]);
+        return violationsCall.assignVar(targetViolationsVar).statement;
+    }
+
+    Expression _produceViolation(Expression violationsVar) {
+        return violationRef.call([
+            literalString('Field must be valid.'),
+            literalString(validatorFactory.fullTypeName),
+            literalList([field.name])
+        ], {
+            childConstraintsArg: violationsVar.property('value').property('constraintViolation')
+        });
+    }
 }

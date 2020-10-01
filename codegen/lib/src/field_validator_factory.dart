@@ -60,7 +60,7 @@ class FieldValidatorFactory {
     ///
     /// The validator obtains the field value via the given [fieldValue] expression.
     ///
-    /// If any constrains violations are discovered, they are registered with
+    /// If any constraint violations are discovered, they are registered with
     /// the [validatorFactory].
     ///
     Code createFieldValidator(Expression fieldValue) => null;
@@ -75,15 +75,15 @@ class FieldValidatorFactory {
             && options.getExtension(Options.required);
     }
 
-    /// Determines if this field type supports `(required)` and related constrains.
+    /// Determines if this field type supports `(required)` and related constraints.
     ///
     /// `true` by default.
     ///
     bool supportsRequired() => true;
 
     /// Creates a new validation rule with the given parameters.
-    Rule newRule(LazyCondition condition, LazyViolation violation) {
-        return Rule._(condition, violation, validatorFactory.report);
+    Rule newRule(LazyCondition condition, LazyViolation violation, {LazyPreparation preparation}) {
+        return Rule._(condition, violation, validatorFactory.report, preparation: preparation);
     }
 
     /// Creates a validation for the `(required)` constraint.
@@ -152,14 +152,13 @@ class SingularFieldValidatorFactory extends FieldValidatorFactory {
     ///
     /// The validator obtains the field value via the given [fieldValue] expression.
     ///
-    /// If any constrains violations are discovered, they are added to
+    /// If any constraint violations are discovered, they are added to
     /// the [ValidatorFactory.violationList] of the [validatorFactory].
     ///
     @override
     Code createFieldValidator(Expression fieldValue) {
         var statements = rules()
-            .map((r) => r._eval(fieldValue))
-            .map((expression) => expression.statement);
+            .map((r) => r._eval(fieldValue));
         return statements.isNotEmpty
                ? Block.of(statements)
                : null;
@@ -182,7 +181,7 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
 
     @override
     Code createFieldValidator(Expression field) {
-        var validation = <Expression>[];
+        var validation = <Code>[];
         if (isRequired()) {
             var requiredRule = createRequiredRule();
             validation.add(requiredRule._eval(field));
@@ -194,22 +193,23 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
         if (validateElements != null || validateDistinctList != null) {
             var valueList = field.isA(refer('Map'))
                                  .conditional(field.asA(refer('dynamic')).property('values'), field)
-                                 .assignVar(values);
+                                 .assignVar(values)
+                                 .statement;
             validation.add(valueList);
             if (validateDistinctList != null) {
                 validation.add(validateDistinctList);
             }
             if (validateElements != null) {
-                validation.add(validateElements);
+                validation.add(validateElements.statement);
             }
         }
-        return Block.of(validation.map((expression) => expression.statement));
+        return Block.of(validation);
     }
 
     @override
     LazyCondition notSetCondition() => (v) => v.property('isEmpty');
 
-    Expression _validateDistinct(Reference valuesRef) {
+    Code _validateDistinct(Reference valuesRef) {
         var options = field.options;
         var option = Options.distinct;
         if (options.hasExtension(option) && options.getExtension(option)) {
@@ -261,6 +261,7 @@ class Rule {
     final LazyCondition _condition;
     final LazyViolation _violation;
     final ViolationConsumer _violationConsumer;
+    final LazyPreparation _preparation;
 
     /// Creates a new rule.
     ///
@@ -273,7 +274,11 @@ class Rule {
     /// `ConstraintViolation` and produces an expression which registers the violation with
     /// a [ValidatorFactory].
     ///
-    Rule._(this._condition, this._violation, this._violationConsumer);
+    Rule._(this._condition,
+           this._violation,
+           this._violationConsumer,
+           {LazyPreparation preparation = null})
+        : _preparation = preparation;
 
     /// Produces a ternary operator which creates a new violation if the string is empty.
     ///
@@ -283,24 +288,42 @@ class Rule {
     ///     : null;
     /// ```
     ///
-    /// `code_builder` does not support `if` statements, so a ternary conditional operator has to
-    /// be used.
+    /// `code_builder` does not support `if` statements, so a ternary conditional operator has
+    /// to be used.
     ///
-    Expression _eval(Expression fieldValue) {
+    Code _eval(Expression fieldValue) {
         var ternaryOperator = _condition(fieldValue).conditional(
             _violationConsumer(_violation(fieldValue)),
-            literalNull);
-        return ternaryOperator;
+            literalNull
+        ).statement;
+        if (_preparation != null) {
+            return Block.of([
+                _preparation.call(fieldValue),
+                ternaryOperator
+            ]);
+        } else {
+            return ternaryOperator;
+        }
     }
 }
 
-/// A function of a field value expresion to a `ConstraintViolation` expression.
+/// A function of a field value expression to a `ConstraintViolation` expression.
 typedef Expression LazyViolation(Expression fieldValue);
 
-/// A function of a field value expresion to a boolean expression representing a constraint.
+/// A function of a field value expression to a boolean expression representing a constraint.
 ///
 /// The resulting expression should return a `bool`:
 ///  - `true` if the constraint is violated;
 ///  - `false` if the constraint obeyed.
 ///
 typedef Expression LazyCondition(Expression fieldValue);
+
+/// A function of a field value expression to code which prepares context
+/// before the constraint check.
+///
+/// Sometimes, in order to validate a field value, we need a certain context. For example, in order
+/// to validate a field of a message type, we need to invoke validation on the message value.
+/// The result of the validation must be saved into a variable. Such preparation can be generated
+/// via a `LazyPreparation`.
+///
+typedef Code LazyPreparation(Expression fieldValue);

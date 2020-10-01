@@ -22,7 +22,6 @@ import com.google.protobuf.gradle.*
 import io.spine.gradle.internal.Deps
 
 plugins {
-    codegen
     dart
     id("io.spine.tools.proto-dart-plugin")
 }
@@ -38,22 +37,9 @@ dependencies {
     protobuf("io.spine:spine-base:$spineBaseVersion")
     protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
     Deps.build.protobuf.forEach { protobuf(it) }
-
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
-
-    testProtobuf("io.spine:spine-base:$spineBaseVersion")
-    testProtobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Deps.build.protobuf.forEach { testProtobuf(it) }
 }
 
-tasks["testDart"].dependsOn("generateDart")
-
-tasks.generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/test"
-    standardTypesPackage = "dart_code_gen"
-}
+tasks["testDart"].enabled = false
 
 protobuf {
     generateProtoTasks {

@@ -36,6 +36,9 @@ const _violation = '_violation';
 ///
 const violationRef = Reference(_violation);
 
+const actualValueArg = 'actualValue';
+const childConstraintsArg = 'childConstraints';
+
 Reference violationTypeRef(String standardPackage) =>
     Reference(_violationType, validationErrorImport(standardPackage));
 
@@ -54,25 +57,39 @@ createViolationFactory(String standardPackage) {
         var msgFormat = 'msgFormat';
         var typeName = 'typeName';
         var fieldPath = 'fieldPath';
-        var actualValue = 'actualValue';
-        var actualValueRef = refer(actualValue);
+        var actualValueRef = refer(actualValueArg);
         
         var listOfStrings = TypeReference((b) => b
             ..symbol = 'List'
-            ..types.add(refer('String')));
+            ..types.add(refer('String'))
+        );
         var fieldPathParam = Parameter((b) => b
             ..type = listOfStrings
-            ..name = fieldPath);
+            ..name = fieldPath
+        );
         var anyType = refer('Any', protoAnyImport(standardPackage));
         var actualValueParam = Parameter((b) => b
+            ..named = true
             ..type = anyType
-            ..name = actualValue);
+            ..name = actualValueArg
+        );
+        var listOfViolations = TypeReference((b) => b
+            ..symbol = 'List'
+            ..types.add(violationTypeRef(standardPackage))
+        );
+        var childConstraintsParam = Parameter((b) => b
+            ..named = true
+            ..type = listOfViolations
+            ..name = childConstraintsArg
+        );
         b.name = _violation;
         b.requiredParameters
             ..add(Parameter((b) => b..type = refer('String')..name = msgFormat))
             ..add(Parameter((b) => b..type = refer('String')..name = typeName))
             ..add(fieldPathParam);
-        b.optionalParameters.add(actualValueParam);
+        b.optionalParameters
+            ..add(actualValueParam)
+            ..add(childConstraintsParam);
         var path = 'path';
         var type = violationTypeRef(standardPackage);
         b..returns = type

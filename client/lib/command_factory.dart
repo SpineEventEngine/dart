@@ -22,8 +22,8 @@ import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/actor_request_factory.dart';
 import 'package:spine_client/spine/core/command.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
-import 'package:spine_client/src/validate.dart';
 import 'package:spine_client/uuids.dart';
+import 'package:spine_client/validate.dart';
 
 /// A factory of commands to send to the server.
 class CommandFactory {

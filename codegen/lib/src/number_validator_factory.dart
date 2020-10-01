@@ -139,8 +139,8 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
         var any = refer('Any', protoAnyImport(standardPackage)).property('pack').call([floatValue]);
         return violationRef.call([literalString('Number is out of bound.'),
                                   literalString(validatorFactory.fullTypeName),
-                                  literalList([field.name]),
-                                  any]);
+                                  literalList([field.name])],
+                                 {actualValueArg: any});
     }
 }
 
