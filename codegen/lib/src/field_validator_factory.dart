@@ -288,8 +288,8 @@ class Rule {
     ///     : null;
     /// ```
     ///
-    /// `code_builder` does not support `if` statements, so a ternary conditional operator has to
-    /// be used.
+    /// `code_builder` does not support `if` statements, so a ternary conditional operator has
+    /// to be used.
     ///
     Code _eval(Expression fieldValue) {
         var ternaryOperator = _condition(fieldValue).conditional(
@@ -318,6 +318,12 @@ typedef Expression LazyViolation(Expression fieldValue);
 ///
 typedef Expression LazyCondition(Expression fieldValue);
 
-/// A function of a field value expression to code which prepares context before the constraint
-/// check.
+/// A function of a field value expression to code which prepares context
+/// before the constraint check.
+///
+/// Sometimes, in order to validate a field value, we need a certain context. For example, in order
+/// to validate a field of a message type, we need to invoke validation on the message value.
+/// The result of the validation must be saved into a variable. Such preparation can be generated
+/// via a `LazyPreparation`.
+///
 typedef Code LazyPreparation(Expression fieldValue);
