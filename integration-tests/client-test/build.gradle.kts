@@ -18,9 +18,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
-import io.spine.gradle.internal.Deps
 import com.google.protobuf.gradle.*
+import io.spine.gradle.internal.Deps
+import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
     codegen
@@ -30,7 +30,6 @@ plugins {
 
 apply {
     from(Deps.scripts.dartBuildTasks(project))
-    from(Deps.scripts.pubPublishTasks(project))
 }
 
 
