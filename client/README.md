@@ -101,14 +101,14 @@ for this package.
 
 ### Adding uploader
 
-As a uploader, you may add other uploaders for this package by running:
+As an uploader, you may add other uploaders for this package by running:
 ```shell
 pub uploader --package spine_client add <email>
 ```
 
 ### Removing uploader
 
-As a uploader, you may remove other uploaders for this package by running:
+As an uploader, you may remove other uploaders for this package by running:
 ```shell
 pub uploader --package spine_client remove <email>
 ```
