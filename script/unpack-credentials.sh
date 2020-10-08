@@ -24,7 +24,7 @@
 #  - spine-dev.json - the Firebase service account to use for integration tests;
 #  - pub-credentials.json - credentials to publish package to Pub;
 #  - deploy_rsa_key - private key for deploying GitHub Pages.
-openssl aes-256-cbc -K $encrypted_2930eb142dc7_key -iv $encrypted_2930eb142dc7_iv -in credentials.tar.enc -out credentials.tar -d
+openssl aes-256-cbc -K $encrypted_54891cbed47a_key -iv $encrypted_54891cbed47a_iv -in credentials.tar.enc -out credentials.tar -d
 tar xvf credentials.tar
 mkdir ./integration-tests/test-app/src/main/resources
 mv ./spine-dev.json ./integration-tests/test-app/src/main/resources
