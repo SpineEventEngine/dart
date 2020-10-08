@@ -27,5 +27,5 @@
 openssl aes-256-cbc -K $encrypted_54891cbed47a_key -iv $encrypted_54891cbed47a_iv -in credentials.tar.enc -out credentials.tar -d
 tar xvf credentials.tar
 mkdir ./integration-tests/test-app/src/main/resources
-mv ./spine-dev-firebase.json ./integration-tests/test-app/src/main/resources
+mv ./spine-dev-firebase.json ./integration-tests/test-app/src/main/resources/spine-dev.json
 mv ./pub-credentials.json "$HOME"/.pub-cache/credentials.json
