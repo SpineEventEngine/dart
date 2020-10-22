@@ -78,5 +78,10 @@ void main() {
             expect(unpack(anyId), isA<UserId>());
             expect(unpack(anyId), equals(unpack(rawId)));
         });
+
+        test('throw ArgumentError on an unsupported ID type', () {
+            expect(() => packId(StringBuffer()..writeln('This is not supported.')),
+                   throwsA(isA<ArgumentError>()));
+        });
     });
 }
