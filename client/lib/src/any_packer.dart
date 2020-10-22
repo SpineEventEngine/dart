@@ -53,8 +53,8 @@ Any pack(GeneratedMessage message) {
 
 /// Packs the given [id] into an [Any].
 ///
-/// An `int` ID is packed as an `Int32Value`. An `fixnum.Int64` ID is packed as an `Int64Value`.
-/// An `Sting` ID is packed as a `StringValue`. A message is packed as itself. Other types of IDs
+/// An `int` ID is packed as an `Int32Value`. A `fixnum.Int64` ID is packed as an `Int64Value`.
+/// A `Sting` ID is packed as a `StringValue`. A message is packed as itself. Other types of IDs
 /// are not supported and would cause an `ArgumentError`.
 ///
 Any packId(Object rawId) {
