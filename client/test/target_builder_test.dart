@@ -18,9 +18,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:fixnum/fixnum.dart';
-import 'package:spine_client/spine/core/user_id.pb.dart';
-import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/known_types.dart';
 import 'package:spine_client/target_builder.dart';
 import 'package:test/test.dart';
@@ -43,27 +40,12 @@ void main() {
             expect(target.includeAll, equals(true));
         });
 
-        test('convert int IDs to Any', () {
-            _testIds([42, 314, 271]);
-        });
-
-        test('convert long IDs to Any', () {
-            _testIds([Int64.ZERO, Int64.ONE, Int64.TWO]);
-        });
-
-        test('convert String IDs to Any', () {
-            _testIds(['foo', 'bar']);
-        });
-
-        test('convert message IDs to Any', () {
-            _testIds([UserId()..value = '42', UserId()..value = '111111']);
-        });
-
-        test('convert Any IDs to Any', () {
-            var ids = [UserId()..value = '42', UserId()..value = '111111']
-                .map(pack)
-                .toList(growable: false);
-            _testIds(ids);
+        test('convert raw IDs to Any', () {
+            var ids = [42, 314, 271];
+            var target = targetByIds(Timestamp.getDefault(), ids);
+            expect(target, isNotNull);
+            expect(target.type, equals('type.googleapis.com/google.protobuf.Timestamp'));
+            expect(target.filters.idFilter.id, hasLength(equals(ids.length)));
         });
 
         test('not allow generic IDs', () {
@@ -71,11 +53,4 @@ void main() {
             expect(() => targetByIds(Empty.getDefault(), ids), throwsA(isA<ArgumentError>()));
         });
     });
-}
-
-_testIds(List<Object> ids) {
-    var target = targetByIds(Timestamp.getDefault(), ids);
-    expect(target, isNotNull);
-    expect(target.type, equals('type.googleapis.com/google.protobuf.Timestamp'));
-    expect(target.filters.idFilter.id, hasLength(equals(ids.length)));
 }

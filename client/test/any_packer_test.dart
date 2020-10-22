@@ -18,8 +18,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'package:fixnum/fixnum.dart';
 import 'package:spine_client/google/protobuf/any.pb.dart';
 import 'package:spine_client/google/protobuf/timestamp.pb.dart';
+import 'package:spine_client/google/protobuf/wrappers.pb.dart';
+import 'package:spine_client/spine/core/user_id.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/time.dart';
 import 'package:test/test.dart';
@@ -38,6 +41,42 @@ void main() {
                 ..typeUrl = 'types.example.com/unknown.Type'
                 ..value = [42];
             expect(() { unpack(any); }, throwsA(isA<ArgumentError>()));
+        });
+
+        test('convert int IDs to Any', () {
+            var rawId = 42;
+            var anyId = packId(rawId);
+            print(unpack(anyId).info_.messageName);
+            expect(unpack(anyId), isA<Int32Value>());
+            expect((unpack(anyId) as Int32Value).value, equals(rawId));
+        });
+
+        test('convert long IDs to Any', () {
+            var rawId = Int64.ONE;
+            var anyId = packId(rawId);
+            expect(unpack(anyId), isA<Int64Value>());
+            expect((unpack(anyId) as Int64Value).value, equals(rawId));
+        });
+
+        test('convert String IDs to Any', () {
+            var rawId = 'foo bar';
+            var anyId = packId(rawId);
+            expect(unpack(anyId), isA<StringValue>());
+            expect((unpack(anyId) as StringValue).value, equals(rawId));
+        });
+
+        test('convert message IDs to Any', () {
+            var rawId = UserId()..value = '42';
+            var anyId = packId(rawId);
+            expect(unpack(anyId), isA<UserId>());
+            expect(unpack(anyId), equals(rawId));
+        });
+
+        test('convert Any IDs to Any', () {
+            var rawId = pack(UserId()..value = '314');
+            var anyId = packId(rawId);
+            expect(unpack(anyId), isA<UserId>());
+            expect(unpack(anyId), equals(unpack(rawId)));
         });
     });
 }

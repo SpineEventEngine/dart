@@ -18,10 +18,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/protobuf.dart';
-import 'package:spine_client/google/protobuf/any.pb.dart';
-import 'package:spine_client/google/protobuf/wrappers.pb.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/known_types.dart';
@@ -41,26 +38,10 @@ Target targetByIds(GeneratedMessage instance, List<Object> ids) {
     target.type = _typeUrl(instance);
     var filters = TargetFilters();
     var idFilter = IdFilter();
-    idFilter.id.addAll(ids.map(_idToAny));
+    idFilter.id.addAll(ids.map(packId));
     filters.idFilter = idFilter;
     target.filters = filters;
     return target;
-}
-
-Any _idToAny(Object rawId) {
-    if (rawId is Any) {
-        return rawId;
-    } else if (rawId is GeneratedMessage) {
-        return pack(rawId);
-    } else  if (rawId is String) {
-        return pack(StringValue()..value = rawId);
-    } else if (rawId is int) {
-        return pack(Int32Value()..value = rawId);
-    } else if (rawId is Int64) {
-        return pack(Int64Value()..value = rawId);
-    } else {
-        throw ArgumentError('Instance of type ${rawId.runtimeType} cannot be an ID.');
-    }
 }
 
 String _typeUrl(GeneratedMessage message) {

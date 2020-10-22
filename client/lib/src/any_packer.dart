@@ -18,8 +18,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/google/protobuf/any.pb.dart';
+import 'package:spine_client/google/protobuf/wrappers.pb.dart';
 import 'package:spine_client/src/known_types.dart';
 
 /// Separates the type URL prefix from the type name.
@@ -47,6 +49,22 @@ GeneratedMessage unpack(Any any) {
 ///
 Any pack(GeneratedMessage message) {
     return Any.pack(message, typeUrlPrefix: _typeUrlPrefix(message));
+}
+
+Any packId(Object rawId) {
+    if (rawId is Any) {
+        return rawId;
+    } else if (rawId is GeneratedMessage) {
+        return pack(rawId);
+    } else  if (rawId is String) {
+        return pack(StringValue()..value = rawId);
+    } else if (rawId is int) {
+        return pack(Int32Value()..value = rawId);
+    } else if (rawId is Int64) {
+        return pack(Int64Value()..value = rawId);
+    } else {
+        throw ArgumentError('Instance of type ${rawId.runtimeType} cannot be an ID.');
+    }
 }
 
 String _typeUrlPrefix(GeneratedMessage message) {
