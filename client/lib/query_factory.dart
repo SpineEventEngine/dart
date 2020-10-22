@@ -20,7 +20,6 @@
 
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/actor_request_factory.dart';
-import 'package:spine_client/google/protobuf/any.pb.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/target_builder.dart';
 import 'package:spine_client/uuids.dart';
@@ -33,7 +32,7 @@ class QueryFactory {
     QueryFactory(this._context);
 
     /// Creates a query which matches all entities of the given type with the given IDs.
-    Query byIds(GeneratedMessage instance, List<Any> ids) {
+    Query byIds(GeneratedMessage instance, List<Object> ids) {
         var query = Query();
         query
             ..id = _newId()

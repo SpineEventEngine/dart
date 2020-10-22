@@ -20,7 +20,6 @@
 
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/actor_request_factory.dart';
-import 'package:spine_client/google/protobuf/any.pb.dart';
 import 'package:spine_client/spine/client/subscription.pb.dart';
 import 'package:spine_client/target_builder.dart';
 import 'package:spine_client/uuids.dart';
@@ -33,7 +32,7 @@ class TopicFactory {
     TopicFactory(this._context);
 
     /// Creates a topic which matches entities of the given type with the specified IDs.
-    Topic byIds(GeneratedMessage instance, List<Any> ids) {
+    Topic byIds(GeneratedMessage instance, List<Object> ids) {
         var topic = Topic();
         topic
             ..id = _newId()
@@ -54,7 +53,7 @@ class TopicFactory {
 
     TopicId _newId() {
         var id = TopicId();
-        id.value = newUuid(prefix: 'q-');
+        id.value = newUuid(prefix: 't-');
         return id;
     }
 }
