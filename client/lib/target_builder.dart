@@ -19,8 +19,8 @@
  */
 
 import 'package:protobuf/protobuf.dart';
-import 'package:spine_client/google/protobuf/any.pb.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
+import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/known_types.dart';
 
 /// Creates a target which matches all messages of type.
@@ -33,12 +33,12 @@ Target targetAll(GeneratedMessage instance) {
 }
 
 /// Creates a target which matches messages with the given IDs.
-Target targetByIds(GeneratedMessage instance, List<Any> ids) {
+Target targetByIds(GeneratedMessage instance, List<Object> ids) {
     var target = Target();
     target.type = _typeUrl(instance);
     var filters = TargetFilters();
     var idFilter = IdFilter();
-    idFilter.id.addAll(ids);
+    idFilter.id.addAll(ids.map(packId));
     filters.idFilter = idFilter;
     target.filters = filters;
     return target;
