@@ -60,7 +60,7 @@ val dartDoc by tasks.creating(Exec::class) {
 
 afterEvaluate {
     extra["generatedDocs"] = files(dartDocDir)
-    tasks["updateGitHubPages"].dependsOn("dartDoc")
+    tasks["updateGitHubPages"].dependsOn(dartDoc)
     tasks["publish"].dependsOn("updateGitHubPages")
 }
 
