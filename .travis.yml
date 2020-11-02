@@ -25,7 +25,7 @@ script:
  - ./gradlew integrationTest
 
 deploy:
-  skip_cleanup: false
+  skip_cleanup: true
   provider: script
   script: bash config/scripts/publish-artifacts.sh
   on:
