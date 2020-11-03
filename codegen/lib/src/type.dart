@@ -242,11 +242,11 @@ class FieldDeclaration {
         return fullName.substring(start);
     }
 
-    bool hasOption(Extension option) {
-        var ext = descriptor.options;
-        return ext.hasExtension(option);
-    }
-
+    /// Finds the given custom option on the field.
+    ///
+    /// Returns the value of the field or `Optional.empty()` if the option is not defined
+    /// on the field.
+    ///
     Optional<T> getOption<T>(Extension<T> option) {
         var ext = descriptor.options;
         if (ext.hasExtension(option)) {
