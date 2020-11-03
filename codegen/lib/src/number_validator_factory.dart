@@ -18,7 +18,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
 import 'package:dart_code_gen/src/type.dart';
