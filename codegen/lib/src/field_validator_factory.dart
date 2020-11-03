@@ -97,8 +97,11 @@ class FieldValidatorFactory {
     /// Generates an expression which constructs a `ConstraintViolation` for a missing required
     /// field.
     Expression _requiredMissing() {
-
-        return violationRef.call([literalString('Field must be set.'),
+        var ifMissing = field.getOption(Options.ifMissing);
+        var message = ifMissing
+            .map((val) => val.msgFormat)
+            .orElse('A value must be set.');
+        return violationRef.call([literalString(message),
                                   literalString(validatorFactory.fullTypeName),
                                   literalList([field.protoName])]);
     }
@@ -214,8 +217,8 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
                     v.property('toSet').call([]).property(length));
             LazyViolation violation = (v) =>
                 violationRef.call([literalString('Collection must be distinct.'),
-                                      literalString(validatorFactory.fullTypeName),
-                                      literalList([field.protoName])]);
+                                   literalString(validatorFactory.fullTypeName),
+                                   literalList([field.protoName])]);
             var distinctRule = newRule(condition, violation);
             return distinctRule._eval(valuesRef);
         } else {

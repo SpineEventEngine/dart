@@ -63,14 +63,20 @@ class StringValidatorFactory extends SingularFieldValidatorFactory {
             .property('stringMatch')
             .call([v])
             .notEqualTo(v),
-                           (v) => _patternMismatch(pattern.regex));
+                           (v) => _patternMismatch(pattern));
         return rule;
     }
 
-    Expression _patternMismatch(String pattern) {
-        var message = 'String must match the regular expression `$pattern`';
-        return violationRef.call([literalString(message, raw: true),
-                                  literalString(validatorFactory.fullTypeName),
-                                  literalList([field.protoName])]);
-    }
+    Expression _patternMismatch(PatternOption pattern) {
+        var msgFormat = pattern.msgFormat;
+        var message = msgFormat.isEmpty
+            ? 'The string must match the regular expression `%s`.'
+            : msgFormat;
+        return violationRef.call([
+                literalString(message),
+                literalString(validatorFactory.fullTypeName),
+                literalList([field.protoName])
+            ], {paramsArg: literalList([literalString(pattern.regex, raw: true)])}
+        );
+  }
 }

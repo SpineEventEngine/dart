@@ -18,6 +18,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
 import 'package:dart_code_gen/src/type.dart';
@@ -28,6 +29,9 @@ import 'imports.dart';
 import 'validator_factory.dart';
 
 const _numericRange = r'([\[(])\s*([+\-]?[\d.]+)\s*\.\.\s*([+\-]?[\d.]+)\s*([\])])';
+
+const _defaultMinFormat = 'The number must be greater than %s%s.';
+const _defaultMaxFormat = 'The number must be less than %s%s.';
 
 /// A [FieldValidatorFactory] for number fields.
 ///
@@ -74,30 +78,34 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
     Rule _minRule(MinOption min) {
         var bound = _parse(min.value);
         var exclusive = min.exclusive;
-        return _constructMinRule(bound, exclusive);
+        var msgFormat = min.msgFormat;
+        var errorFormat = msgFormat.isEmpty ? _defaultMinFormat : msgFormat;
+        return _constructMinRule(bound, exclusive, errorFormat);
     }
     
-    Rule _constructMinRule(N bound, bool exclusive) {
+    Rule _constructMinRule(N bound, bool exclusive, String errorFormat) {
         var literal = literalNum(bound);
         var check = exclusive
                     ? (Expression v) => v.lessOrEqualTo(literal)
                     : (Expression v) => v.lessThan(literal);
-        var requiredString = newRule((v) => check(v), _outOfBound);
+        var requiredString = newRule((v) => check(v), _outOfBound(errorFormat, !exclusive));
         return requiredString;
     }
 
     Rule _maxRule(MaxOption max) {
         var bound = _parse(max.value);
         var exclusive = max.exclusive;
-        return _constructMaxRule(bound, exclusive);
+        var msgFormat = max.msgFormat;
+        var errorFormat = msgFormat.isEmpty ? _defaultMaxFormat : msgFormat;
+        return _constructMaxRule(bound, exclusive, errorFormat);
     }
 
-    Rule _constructMaxRule(N bound, bool exclusive) {
+    Rule _constructMaxRule(N bound, bool exclusive, String errorFormat) {
       var literal = literalNum(bound);
       var check = exclusive
                   ? (Expression v) => v.greaterOrEqualTo(literal)
                   : (Expression v) => v.greaterThan(literal);
-      var rule = newRule((v) => check(v), _outOfBound);
+      var rule = newRule((v) => check(v), _outOfBound(errorFormat, !exclusive));
       return rule;
     }
     
@@ -113,30 +121,39 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
         var end = _parse(match.group(3));
         var endOpen = match.group(4) == ')';
 
-        var minRule = _constructMinRule(start, startOpen);
-        var maxRule = _constructMaxRule(end, endOpen);
+        var minRule = _constructMinRule(start, startOpen, _defaultMinFormat);
+        var maxRule = _constructMaxRule(end, endOpen, _defaultMaxFormat);
         return [minRule, maxRule];
     }
 
-    // TODO:2019-10-14:dmytro.dashenkov: Support custom error messages based on the option value.
-    // https://github.com/SpineEventEngine/base/issues/482
-    Expression _outOfBound(Expression value) {
-        var param = 'v';
-        var standardPackage = validatorFactory.properties.standardPackage;
-        var floatValue = refer(_wrapperType, protoWrappersImport(standardPackage))
-            .newInstance([])
-            .property('copyWith')
-            .call([Method((b) => b
-            ..requiredParameters.add(Parameter((b) => b.name = param))
-            ..body = refer(param)
-                .property('value')
-                .assign(value)
-                .statement).closure]);
-        var any = refer('Any', protoAnyImport(standardPackage)).property('pack').call([floatValue]);
-        return violationRef.call([literalString('Number is out of bound.'),
-                                  literalString(validatorFactory.fullTypeName),
-                                  literalList([field.protoName])],
-                                 {actualValueArg: any});
+    LazyViolation _outOfBound(String messageFormat, bool inclusive) {
+        return (Expression value) {
+            var param = 'v';
+            var standardPackage = validatorFactory.properties.standardPackage;
+            var floatValue = refer(_wrapperType, protoWrappersImport(standardPackage))
+                .newInstance([])
+                .property('copyWith')
+                .call([Method((b) => b
+                ..requiredParameters.add(Parameter((b) => b.name = param))
+                ..body = refer(param)
+                    .property('value')
+                    .assign(value)
+                    .statement).closure]);
+            var any = refer('Any', protoAnyImport(standardPackage))
+                .property('pack')
+                .call([floatValue]);
+            var inclusivity = inclusive ? 'or equal to ' : '';
+            var params = literalList([
+                literalString(inclusivity),
+                value.property('toString').call([])
+            ]);
+            return violationRef.call(
+                [literalString(messageFormat),
+                 literalString(validatorFactory.fullTypeName),
+                 literalList([field.protoName])],
+                {actualValueArg: any, paramsArg: params}
+            );
+        };
     }
 }
 

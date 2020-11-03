@@ -86,8 +86,11 @@ class MessageValidatorFactory extends SingularFieldValidatorFactory {
     }
 
     Expression _produceViolation(Expression violationsVar) {
+        var message = field.getOption(Options.ifInvalid)
+                           .map((val) => val.msgFormat)
+                           .orElse('The message must have valid properties.');
         return violationRef.call([
-            literalString('Field must be valid.'),
+            literalString(message),
             literalString(validatorFactory.fullTypeName),
             literalList([field.protoName])
         ], {
