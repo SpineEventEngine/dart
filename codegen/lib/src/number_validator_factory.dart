@@ -19,8 +19,8 @@
  */
 
 import 'package:code_builder/code_builder.dart';
-import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
+import 'package:dart_code_gen/src/type.dart';
 
 import 'constraint_violation.dart';
 import 'field_validator_factory.dart';
@@ -38,7 +38,7 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
     final String _wrapperType;
 
     NumberValidatorFactory(ValidatorFactory validatorFactory,
-                           FieldDescriptorProto field,
+                           FieldDeclaration field,
                            this._wrapperType)
         : super(validatorFactory, field);
 
@@ -49,19 +49,18 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
     @override
     Iterable<Rule> rules() {
         var rules = <Rule>[];
-        var options = field.options;
-        if (options.hasExtension(Options.min)) {
-            Rule min = _minRule(options);
-            rules.add(min);
-        }
-        if (options.hasExtension(Options.max)) {
-            Rule max = _maxRule(options);
-            rules.add(max);
-        }
-        if (options.hasExtension(Options.range)) {
-            Iterable<Rule> range = _rangeRules(options);
-            rules.addAll(range);
-        }
+        field.getOption(Options.min).ifPresent((val) {
+            Rule minRule = _minRule(val);
+            rules.add(minRule);
+        });
+        field.getOption(Options.max).ifPresent((val) {
+            Rule maxRule = _maxRule(val);
+            rules.add(maxRule);
+        });
+        field.getOption(Options.range).ifPresent((val) {
+            Iterable<Rule> rangeRules = _rangeRules(val);
+            rules.addAll(rangeRules);
+        });
         return rules;
     }
 
@@ -72,8 +71,7 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
     ///
     bool supportsRequired() => false;
 
-    Rule _minRule(FieldOptions options) {
-        var min = options.getExtension(Options.min) as MinOption;
+    Rule _minRule(MinOption min) {
         var bound = _parse(min.value);
         var exclusive = min.exclusive;
         return _constructMinRule(bound, exclusive);
@@ -88,8 +86,7 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
         return requiredString;
     }
 
-    Rule _maxRule(FieldOptions options) {
-        var max = options.getExtension(Options.max) as MaxOption;
+    Rule _maxRule(MaxOption max) {
         var bound = _parse(max.value);
         var exclusive = max.exclusive;
         return _constructMaxRule(bound, exclusive);
@@ -104,8 +101,7 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
       return rule;
     }
     
-    Iterable<Rule> _rangeRules(FieldOptions options) {
-        var rangeNotation = options.getExtension(Options.range) as String;
+    Iterable<Rule> _rangeRules(String rangeNotation) {
         var rangePattern = RegExp(_numericRange);
         var match = rangePattern.firstMatch(rangeNotation.trim());
         if (match == null) {
@@ -139,7 +135,7 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
         var any = refer('Any', protoAnyImport(standardPackage)).property('pack').call([floatValue]);
         return violationRef.call([literalString('Number is out of bound.'),
                                   literalString(validatorFactory.fullTypeName),
-                                  literalList([field.name])],
+                                  literalList([field.protoName])],
                                  {actualValueArg: any});
     }
 }
@@ -149,19 +145,19 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
 class DoubleValidatorFactory extends NumberValidatorFactory<double> {
 
     DoubleValidatorFactory._(ValidatorFactory validatorFactory,
-                             FieldDescriptorProto field,
+                             FieldDeclaration field,
                              String wrapperType)
         : super(validatorFactory, field, wrapperType);
 
     /// Creates a new validator factory for a `float` field.
     factory DoubleValidatorFactory.forFloat(ValidatorFactory validatorFactory,
-                                            FieldDescriptorProto field) {
+                                            FieldDeclaration field) {
         return DoubleValidatorFactory._(validatorFactory, field, 'FloatValue');
     }
 
     /// Creates a new validator factory for a `double` field.
     factory DoubleValidatorFactory.forDouble(ValidatorFactory validatorFactory,
-                                             FieldDescriptorProto field) {
+                                             FieldDeclaration field) {
         return DoubleValidatorFactory._(validatorFactory, field, 'DoubleValue');
     }
 
@@ -174,7 +170,7 @@ class DoubleValidatorFactory extends NumberValidatorFactory<double> {
 class IntValidatorFactory extends NumberValidatorFactory<int> {
 
     IntValidatorFactory._(ValidatorFactory validatorFactory,
-                          FieldDescriptorProto field,
+                          FieldDeclaration field,
                           String wrapperType)
         : super(validatorFactory, field, wrapperType);
 
@@ -184,7 +180,7 @@ class IntValidatorFactory extends NumberValidatorFactory<int> {
     /// by this factory.
     ///
     factory IntValidatorFactory.forInt32(ValidatorFactory validatorFactory,
-                                         FieldDescriptorProto field) {
+                                         FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'Int32Value');
     }
 
@@ -194,19 +190,19 @@ class IntValidatorFactory extends NumberValidatorFactory<int> {
     /// by this factory.
     ///
     factory IntValidatorFactory.forInt64(ValidatorFactory validatorFactory,
-                                         FieldDescriptorProto field) {
+                                         FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'Int64Value');
     }
 
     /// Creates a new validator factory for a unsigned 32-bit integer.
     factory IntValidatorFactory.forUInt32(ValidatorFactory validatorFactory,
-                                          FieldDescriptorProto field) {
+                                          FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'UInt32Value');
     }
 
     /// Creates a new validator factory for a unsigned 64-bit integer.
     factory IntValidatorFactory.forUInt64(ValidatorFactory validatorFactory,
-                                          FieldDescriptorProto field) {
+                                          FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'UInt64Value');
     }
 

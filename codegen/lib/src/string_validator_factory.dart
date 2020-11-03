@@ -19,8 +19,8 @@
  */
 
 import 'package:code_builder/code_builder.dart';
-import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
+import 'package:dart_code_gen/src/type.dart';
 
 import 'constraint_violation.dart';
 import 'field_validator_factory.dart';
@@ -32,20 +32,19 @@ import 'validator_factory.dart';
 ///
 class StringValidatorFactory extends SingularFieldValidatorFactory {
 
-    StringValidatorFactory(ValidatorFactory validatorFactory, FieldDescriptorProto field)
+    StringValidatorFactory(ValidatorFactory validatorFactory, FieldDeclaration field)
         : super(validatorFactory, field);
 
     @override
     Iterable<Rule> rules() {
-        var options = field.options;
         var rules = <Rule>[];
         if (isRequired()) {
             rules.add(createRequiredRule());
         }
-        if (options.hasExtension(Options.pattern)) {
-            Rule rule = _patternRule(options);
+        field.getOption(Options.pattern).ifPresent((val) {
+            Rule rule = _patternRule(val);
             rules.add(rule);
-        }
+        });
         return rules;
     }
 
@@ -58,8 +57,7 @@ class StringValidatorFactory extends SingularFieldValidatorFactory {
     /// the `RegExp` to the string and compares the first match to the value of the initial string.
     /// If the values are identical, the check passes.
     ///
-    Rule _patternRule(FieldOptions options) {
-        PatternOption pattern = options.getExtension(Options.pattern);
+    Rule _patternRule(PatternOption pattern) {
         var rule = newRule((v) => refer('RegExp')
             .newInstance([literalString(pattern.regex, raw: true)])
             .property('stringMatch')
@@ -73,6 +71,6 @@ class StringValidatorFactory extends SingularFieldValidatorFactory {
         var message = 'String must match the regular expression `$pattern`';
         return violationRef.call([literalString(message, raw: true),
                                   literalString(validatorFactory.fullTypeName),
-                                  literalList([field.name])]);
+                                  literalList([field.protoName])]);
     }
 }

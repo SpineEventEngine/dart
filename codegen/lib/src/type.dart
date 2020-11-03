@@ -20,6 +20,8 @@
 
 import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
+import 'package:optional/optional.dart';
+import 'package:protobuf/protobuf.dart';
 
 const _protoExtension = 'proto';
 const _pbDartExtension = 'pb.dart';
@@ -80,6 +82,11 @@ class MessageType {
         return "$prefix/$fullName";
     }
 
+    List<FieldDeclaration> get fields {
+        var fields = descriptor.field.map((descriptor) => FieldDeclaration(this, descriptor));
+        return List.from(fields);
+    }
+
     /// Obtains all the nested declarations of this type, including deeper levels of nesting.
     TypeSet allChildDeclarations() {
         var children = <MessageType>{};
@@ -108,6 +115,146 @@ class MessageType {
 
     String _childDartName(String simpleName) {
         return '${dartClassName}_${simpleName}';
+    }
+}
+
+/// A Protobuf message field.
+class FieldDeclaration {
+
+    /// A list of some Dart keywords.
+    ///
+    /// A name of a field cannot be the same as a keyword. If such a clash happens, the name of
+    /// the field is escaped. See [escapedDartName].
+    ///
+    /// Some Dart keywords can be used as identifiers in most cases. This list does not contain
+    /// such keywords.
+    ///
+    /// See https://dart.dev/guides/language/language-tour#keywords.
+    ///
+    static const List<String> _DART_KEYWORDS = [
+        'assert',
+        'await',
+        'break',
+        'case',
+        'catch',
+        'class',
+        'const',
+        'continue',
+        'default',
+        'do',
+        'else',
+        'enum',
+        'extends',
+        'factory',
+        'false',
+        'final',
+        'finally',
+        'for',
+        'if',
+        'implements',
+        'in',
+        'is',
+        'new',
+        'null',
+        'rethrow',
+        'return',
+        'super',
+        'switch',
+        'this',
+        'throw',
+        'true',
+        'try',
+        'var',
+        'void',
+        'while',
+        'with',
+        'yield',
+    ];
+
+    final MessageType declaringType;
+    final FieldDescriptorProto descriptor;
+
+    FieldDeclaration(this.declaringType, this.descriptor);
+
+    /// The name of the field as declared in Protobuf.
+    String get protoName => descriptor.name;
+
+    /// The name of the field "translated directly" to Dart, i.e. in "javaCase".
+    ///
+    /// See [escapedDartName] for code generation.
+    ///
+    String get dartName {
+        var protoName = descriptor.name;
+        var words = protoName.split('_');
+        var first = words[0];
+        var capitalized = List.of(words.map(_capitalize));
+        capitalized[0] = first;
+        return capitalized.join('');
+    }
+
+    static String _capitalize(String word) {
+        return word.isEmpty
+            ? word
+            : '${word[0].toUpperCase()}${word.substring(1)}';
+    }
+
+    /// A field name which is safe to use in Dart.
+    ///
+    /// The escaping mechanism is the same as the one provided by the Dart Protoc plugin.
+    ///
+    /// If a Proto message field has a name which clashes with a Dart keyword, a suffix is added to
+    /// the field. The suffix consists of an underscore (`_`) and the field number. For example,
+    /// given a message:
+    /// ```proto
+    /// message Glue {
+    ///     bool super = 1;
+    /// }
+    /// ```
+    /// The escaped name of the field, which will be used for code generation, is `Glue.super_1`.
+    ///
+    String get escapedDartName {
+        var name = dartName;
+        if (_DART_KEYWORDS.contains(name)) {
+            return '${name}_${descriptor.number}';
+        } else {
+            return name;
+        }
+    }
+
+    /// Checks if this field is `repeated`.
+    bool get isRepeated =>
+        descriptor.label == FieldDescriptorProto_Label.LABEL_REPEATED;
+
+    /// Checks if this field is a `map`.
+    bool get isMap {
+        if (!isRepeated) {
+            return false;
+        }
+        if (descriptor.type != FieldDescriptorProto_Type.TYPE_MESSAGE) {
+            return false;
+        }
+        var mapEntryTypeName = _capitalize(dartName) + 'Entry';
+        return _simpleName(descriptor.typeName) == mapEntryTypeName;
+    }
+
+    String _simpleName(String fullName) {
+        var start = fullName.lastIndexOf('.') + 1;
+        return fullName.substring(start);
+    }
+
+    bool hasOption(Extension option) {
+        var ext = descriptor.options;
+        return ext.hasExtension(option);
+    }
+
+    Optional<T> getOption<T>(Extension<T> option) {
+        var ext = descriptor.options;
+        if (ext.hasExtension(option)) {
+            var value = ext.getExtension(option);
+            return Optional.of(value);
+        } else {
+            return Optional.empty();
+        }
     }
 }
 
