@@ -54,7 +54,7 @@ class MessageValidatorFactory extends SingularFieldValidatorFactory {
             (v) => v.property('createEmptyInstance').call([]).equalTo(v);
 
     /// Checks if the field should be validated according to the `(validate)` option.
-    bool _shouldValidate() => field.getOption(Options.validate).orElse(false);
+    bool _shouldValidate() => field.findOption(Options.validate).orElse(false);
 
     /// Constructs a [Rule] for validating the field message value.
     Rule _createValidateRule() {
@@ -86,7 +86,7 @@ class MessageValidatorFactory extends SingularFieldValidatorFactory {
     }
 
     Expression _produceViolation(Expression violationsVar) {
-        var message = field.getOption(Options.ifInvalid)
+        var message = field.findOption(Options.ifInvalid)
                            .map((val) => val.msgFormat)
                            .orElse('The message must have valid properties.');
         return violationRef.call([

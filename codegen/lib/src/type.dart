@@ -247,7 +247,7 @@ class FieldDeclaration {
     /// Returns the value of the field or `Optional.empty()` if the option is not defined
     /// on the field.
     ///
-    Optional<T> getOption<T>(Extension<T> option) {
+    Optional<T> findOption<T>(Extension<T> option) {
         var ext = descriptor.options;
         if (ext.hasExtension(option)) {
             var value = ext.getExtension(option);

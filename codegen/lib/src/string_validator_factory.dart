@@ -41,7 +41,7 @@ class StringValidatorFactory extends SingularFieldValidatorFactory {
         if (isRequired()) {
             rules.add(createRequiredRule());
         }
-        field.getOption(Options.pattern).ifPresent((val) {
+        field.findOption(Options.pattern).ifPresent((val) {
             Rule rule = _patternRule(val);
             rules.add(rule);
         });

@@ -69,7 +69,7 @@ class FieldValidatorFactory {
     ///
     /// Returns `true` if the field is required and `false` if it is optional.
     ///
-    bool isRequired() => field.getOption(Options.required).orElse(false);
+    bool isRequired() => field.findOption(Options.required).orElse(false);
 
     /// Determines if this field type supports `(required)` and related constraints.
     ///
@@ -97,7 +97,7 @@ class FieldValidatorFactory {
     /// Generates an expression which constructs a `ConstraintViolation` for a missing required
     /// field.
     Expression _requiredMissing() {
-        var ifMissing = field.getOption(Options.ifMissing);
+        var ifMissing = field.findOption(Options.ifMissing);
         var message = ifMissing
             .map((val) => val.msgFormat)
             .orElse('A value must be set.');
@@ -210,7 +210,7 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
     LazyCondition notSetCondition() => (v) => v.property('isEmpty');
 
     Code _validateDistinct(Reference valuesRef) {
-        if (field.getOption(Options.distinct).orElse(false)) {
+        if (field.findOption(Options.distinct).orElse(false)) {
             var length = 'length';
             LazyCondition condition = (v) =>
                 v.property(length).notEqualTo(

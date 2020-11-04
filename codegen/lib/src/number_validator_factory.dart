@@ -52,15 +52,15 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
     @override
     Iterable<Rule> rules() {
         var rules = <Rule>[];
-        field.getOption(Options.min).ifPresent((val) {
+        field.findOption(Options.min).ifPresent((val) {
             Rule minRule = _minRule(val);
             rules.add(minRule);
         });
-        field.getOption(Options.max).ifPresent((val) {
+        field.findOption(Options.max).ifPresent((val) {
             Rule maxRule = _maxRule(val);
             rules.add(maxRule);
         });
-        field.getOption(Options.range).ifPresent((val) {
+        field.findOption(Options.range).ifPresent((val) {
             Iterable<Rule> rangeRules = _rangeRules(val);
             rules.addAll(rangeRules);
         });
