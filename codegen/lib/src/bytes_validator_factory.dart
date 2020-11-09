@@ -18,8 +18,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/src/field_validator_factory.dart';
+import 'package:dart_code_gen/src/type.dart';
 import 'package:dart_code_gen/src/validator_factory.dart';
 
 import 'field_validator_factory.dart';
@@ -29,7 +29,7 @@ import 'validator_factory.dart';
 ///
 class BytesValidatorFactory extends SingularFieldValidatorFactory {
 
-    BytesValidatorFactory(ValidatorFactory validatorFactory, FieldDescriptorProto field)
+    BytesValidatorFactory(ValidatorFactory validatorFactory, FieldDeclaration field)
         : super(validatorFactory, field);
 
     @override

@@ -52,7 +52,7 @@ class ValidatorFactory {
     String get fullTypeName => type.fullName;
 
     ViolationConsumer get report =>
-            (violation) => _violationList.property('add').call([violation]);
+            (Expression violation) => _violationList.property('add').call([violation]);
 
     String get _fileName => type.dartFilePath;
 
@@ -107,7 +107,7 @@ class ValidatorFactory {
 
     Code _createFieldValidators() {
         var validations = <Code>[];
-        for (var field in type.descriptor.field) {
+        for (var field in type.fields) {
             var validator = _createFieldValidator(field);
             if (validator != null) {
                 validations.add(validator);
@@ -137,7 +137,7 @@ class ValidatorFactory {
     ///
     /// See [FieldValidatorFactory] for more on field validation.
     ///
-    Code _createFieldValidator(FieldDescriptorProto field) {
+    Code _createFieldValidator(FieldDeclaration field) {
         var factory = FieldValidatorFactory.forField(field, this);
         if (factory != null) {
             var fieldValue = accessField(field);
@@ -147,35 +147,13 @@ class ValidatorFactory {
         }
     }
 
-    Expression accessField(FieldDescriptorProto field) =>
-        _typedMessage.property(_fieldName(field));
+    Expression accessField(FieldDeclaration field) => _typedMessage.property(field.escapedDartName);
 
     Expression get _typedMessage =>
         refer(_msg).asA(_typeRef(properties.importPrefix));
 
     Reference _typeRef(String prefix) =>
         refer(type.dartClassName, prefix.isNotEmpty ? '$prefix/$_fileName' : _fileName);
-
-    /// Obtains a Dart name of the given Protobuf field.
-    ///
-    /// Dart Protobuf plugin also supports custom names generated from the custom `(dart_name)`
-    /// option. However, since the Protobuf sources for that option are not published, there is
-    /// no easy way to use this option. Thus, Spine code generation does not support it.
-    ///
-    String _fieldName(FieldDescriptorProto field) {
-        var protoName = field.name;
-        var words = protoName.split('_');
-        var first = words[0];
-        var capitalized = List.of(words.map(_capitalize));
-        capitalized[0] = first;
-        return capitalized.join('');
-    }
-
-    String _capitalize(String word) {
-        return word.isEmpty
-               ? word
-               : '${word[0].toUpperCase()}${word.substring(1)}';
-    }
 }
 
 /// A functional interface which transforms an expression of [constraintViolation] into an
