@@ -159,12 +159,12 @@ class BackendClient {
     Stream<T> _processDirectResponse<T extends GeneratedMessage>(
         Future<http.Response> httpResponse
     ) async* {
-      var qr = httpResponse.then(_parseDirectQueryResponse);
-      var entities = await qr.then((response) => response.message);
-      for (var entity in entities) {
-          var message = unpack(entity.state);
-          yield message as T;
-      }
+        var qr = httpResponse.then(_parseDirectQueryResponse);
+        var entities = await qr.then((response) => response.message);
+        for (var entity in entities) {
+            var message = unpack(entity.state);
+            yield message as T;
+        }
     }
 
     /// Subscribes to the changes of entities described by the given [topic].
