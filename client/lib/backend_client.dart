@@ -23,7 +23,6 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
-import 'package:spine_client/src/http_endpoint.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/spine/client/subscription.pb.dart' as pb;
 import 'package:spine_client/spine/core/ack.pb.dart';
@@ -31,6 +30,8 @@ import 'package:spine_client/spine/core/command.pb.dart';
 import 'package:spine_client/spine/web/firebase/query/response.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
 import 'package:spine_client/spine_client.dart';
+import 'package:spine_client/src/any_packer.dart';
+import 'package:spine_client/src/http_endpoint.dart';
 import 'package:spine_client/src/json.dart';
 import 'package:spine_client/src/known_types.dart';
 
@@ -132,18 +133,38 @@ class BackendClient {
     /// occurs.
     ///
     Stream<T> fetch<T extends GeneratedMessage>(Query query) async* {
+        var httpResponse = _endpoint
+            .postMessage(_endpoints.query, query);
+        if (_queryMode == QueryMode.FIREBASE) {
+            yield* _fetchFromFirebase(httpResponse, query);
+        } else {
+            yield* _processDirectResponse(httpResponse);
+        }
+    }
+
+    Stream<T> _fetchFromFirebase<T extends GeneratedMessage>(Future<http.Response> httpResponse,
+                                                             Query query) async* {
         var targetTypeUrl = query.target.type;
         var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
         if (builder == null) {
             throw ArgumentError.value(query, 'query', 'Target type `$targetTypeUrl` is unknown.');
         }
-        var qr = await _endpoint
-            .postMessage('query', query)
-            .then(_parseQueryResponse);
+        var qr = await httpResponse.then(_parseFbQueryResponse);
         yield* _database
             .get(qr.path)
             .take(qr.count.toInt())
             .map((json) => parseIntoNewInstance(builder, json));
+    }
+
+    Stream<T> _processDirectResponse<T extends GeneratedMessage>(
+        Future<http.Response> httpResponse
+    ) async* {
+      var qr = httpResponse.then(_parseDirectQueryResponse);
+      var entities = await qr.then((response) => response.message);
+      for (var entity in entities) {
+          var message = unpack(entity.state);
+          yield message as T;
+      }
     }
 
     /// Subscribes to the changes of entities described by the given [topic].
