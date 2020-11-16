@@ -38,6 +38,7 @@ const violationRef = Reference(_violation);
 
 const actualValueArg = 'actualValue';
 const childConstraintsArg = 'childConstraints';
+const paramsArg = 'params';
 
 Reference violationTypeRef(String standardPackage) =>
     Reference(_violationType, validationErrorImport(standardPackage));
@@ -82,6 +83,12 @@ createViolationFactory(String standardPackage) {
             ..type = listOfViolations
             ..name = childConstraintsArg
         );
+        var formatParamsParam = Parameter((b) => b
+            ..named = true
+            ..name = paramsArg
+            ..type = listOfStrings
+            ..defaultTo = Code('const []')
+        );
         b.name = _violation;
         b.requiredParameters
             ..add(Parameter((b) => b..type = refer('String')..name = msgFormat))
@@ -89,7 +96,8 @@ createViolationFactory(String standardPackage) {
             ..add(fieldPathParam);
         b.optionalParameters
             ..add(actualValueParam)
-            ..add(childConstraintsParam);
+            ..add(childConstraintsParam)
+            ..add(formatParamsParam);
         var path = 'path';
         var type = violationTypeRef(standardPackage);
         b..returns = type
@@ -104,6 +112,7 @@ createViolationFactory(String standardPackage) {
              refer(path).property('fieldName').property('addAll').call([refer(fieldPath)]),
              resultRef.property('fieldPath').assign(refer(path)),
              resultRef.property('fieldValue').assign(actualValueRef),
+             resultRef.property('param').property('addAll').call([refer(paramsArg)]),
              resultRef.returned
          ].map((expression) => expression.statement));
     });

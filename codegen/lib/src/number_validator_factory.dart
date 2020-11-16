@@ -19,8 +19,8 @@
  */
 
 import 'package:code_builder/code_builder.dart';
-import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
+import 'package:dart_code_gen/src/type.dart';
 
 import 'constraint_violation.dart';
 import 'field_validator_factory.dart';
@@ -28,6 +28,9 @@ import 'imports.dart';
 import 'validator_factory.dart';
 
 const _numericRange = r'([\[(])\s*([+\-]?[\d.]+)\s*\.\.\s*([+\-]?[\d.]+)\s*([\])])';
+
+const _defaultMinFormat = 'The number must be greater than %s%s.';
+const _defaultMaxFormat = 'The number must be less than %s%s.';
 
 /// A [FieldValidatorFactory] for number fields.
 ///
@@ -38,7 +41,7 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
     final String _wrapperType;
 
     NumberValidatorFactory(ValidatorFactory validatorFactory,
-                           FieldDescriptorProto field,
+                           FieldDeclaration field,
                            this._wrapperType)
         : super(validatorFactory, field);
 
@@ -49,19 +52,18 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
     @override
     Iterable<Rule> rules() {
         var rules = <Rule>[];
-        var options = field.options;
-        if (options.hasExtension(Options.min)) {
-            Rule min = _minRule(options);
-            rules.add(min);
-        }
-        if (options.hasExtension(Options.max)) {
-            Rule max = _maxRule(options);
-            rules.add(max);
-        }
-        if (options.hasExtension(Options.range)) {
-            Iterable<Rule> range = _rangeRules(options);
-            rules.addAll(range);
-        }
+        field.findOption(Options.min).ifPresent((val) {
+            Rule minRule = _minRule(val);
+            rules.add(minRule);
+        });
+        field.findOption(Options.max).ifPresent((val) {
+            Rule maxRule = _maxRule(val);
+            rules.add(maxRule);
+        });
+        field.findOption(Options.range).ifPresent((val) {
+            Iterable<Rule> rangeRules = _rangeRules(val);
+            rules.addAll(rangeRules);
+        });
         return rules;
     }
 
@@ -72,40 +74,41 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
     ///
     bool supportsRequired() => false;
 
-    Rule _minRule(FieldOptions options) {
-        var min = options.getExtension(Options.min) as MinOption;
+    Rule _minRule(MinOption min) {
         var bound = _parse(min.value);
         var exclusive = min.exclusive;
-        return _constructMinRule(bound, exclusive);
+        var msgFormat = min.msgFormat;
+        var errorFormat = msgFormat.isEmpty ? _defaultMinFormat : msgFormat;
+        return _constructMinRule(bound, exclusive, errorFormat);
     }
     
-    Rule _constructMinRule(N bound, bool exclusive) {
+    Rule _constructMinRule(N bound, bool exclusive, String errorFormat) {
         var literal = literalNum(bound);
         var check = exclusive
                     ? (Expression v) => v.lessOrEqualTo(literal)
                     : (Expression v) => v.lessThan(literal);
-        var requiredString = newRule((v) => check(v), _outOfBound);
+        var requiredString = newRule((v) => check(v), _outOfBound(errorFormat, !exclusive));
         return requiredString;
     }
 
-    Rule _maxRule(FieldOptions options) {
-        var max = options.getExtension(Options.max) as MaxOption;
+    Rule _maxRule(MaxOption max) {
         var bound = _parse(max.value);
         var exclusive = max.exclusive;
-        return _constructMaxRule(bound, exclusive);
+        var msgFormat = max.msgFormat;
+        var errorFormat = msgFormat.isEmpty ? _defaultMaxFormat : msgFormat;
+        return _constructMaxRule(bound, exclusive, errorFormat);
     }
 
-    Rule _constructMaxRule(N bound, bool exclusive) {
+    Rule _constructMaxRule(N bound, bool exclusive, String errorFormat) {
       var literal = literalNum(bound);
       var check = exclusive
                   ? (Expression v) => v.greaterOrEqualTo(literal)
                   : (Expression v) => v.greaterThan(literal);
-      var rule = newRule((v) => check(v), _outOfBound);
+      var rule = newRule((v) => check(v), _outOfBound(errorFormat, !exclusive));
       return rule;
     }
     
-    Iterable<Rule> _rangeRules(FieldOptions options) {
-        var rangeNotation = options.getExtension(Options.range) as String;
+    Iterable<Rule> _rangeRules(String rangeNotation) {
         var rangePattern = RegExp(_numericRange);
         var match = rangePattern.firstMatch(rangeNotation.trim());
         if (match == null) {
@@ -117,30 +120,39 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
         var end = _parse(match.group(3));
         var endOpen = match.group(4) == ')';
 
-        var minRule = _constructMinRule(start, startOpen);
-        var maxRule = _constructMaxRule(end, endOpen);
+        var minRule = _constructMinRule(start, startOpen, _defaultMinFormat);
+        var maxRule = _constructMaxRule(end, endOpen, _defaultMaxFormat);
         return [minRule, maxRule];
     }
 
-    // TODO:2019-10-14:dmytro.dashenkov: Support custom error messages based on the option value.
-    // https://github.com/SpineEventEngine/base/issues/482
-    Expression _outOfBound(Expression value) {
-        var param = 'v';
-        var standardPackage = validatorFactory.properties.standardPackage;
-        var floatValue = refer(_wrapperType, protoWrappersImport(standardPackage))
-            .newInstance([])
-            .property('copyWith')
-            .call([Method((b) => b
-            ..requiredParameters.add(Parameter((b) => b.name = param))
-            ..body = refer(param)
-                .property('value')
-                .assign(value)
-                .statement).closure]);
-        var any = refer('Any', protoAnyImport(standardPackage)).property('pack').call([floatValue]);
-        return violationRef.call([literalString('Number is out of bound.'),
-                                  literalString(validatorFactory.fullTypeName),
-                                  literalList([field.name])],
-                                 {actualValueArg: any});
+    LazyViolation _outOfBound(String messageFormat, bool inclusive) {
+        return (Expression value) {
+            var param = 'v';
+            var standardPackage = validatorFactory.properties.standardPackage;
+            var floatValue = refer(_wrapperType, protoWrappersImport(standardPackage))
+                .newInstance([])
+                .property('copyWith')
+                .call([Method((b) => b
+                ..requiredParameters.add(Parameter((b) => b.name = param))
+                ..body = refer(param)
+                    .property('value')
+                    .assign(value)
+                    .statement).closure]);
+            var any = refer('Any', protoAnyImport(standardPackage))
+                .property('pack')
+                .call([floatValue]);
+            var inclusivity = inclusive ? 'or equal to ' : '';
+            var params = literalList([
+                literalString(inclusivity),
+                value.property('toString').call([])
+            ]);
+            return violationRef.call(
+                [literalString(messageFormat),
+                 literalString(validatorFactory.fullTypeName),
+                 literalList([field.protoName])],
+                {actualValueArg: any, paramsArg: params}
+            );
+        };
     }
 }
 
@@ -149,19 +161,19 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
 class DoubleValidatorFactory extends NumberValidatorFactory<double> {
 
     DoubleValidatorFactory._(ValidatorFactory validatorFactory,
-                             FieldDescriptorProto field,
+                             FieldDeclaration field,
                              String wrapperType)
         : super(validatorFactory, field, wrapperType);
 
     /// Creates a new validator factory for a `float` field.
     factory DoubleValidatorFactory.forFloat(ValidatorFactory validatorFactory,
-                                            FieldDescriptorProto field) {
+                                            FieldDeclaration field) {
         return DoubleValidatorFactory._(validatorFactory, field, 'FloatValue');
     }
 
     /// Creates a new validator factory for a `double` field.
     factory DoubleValidatorFactory.forDouble(ValidatorFactory validatorFactory,
-                                             FieldDescriptorProto field) {
+                                             FieldDeclaration field) {
         return DoubleValidatorFactory._(validatorFactory, field, 'DoubleValue');
     }
 
@@ -174,7 +186,7 @@ class DoubleValidatorFactory extends NumberValidatorFactory<double> {
 class IntValidatorFactory extends NumberValidatorFactory<int> {
 
     IntValidatorFactory._(ValidatorFactory validatorFactory,
-                          FieldDescriptorProto field,
+                          FieldDeclaration field,
                           String wrapperType)
         : super(validatorFactory, field, wrapperType);
 
@@ -184,7 +196,7 @@ class IntValidatorFactory extends NumberValidatorFactory<int> {
     /// by this factory.
     ///
     factory IntValidatorFactory.forInt32(ValidatorFactory validatorFactory,
-                                         FieldDescriptorProto field) {
+                                         FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'Int32Value');
     }
 
@@ -194,19 +206,19 @@ class IntValidatorFactory extends NumberValidatorFactory<int> {
     /// by this factory.
     ///
     factory IntValidatorFactory.forInt64(ValidatorFactory validatorFactory,
-                                         FieldDescriptorProto field) {
+                                         FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'Int64Value');
     }
 
     /// Creates a new validator factory for a unsigned 32-bit integer.
     factory IntValidatorFactory.forUInt32(ValidatorFactory validatorFactory,
-                                          FieldDescriptorProto field) {
+                                          FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'UInt32Value');
     }
 
     /// Creates a new validator factory for a unsigned 64-bit integer.
     factory IntValidatorFactory.forUInt64(ValidatorFactory validatorFactory,
-                                          FieldDescriptorProto field) {
+                                          FieldDeclaration field) {
         return IntValidatorFactory._(validatorFactory, field, 'UInt64Value');
     }
 

@@ -20,6 +20,7 @@
 
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/validate/validation_error.pb.dart';
+import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/known_types.dart';
 import 'package:test/test.dart';
 
@@ -52,6 +53,52 @@ void main() {
             assertValid(givenNameOnly);
         });
 
+        group('add to violation', () {
+            test('actual value of a number', () {
+                var tooManyMinutes = 1000;
+                var invalidTime = LocalTime()
+                    ..hours = 11
+                    ..minutes = tooManyMinutes;
+                assertInvalid(invalidTime);
+                var violations = validate(invalidTime);
+                expect(violations.length, equals(1));
+                var violation = violations[0];
+                var anyValue = violation.fieldValue;
+                var floatValue = unpack(anyValue) as UInt32Value;
+                expect(floatValue.value, equals(tooManyMinutes));
+            });
+
+            test('custom error message for (pattern)', () {
+                var invalidId = TaskId()
+                    ..value = 'not_enough';
+                assertInvalid(invalidId);
+                var violations = validate(invalidId);
+                expect(violations.length, equals(1));
+                var violation = violations[0];
+                expect(violation.msgFormat, contains('alphanumeric'));
+            });
+
+            test('custom error message for (valid)', () {
+                var invalidSnapshot = WorkInProgressSnapshot();
+                invalidSnapshot.when = LocalTime()
+                    ..hours = 73
+                    ..minutes = 1000;
+                assertInvalid(invalidSnapshot);
+                var violations = validate(invalidSnapshot);
+                expect(violations.length, equals(1));
+                var violation = violations[0];
+                expect(violation.msgFormat, contains('WIP'));
+            });
+
+            test('custom error message for (required)', () {
+                var invalidId = TaskId();
+                assertInvalid(invalidId);
+                var violations = validate(invalidId);
+                var violation = violations[0];
+                expect(violation.msgFormat, endsWith('a value!'));
+            });
+        });
+
         group('report violations on', () {
             test('mismatched string', () {
                 var msg = PhoneNumber()
@@ -60,7 +107,7 @@ void main() {
                 expect(violations, hasLength(equals(1)));
                 var violation = violations[0];
                 expect(violation.fieldPath.fieldName[0], 'digits');
-                expect(violation.msgFormat, contains('\\+?\\d{4,15}'));
+                expect(violation.msgFormat, contains('`%s`'));
                 expect(violation.typeName, msg.info_.qualifiedMessageName);
             });
 
@@ -172,8 +219,10 @@ void main() {
             test('several constraints on the same field', () {
                 var violations = validate(PhoneNumber());
                 expect(violations.length, 2);
-                expect(violations[0].msgFormat, contains('Field must be set'));
+                expect(violations[0].msgFormat, equals('A value must be set.'));
                 expect(violations[1].msgFormat, contains('regular expression'));
+                expect(violations[1].param.length, equals(1));
+                expect(violations[1].param[0], equals('\\+?\\d{4,15}'));
             });
 
             test('unexpected duplicates', () {
@@ -249,7 +298,7 @@ void checkMissing(GeneratedMessage message, String fieldName) {
     expect(violations, hasLength(equals(1)));
     var violation = violations[0];
     expect(violation.fieldPath.fieldName[0], fieldName);
-    expect(violation.msgFormat, contains('Field must be set'));
+    expect(violation.msgFormat, equals('A value must be set.'));
     expect(violation.typeName, message.info_.qualifiedMessageName);
 }
 

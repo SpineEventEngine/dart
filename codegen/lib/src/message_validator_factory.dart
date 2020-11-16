@@ -19,10 +19,10 @@
  */
 
 import 'package:code_builder/code_builder.dart';
-import 'package:dart_code_gen/google/protobuf/descriptor.pb.dart';
 import 'package:dart_code_gen/spine/options.pb.dart';
 import 'package:dart_code_gen/src/constraint_violation.dart';
 import 'package:dart_code_gen/src/field_validator_factory.dart';
+import 'package:dart_code_gen/src/type.dart';
 import 'package:dart_code_gen/src/validator_factory.dart';
 
 import 'field_validator_factory.dart';
@@ -34,7 +34,7 @@ const String _validateLib = 'package:spine_client/validate.dart';
 ///
 class MessageValidatorFactory extends SingularFieldValidatorFactory {
 
-    MessageValidatorFactory(ValidatorFactory validatorFactory, FieldDescriptorProto field)
+    MessageValidatorFactory(ValidatorFactory validatorFactory, FieldDeclaration field)
         : super(validatorFactory, field);
 
     @override
@@ -54,15 +54,11 @@ class MessageValidatorFactory extends SingularFieldValidatorFactory {
             (v) => v.property('createEmptyInstance').call([]).equalTo(v);
 
     /// Checks if the field should be validated according to the `(validate)` option.
-    bool _shouldValidate() {
-        var options = field.options;
-        return options.hasExtension(Options.validate)
-            && options.getExtension(Options.validate);
-    }
+    bool _shouldValidate() => field.findOption(Options.validate).orElse(false);
 
     /// Constructs a [Rule] for validating the field message value.
     Rule _createValidateRule() {
-        var violationsVar = 'violationsOf_${field.name}';
+        var violationsVar = 'violationsOf_${field.dartName}';
         return newRule((fieldValue) => _isValidExpression(fieldValue, refer(violationsVar)),
                        (fieldValue) => _produceViolation(refer(violationsVar)),
           preparation: (fieldValue) => _produceChildViolations(violationsVar, fieldValue));
@@ -90,10 +86,13 @@ class MessageValidatorFactory extends SingularFieldValidatorFactory {
     }
 
     Expression _produceViolation(Expression violationsVar) {
+        var message = field.findOption(Options.ifInvalid)
+                           .map((val) => val.msgFormat)
+                           .orElse('The message must have valid properties.');
         return violationRef.call([
-            literalString('Field must be valid.'),
+            literalString(message),
             literalString(validatorFactory.fullTypeName),
-            literalList([field.name])
+            literalList([field.protoName])
         ], {
             childConstraintsArg: violationsVar.property('value').property('constraintViolation')
         });

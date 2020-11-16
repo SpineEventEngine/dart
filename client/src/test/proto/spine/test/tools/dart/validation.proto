@@ -82,7 +82,12 @@ message LotteryTicket {
 
 message TaskId {
 
-    string value = 1 [(required) = true, (pattern).regex = "\\w{20}"];
+    string value = 1 [
+        (required) = true,
+        (if_missing) = {msg_format: 'Task ID must have a value!'},
+        (pattern).regex = "\\w{20}",
+        (pattern).msg_format = 'Task ID must consist of 20 alphanumeric symbols (regx: %s).'
+    ];
 }
 
 // A snapshot of task assignments at a point in time.
@@ -96,7 +101,10 @@ message WorkInProgressSnapshot {
     map<string, TaskId> assignment = 1 [(validate) = true];
 
     // When the snapshot was taken.
-    LocalTime when = 2 [(validate) = true];
+    LocalTime when = 2 [
+        (validate) = true,
+        (if_invalid) = {msg_format: 'WIP snapshot must have a valid timestamp.'}
+    ];
 
     // IDs of tasks which are not yet assigned but are to be done in the nearest future.
     repeated TaskId backlog = 3 [(validate) = true];
