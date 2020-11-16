@@ -82,4 +82,14 @@ class KnownTypes {
         _msgToTypeUrl.addAll(msgToTypeUrl);
         _validators.addAll(validationFunctions);
     }
+
+    /// Registers each given type provider.
+    ///
+    /// Each element should be obtained from the `types()` method in a generated `types.dart` file.
+    ///
+    void registerAll(List<dynamic> typeRegistries) {
+        for (var registry in typeRegistries) {
+            register(registry);
+        }
+    }
 }

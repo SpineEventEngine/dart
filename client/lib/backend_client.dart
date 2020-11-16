@@ -51,6 +51,13 @@ class BackendClient {
     final FirebaseClient _database;
     final List<Subscription> _activeSubscriptions = [];
 
+    /// Indicates in the client should read query results directly from the HTTP response or from
+    /// the Firebase Database.
+    ///
+    final QueryMode _queryMode;
+    
+    final Endpoints _endpoints;
+
     /// A period with which the "subscription keep-up" request is sent for all active
     /// subscriptions.
     ///
@@ -78,28 +85,40 @@ class BackendClient {
     /// import 'package:example_dependency/types.dart' as dependencyTypes;
     /// import 'types.dart' as myTypes;
     ///
-    /// var firebase = RestClient(fb.FirebaseClient.anonymous(),
-    ///                           'https://example-org-42.firebaseio.com');
+    /// var firebaseClient = RestClient(fb.FirebaseClient.anonymous(),
+    ///                                 'https://example-org-42.firebaseio.com');
     /// var client = BackendClient('https://example.org',
-    ///                            firebase,
+    ///                            firebase: firebaseClient,
     ///                            typeRegistries: [myTypes.types(), dependencyTypes.types()]);
     /// ```
     ///
     BackendClient(String serverUrl,
-                  this._database,
-                  {List<dynamic> typeRegistries = const [],
-                   this.subscriptionKeepUpPeriod = _defaultSubscriptionKeepUpPeriod})
-            : _endpoint = HttpEndpoint(serverUrl) {
-        for (var registry in typeRegistries) {
-            theKnownTypes.register(registry);
+                 {FirebaseClient firebase,
+                  List<dynamic> typeRegistries = const [],
+                  this.subscriptionKeepUpPeriod = _defaultSubscriptionKeepUpPeriod,
+                  QueryMode queryMode = QueryMode.FIREBASE,
+                  Endpoints endpoints = const Endpoints()})
+            : _endpoint = HttpEndpoint(serverUrl),
+              _database = firebase,
+              _queryMode = queryMode,
+              _endpoints = endpoints {
+        ArgumentError.checkNotNull(serverUrl);
+        ArgumentError.checkNotNull(typeRegistries);
+        ArgumentError.checkNotNull(_queryMode);
+        if (_queryMode == QueryMode.FIREBASE && firebase == null) {
+            throw ArgumentError('Use `QueryMode.DIRECT` to bypass Firebase.');
         }
+        ArgumentError.checkNotNull(_endpoints);
+        _endpoints._validate();
+
+        theKnownTypes.registerAll(typeRegistries);
         Timer.periodic(subscriptionKeepUpPeriod, (timer) => _keepUpSubscriptions());
     }
 
     /// Posts a given [Command] to the server.
     Future<Ack> post(Command command) {
         var result = _endpoint
-            .postMessage('command', command)
+            .postMessage(_endpoints.command, command)
             .then(_parseAck);
         return result;
     }
@@ -145,7 +164,7 @@ class BackendClient {
             throw ArgumentError.value(topic, 'topic', 'Target type `$targetTypeUrl` is unknown.');
         }
         var response = await _endpoint
-            .postMessage('subscription/create', topic)
+            .postMessage(_endpoints.subscription.create, topic)
             .then(_parseFirebaseSubscription);
 
         Subscription<T> subscription = Subscription.of(response, _database);
@@ -159,8 +178,14 @@ class BackendClient {
         return ack;
     }
 
-    FirebaseQueryResponse _parseQueryResponse(http.Response response) {
+    FirebaseQueryResponse _parseFbQueryResponse(http.Response response) {
         var queryResponse = FirebaseQueryResponse();
+        _parseInto(queryResponse, response);
+        return queryResponse;
+    }
+
+    QueryResponse _parseDirectQueryResponse(http.Response response) {
+        var queryResponse = QueryResponse();
         _parseInto(queryResponse, response);
         return queryResponse;
     }
@@ -191,10 +216,54 @@ class BackendClient {
     }
 
     void _keepUp(pb.Subscription subscription) {
-        _endpoint.postMessage('subscription/keep-up', subscription);
+        _endpoint.postMessage(_endpoints.subscription.keepUp, subscription);
     }
 
     void _cancel(pb.Subscription subscription) {
-        _endpoint.postMessage('subscription/cancel', subscription);
+        _endpoint.postMessage(_endpoints.subscription.cancel, subscription);
+    }
+}
+
+enum QueryMode {
+
+    DIRECT, FIREBASE
+}
+
+class Endpoints {
+
+    final String query;
+    final String command;
+    final SubscriptionEndpoints subscription;
+
+    const Endpoints({
+        this.query = 'query',
+        this.command = 'command',
+        this.subscription = const SubscriptionEndpoints()
+    });
+
+    void _validate() {
+        ArgumentError.checkNotNull(query, 'query');
+        ArgumentError.checkNotNull(command, 'command');
+        ArgumentError.checkNotNull(subscription, 'subscription');
+        subscription._validate();
+    }
+}
+
+class SubscriptionEndpoints {
+
+    final String create;
+    final String keepUp;
+    final String cancel;
+
+    const SubscriptionEndpoints({
+        this.create = 'subscription/create',
+        this.keepUp = 'subscription/keep-up',
+        this.cancel = 'subscription/cancel'
+    });
+
+    void _validate() {
+        ArgumentError.checkNotNull(create, 'subscription.create');
+        ArgumentError.checkNotNull(keepUp, 'subscription.keepUp');
+        ArgumentError.checkNotNull(cancel, 'subscription.cancel');
     }
 }
