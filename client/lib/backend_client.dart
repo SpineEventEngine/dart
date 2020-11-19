@@ -39,10 +39,15 @@ import 'subscription.dart';
 
 /// A client of a Spine-based web server.
 ///
-/// Communicates with the backend via the Spine Firebase-web protocol.
+/// Posts commands, sends queries, and manages subscriptions.
 ///
-/// For read operations, the client sends a request to the Spine-based server, receives a path to
-/// a node in Firebase Realtime Database in response, and fetches the data under that node.
+/// There are two modes for querying the data from backend:
+///   1. Firebase mode (default) — the Firebase Database is used to deliver query
+///      and subscription results. The client sends a request to the backend, receives a path to
+///      a node in Firebase Realtime Database in response, and fetches the data under that node.
+///   2. Direct mode — the Firebase Database is only used for subscription updates, while
+///      query results are delivered directly in HTTP responses. In this mode, if there is no need
+///      to use subscriptions, the firebase client is not required.
 ///
 class BackendClient {
 
@@ -76,10 +81,18 @@ class BackendClient {
 
     /// Creates a new instance of `BackendClient`.
     ///
-    /// The client connects to the Spine-based server at the given [_endpoint] and reads query
-    /// responses from the given Firebase [_database].
+    /// The client connects to the Spine-based server at the given [_endpoint].
+    ///
+    /// To choose a query mode, specify the [queryMode] argument The default value
+    /// is `QueryMode.FIREBASE`.
     ///
     /// The client may accept [typeRegistries] defined by the client modules.
+    ///
+    /// By default, the client connects to the `/command` endpoint for posting commands,
+    /// to the `/query` endpoint for sending queries, and to `/subscription/create`,
+    /// `/subscription/keep-up`, and `/subscription/cancel` endpoints to manage subscriptions.
+    /// These endpoints can be changed via the [endpoints] parameter. If only a few of the endpoints
+    /// need to be customized, submit only those to the `Endpoints` constructor and skip the others.
     ///
     /// Example:
     /// ```dart
@@ -91,6 +104,15 @@ class BackendClient {
     ///                                 'https://example-org-42.firebaseio.com');
     /// var client = BackendClient('https://example.org',
     ///                            firebase: firebaseClient,
+    ///                            typeRegistries: [myTypes.types(), dependencyTypes.types()]);
+    /// ```
+    /// or
+    /// ```dart
+    /// import 'package:example_dependency/types.dart' as dependencyTypes;
+    /// import 'types.dart' as myTypes;
+    ///
+    /// var client = BackendClient('https://example.org',
+    ///                            queryMode: QueryMode.DIRECT,
     ///                            typeRegistries: [myTypes.types(), dependencyTypes.types()]);
     /// ```
     ///
@@ -125,8 +147,10 @@ class BackendClient {
 
     /// Obtains entities matching the given query from the server.
     ///
-    /// Sends a [Query] to the server and receives a path to a node in Firebase Realtime Database.
-    /// The node's children represent the entities matching the query.
+    /// Sends a [Query] to the server. If in `QueryMode.DIRECT` mode, the HTTP response contains
+    /// a [QueryResponce]. If in `QueryMode.FIREBASE` mode, the HTTP responce contains a path to
+    /// a node in Firebase Realtime Database. The node's children represent the entities matching
+    /// the query.
     ///
     /// Throws an exception if the query is invalid or if any kind of network or server error
     /// occurs.
