@@ -56,8 +56,9 @@ class BackendClient {
     /// the Firebase Database.
     ///
     final QueryMode _queryMode;
-    
-    final Endpoints _endpoints;
+
+    /// Endpoints to which this client connects.
+    Endpoints _endpoints;
 
     /// A period with which the "subscription keep-up" request is sent for all active
     /// subscriptions.
@@ -98,11 +99,10 @@ class BackendClient {
                   List<dynamic> typeRegistries = const [],
                   this.subscriptionKeepUpPeriod = _defaultSubscriptionKeepUpPeriod,
                   QueryMode queryMode = QueryMode.FIREBASE,
-                  Endpoints endpoints = const Endpoints()})
+                  Endpoints endpoints})
             : _endpoint = HttpEndpoint(serverUrl),
               _database = firebase,
-              _queryMode = queryMode,
-              _endpoints = endpoints {
+              _queryMode = queryMode {
         ArgumentError.checkNotNull(serverUrl);
         ArgumentError.checkNotNull(typeRegistries);
         ArgumentError.checkNotNull(_queryMode);
@@ -110,7 +110,7 @@ class BackendClient {
             throw ArgumentError('Use `QueryMode.DIRECT` to bypass Firebase.');
         }
         ArgumentError.checkNotNull(_endpoints);
-        _endpoints._validate();
+        this._endpoints = endpoints ?? Endpoints();
 
         theKnownTypes.registerAll(typeRegistries);
         Timer.periodic(subscriptionKeepUpPeriod, (timer) => _keepUpSubscriptions());
@@ -245,44 +245,55 @@ class BackendClient {
     }
 }
 
+/// The mode in which the backend serves query responses.
 enum QueryMode {
 
-    DIRECT, FIREBASE
+    /// HTTP responses received from backend are query responses.
+    DIRECT,
+
+    /// HTTP responses received from the backend are references in a Firebase database to where
+    /// the actual query responses are.
+    FIREBASE
 }
 
+/// URL paths to which the client should send requests.
+///
 class Endpoints {
 
     final String query;
     final String command;
-    final SubscriptionEndpoints subscription;
+    SubscriptionEndpoints _subscription;
 
-    const Endpoints({
+    Endpoints({
         this.query = 'query',
         this.command = 'command',
-        this.subscription = const SubscriptionEndpoints()
-    });
-
-    void _validate() {
+        SubscriptionEndpoints subscription
+    }) {
         ArgumentError.checkNotNull(query, 'query');
         ArgumentError.checkNotNull(command, 'command');
-        ArgumentError.checkNotNull(subscription, 'subscription');
-        subscription._validate();
+        this._subscription = subscription ?? SubscriptionEndpoints();
+    }
+
+    SubscriptionEndpoints get subscription {
+        return _subscription;
     }
 }
 
+/// URL paths to which the client should send requests regarding entity and event subscriptions.
+///
+/// See [Endpoints].
+///
 class SubscriptionEndpoints {
 
     final String create;
     final String keepUp;
     final String cancel;
 
-    const SubscriptionEndpoints({
+    SubscriptionEndpoints({
         this.create = 'subscription/create',
         this.keepUp = 'subscription/keep-up',
         this.cancel = 'subscription/cancel'
-    });
-
-    void _validate() {
+    }) {
         ArgumentError.checkNotNull(create, 'subscription.create');
         ArgumentError.checkNotNull(keepUp, 'subscription.keepUp');
         ArgumentError.checkNotNull(cancel, 'subscription.cancel');
