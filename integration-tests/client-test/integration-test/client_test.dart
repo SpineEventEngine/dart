@@ -35,12 +35,13 @@ void main() {
     group('BackendClient should', () {
         ActorRequestFactory requestFactory;
         BackendClient client;
+        FirebaseClient firebaseClient;
 
         setUp(() {
             var database = FirebaseApp().database;
-            var firebase = WebFirebaseClient(database);
+            firebaseClient = WebFirebaseClient(database);
             client = BackendClient(BACKEND,
-                                   firebase: firebase,
+                                   firebase: firebaseClient,
                                    typeRegistries: [testTypes.types()]);
             var actor = UserId();
             actor.value = newUuid();
@@ -48,6 +49,26 @@ void main() {
         });
 
         test('send commands and obtain query data', () async {
+            var taskId = TaskId()
+                ..value = newUuid();
+            var cmd = CreateTask()
+                ..id = taskId
+                ..name = 'Task name'
+                ..description = "long";
+            await client.post(requestFactory.command().create(cmd));
+            var query = requestFactory.query().all(Task());
+            var tasks = await client.fetch<Task>(query).toList();
+            expect(tasks, hasLength(greaterThanOrEqualTo(1)));
+            var matchingById = tasks.where((task) => task.id == taskId);
+            expect(matchingById, hasLength(1));
+        });
+
+        test('query server directly', () async {
+            client = BackendClient(BACKEND,
+                                   queryMode: QueryMode.DIRECT,
+                                   endpoints: Endpoints(
+                                       query: 'direct-query'
+                                   ));
             var taskId = TaskId()
                 ..value = newUuid();
             var cmd = CreateTask()

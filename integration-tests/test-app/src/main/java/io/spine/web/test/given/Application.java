@@ -33,6 +33,7 @@ import io.spine.web.firebase.FirebaseClient;
 import io.spine.web.firebase.FirebaseCredentials;
 import io.spine.web.firebase.query.FirebaseQueryBridge;
 import io.spine.web.firebase.subscription.FirebaseSubscriptionBridge;
+import io.spine.web.query.BlockingQueryBridge;
 
 import java.io.IOException;
 
@@ -48,7 +49,8 @@ final class Application {
     private static final String DATABASE_URL = "https://spine-dev.firebaseio.com/";
 
     private final CommandService commandService;
-    private final FirebaseQueryBridge queryBridge;
+    private final FirebaseQueryBridge fbQueryBridge;
+    private final BlockingQueryBridge blockingQueryBridge;
     private final FirebaseSubscriptionBridge subscriptionBridge;
 
     private Application(CommandService commandService,
@@ -56,11 +58,12 @@ final class Application {
                         SubscriptionService subscriptionService,
                         FirebaseClient client) {
         this.commandService = commandService;
-        this.queryBridge = FirebaseQueryBridge
+        this.fbQueryBridge = FirebaseQueryBridge
                 .newBuilder()
                 .setQueryService(queryService)
                 .setFirebaseClient(client)
                 .build();
+        this.blockingQueryBridge = new BlockingQueryBridge(queryService);
         this.subscriptionBridge = FirebaseSubscriptionBridge
                 .newBuilder()
                 .setSubscriptionService(subscriptionService)
@@ -113,11 +116,15 @@ final class Application {
         return commandService;
     }
 
-    FirebaseQueryBridge queryBridge() {
-        return this.queryBridge;
+    FirebaseQueryBridge firebaseQueryBridge() {
+        return fbQueryBridge;
+    }
+
+    BlockingQueryBridge blockingQueryBridge() {
+        return blockingQueryBridge;
     }
 
     FirebaseSubscriptionBridge subscriptionBridge() {
-        return this.subscriptionBridge;
+        return subscriptionBridge;
     }
 }
