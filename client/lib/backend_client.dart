@@ -109,7 +109,6 @@ class BackendClient {
         if (_queryMode == QueryMode.FIREBASE && firebase == null) {
             throw ArgumentError('Use `QueryMode.DIRECT` to bypass Firebase.');
         }
-        ArgumentError.checkNotNull(_endpoints);
         this._endpoints = endpoints ?? Endpoints();
 
         theKnownTypes.registerAll(typeRegistries);
