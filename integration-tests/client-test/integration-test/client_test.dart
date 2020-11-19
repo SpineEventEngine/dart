@@ -39,7 +39,9 @@ void main() {
         setUp(() {
             var database = FirebaseApp().database;
             var firebase = WebFirebaseClient(database);
-            client = BackendClient(BACKEND, firebase, typeRegistries: [testTypes.types()]);
+            client = BackendClient(BACKEND,
+                                   firebase: firebase,
+                                   typeRegistries: [testTypes.types()]);
             var actor = UserId();
             actor.value = newUuid();
             requestFactory = ActorRequestFactory(actor);
