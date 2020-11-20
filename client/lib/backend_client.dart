@@ -53,7 +53,7 @@ class BackendClient {
 
     static const Duration _defaultSubscriptionKeepUpPeriod = Duration(minutes: 2);
 
-    final HttpEndpoint _endpoint;
+    final HttpClient _httpClient;
     final FirebaseClient _database;
     final List<Subscription> _activeSubscriptions = [];
 
@@ -78,7 +78,7 @@ class BackendClient {
 
     /// Creates a new instance of `BackendClient`.
     ///
-    /// The client connects to the Spine-based server at the given [_endpoint].
+    /// The client connects to the Spine-based server at the given [_httpClient].
     ///
     /// To choose a query mode, specify the [queryMode] argument The default value
     /// is `QueryMode.FIREBASE`.
@@ -119,7 +119,7 @@ class BackendClient {
                   this.subscriptionKeepUpPeriod = _defaultSubscriptionKeepUpPeriod,
                   QueryMode queryMode = QueryMode.FIREBASE,
                   Endpoints endpoints})
-            : _endpoint = HttpEndpoint(serverUrl),
+            : _httpClient = HttpClient(serverUrl),
               _database = firebase,
               _queryProcessor = ArgumentError.checkNotNull(queryMode) == QueryMode.FIREBASE
                                 ? _FirebaseResponceProcessor(firebase)
@@ -133,7 +133,7 @@ class BackendClient {
 
     /// Posts a given [Command] to the server.
     Future<Ack> post(Command command) {
-        var result = _endpoint
+        var result = _httpClient
             .postMessage(_endpoints.command, command)
             .then(_parseAck);
         return result;
@@ -150,7 +150,7 @@ class BackendClient {
     /// occurs.
     ///
     Stream<T> fetch<T extends GeneratedMessage>(Query query) {
-        var httpResponse = _endpoint.postMessage(_endpoints.query, query);
+        var httpResponse = _httpClient.postMessage(_endpoints.query, query);
         return _queryProcessor.process(httpResponse, query);
     }
 
@@ -174,7 +174,7 @@ class BackendClient {
         if (builder == null) {
             throw ArgumentError.value(topic, 'topic', 'Target type `$targetTypeUrl` is unknown.');
         }
-        var response = await _endpoint
+        var response = await _httpClient
             .postMessage(_endpoints.subscription.create, topic)
             .then(_parseFirebaseSubscription);
 
@@ -210,11 +210,11 @@ class BackendClient {
     }
 
     void _keepUp(pb.Subscription subscription) {
-        _endpoint.postMessage(_endpoints.subscription.keepUp, subscription);
+        _httpClient.postMessage(_endpoints.subscription.keepUp, subscription);
     }
 
     void _cancel(pb.Subscription subscription) {
-        _endpoint.postMessage(_endpoints.subscription.cancel, subscription);
+        _httpClient.postMessage(_endpoints.subscription.cancel, subscription);
     }
 }
 
