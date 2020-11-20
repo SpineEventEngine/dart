@@ -27,13 +27,13 @@ import 'package:spine_client/src/url.dart';
 const _base64 = Base64Codec();
 const _protobufContentType = {'Content-Type': 'application/x-protobuf'};
 
-/// An HTTP endpoint located at some URL.
+/// An HTTP client for connecting to the backend.
 ///
-class HttpEndpoint {
+class HttpClient {
 
     final String _baseUrl;
 
-    HttpEndpoint(this._baseUrl);
+    HttpClient(this._baseUrl);
 
     /// Sends an HTTP POST request at the given path with the given message as request body.
     ///
