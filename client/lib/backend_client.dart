@@ -57,11 +57,6 @@ class BackendClient {
     final FirebaseClient _database;
     final List<Subscription> _activeSubscriptions = [];
 
-    /// Indicates in the client should read query results directly from the HTTP response or from
-    /// the Firebase Database.
-    ///
-    final QueryMode _queryMode;
-
     /// Endpoints to which this client connects.
     Endpoints _endpoints;
 
@@ -78,6 +73,8 @@ class BackendClient {
     /// The default value is 2 minutes.
     ///
     final Duration subscriptionKeepUpPeriod;
+
+    final _QueryResponseProcessor _queryProcessor;
 
     /// Creates a new instance of `BackendClient`.
     ///
@@ -124,15 +121,12 @@ class BackendClient {
                   Endpoints endpoints})
             : _endpoint = HttpEndpoint(serverUrl),
               _database = firebase,
-              _queryMode = queryMode {
+              _queryProcessor = ArgumentError.checkNotNull(queryMode) == QueryMode.FIREBASE
+                                ? _FirebaseResponceProcessor(firebase)
+                                : _DirectResponseProcessor() {
         ArgumentError.checkNotNull(serverUrl);
         ArgumentError.checkNotNull(typeRegistries);
-        ArgumentError.checkNotNull(_queryMode);
-        if (_queryMode == QueryMode.FIREBASE && firebase == null) {
-            throw ArgumentError('Use `QueryMode.DIRECT` to bypass Firebase.');
-        }
         this._endpoints = endpoints ?? Endpoints();
-
         theKnownTypes.registerAll(typeRegistries);
         Timer.periodic(subscriptionKeepUpPeriod, (timer) => _keepUpSubscriptions());
     }
@@ -155,39 +149,9 @@ class BackendClient {
     /// Throws an exception if the query is invalid or if any kind of network or server error
     /// occurs.
     ///
-    Stream<T> fetch<T extends GeneratedMessage>(Query query) async* {
-        var httpResponse = _endpoint
-            .postMessage(_endpoints.query, query);
-        if (_queryMode == QueryMode.FIREBASE) {
-            yield* _fetchFromFirebase(httpResponse, query);
-        } else {
-            yield* _processDirectResponse(httpResponse);
-        }
-    }
-
-    Stream<T> _fetchFromFirebase<T extends GeneratedMessage>(Future<http.Response> httpResponse,
-                                                             Query query) async* {
-        var targetTypeUrl = query.target.type;
-        var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
-        if (builder == null) {
-            throw ArgumentError.value(query, 'query', 'Target type `$targetTypeUrl` is unknown.');
-        }
-        var qr = await httpResponse.then(_parseFbQueryResponse);
-        yield* _database
-            .get(qr.path)
-            .take(qr.count.toInt())
-            .map((json) => parseIntoNewInstance(builder, json));
-    }
-
-    Stream<T> _processDirectResponse<T extends GeneratedMessage>(
-        Future<http.Response> httpResponse
-    ) async* {
-        var qr = httpResponse.then(_parseDirectQueryResponse);
-        var entities = await qr.then((response) => response.message);
-        for (var entity in entities) {
-            var message = unpack(entity.state);
-            yield message as T;
-        }
+    Stream<T> fetch<T extends GeneratedMessage>(Query query) {
+        var httpResponse = _endpoint.postMessage(_endpoints.query, query);
+        return _queryProcessor.process(httpResponse, query);
     }
 
     /// Subscribes to the changes of entities described by the given [topic].
@@ -202,6 +166,9 @@ class BackendClient {
     /// occurs.
     ///
     Future<Subscription<T>> subscribeTo<T extends GeneratedMessage>(pb.Topic topic) async {
+        if (_database == null) {
+            throw StateError('Cannot create a subscription. No Firebase client is provided.');
+        }
         var targetTypeUrl = topic.target.type;
         var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
         if (builder == null) {
@@ -222,27 +189,10 @@ class BackendClient {
         return ack;
     }
 
-    FirebaseQueryResponse _parseFbQueryResponse(http.Response response) {
-        var queryResponse = FirebaseQueryResponse();
-        _parseInto(queryResponse, response);
-        return queryResponse;
-    }
-
-    QueryResponse _parseDirectQueryResponse(http.Response response) {
-        var queryResponse = QueryResponse();
-        _parseInto(queryResponse, response);
-        return queryResponse;
-    }
-
     FirebaseSubscription _parseFirebaseSubscription(http.Response response) {
         var firebaseSubscription = FirebaseSubscription();
         _parseInto(firebaseSubscription, response);
         return firebaseSubscription;
-    }
-
-    void _parseInto(GeneratedMessage message, http.Response response) {
-        var json = response.body;
-        parseInto(message, json);
     }
 
     void _keepUpSubscriptions() {
@@ -277,6 +227,72 @@ enum QueryMode {
     /// HTTP responses received from the backend are references in a Firebase database to where
     /// the actual query responses are.
     FIREBASE
+}
+
+/// A strategy of processing HTTP responses from the query endpoint.
+abstract class _QueryResponseProcessor {
+
+    Stream<T> process<T extends GeneratedMessage>(Future<http.Response> httpResponse, Query query);
+}
+
+/// Parses the HTTP response as a Firebase database reference and reads the query response from
+/// by that reference.
+class _FirebaseResponceProcessor implements _QueryResponseProcessor {
+
+    final FirebaseClient _database;
+
+    _FirebaseResponceProcessor(this._database) {
+        ArgumentError.checkNotNull(_database, 'FirebaseClient');
+    }
+
+    @override
+    Stream<T> process<T extends GeneratedMessage>(
+        Future<http.Response> httpResponse, Query query
+    ) async* {
+        var targetTypeUrl = query.target.type;
+        var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
+        if (builder == null) {
+            throw ArgumentError.value(query, 'query', 'Target type `$targetTypeUrl` is unknown.');
+        }
+        var qr = await httpResponse.then(_parse);
+        yield* _database
+            .get(qr.path)
+            .take(qr.count.toInt())
+            .map((json) => parseIntoNewInstance(builder, json));
+    }
+
+    FirebaseQueryResponse _parse(http.Response response) {
+        var queryResponse = FirebaseQueryResponse();
+        _parseInto(queryResponse, response);
+        return queryResponse;
+    }
+}
+
+/// Parses the HTTP response as a [QueryResponse].
+class _DirectResponseProcessor extends _QueryResponseProcessor {
+
+    @override
+    Stream<T> process<T extends GeneratedMessage>(
+        Future<http.Response> httpResponse, Query query
+    ) async* {
+        var qr = httpResponse.then(_parse);
+        var entities = await qr.then((response) => response.message);
+        for (var entity in entities) {
+            var message = unpack(entity.state);
+            yield message as T;
+        }
+    }
+
+    QueryResponse _parse(http.Response response) {
+        var queryResponse = QueryResponse();
+        _parseInto(queryResponse, response);
+        return queryResponse;
+    }
+}
+
+void _parseInto(GeneratedMessage message, http.Response response) {
+    var json = response.body;
+    parseInto(message, json);
 }
 
 /// URL paths to which the client should send requests.
