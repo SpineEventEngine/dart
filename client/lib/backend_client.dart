@@ -122,7 +122,7 @@ class BackendClient {
             : _httpClient = HttpClient(serverUrl),
               _database = firebase,
               _queryProcessor = ArgumentError.checkNotNull(queryMode) == QueryMode.FIREBASE
-                                ? _FirebaseResponceProcessor(firebase)
+                                ? _FirebaseResponseProcessor(firebase)
                                 : _DirectResponseProcessor() {
         ArgumentError.checkNotNull(serverUrl);
         ArgumentError.checkNotNull(typeRegistries);
@@ -142,7 +142,7 @@ class BackendClient {
     /// Obtains entities matching the given query from the server.
     ///
     /// Sends a [Query] to the server. If in `QueryMode.DIRECT` mode, the HTTP response contains
-    /// a [QueryResponce]. If in `QueryMode.FIREBASE` mode, the HTTP responce contains a path to
+    /// a [QueryResponse]. If in `QueryMode.FIREBASE` mode, the HTTP response contains a path to
     /// a node in Firebase Realtime Database. The node's children represent the entities matching
     /// the query.
     ///
@@ -237,11 +237,11 @@ abstract class _QueryResponseProcessor {
 
 /// Parses the HTTP response as a Firebase database reference and reads the query response from
 /// by that reference.
-class _FirebaseResponceProcessor implements _QueryResponseProcessor {
+class _FirebaseResponseProcessor implements _QueryResponseProcessor {
 
     final FirebaseClient _database;
 
-    _FirebaseResponceProcessor(this._database) {
+    _FirebaseResponseProcessor(this._database) {
         ArgumentError.checkNotNull(_database, 'FirebaseClient');
     }
 
