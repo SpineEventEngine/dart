@@ -33,7 +33,9 @@ class HttpClient {
 
     final String _baseUrl;
 
-    HttpClient(this._baseUrl);
+    HttpClient(this._baseUrl) {
+        ArgumentError.checkNotNull(_baseUrl, 'base URL');
+    }
 
     /// Sends an HTTP POST request at the given path with the given message as request body.
     ///

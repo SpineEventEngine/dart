@@ -36,7 +36,7 @@ class QueryFactory {
         var query = Query();
         query
             ..id = _newId()
-            ..target = targetByIds(instance, ids)
+            ..target = target(instance, ids: ids)
             ..context = _context();
         return query;
     }
@@ -46,7 +46,7 @@ class QueryFactory {
         var query = Query();
         query
             ..id = _newId()
-            ..target = targetAll(instance)
+            ..target = target(instance)
             ..context = _context();
         return query;
     }

@@ -18,6 +18,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/google/protobuf/any.pb.dart';
@@ -58,18 +59,47 @@ Any pack(GeneratedMessage message) {
 /// are not supported and would cause an `ArgumentError`.
 ///
 Any packId(Object rawId) {
-    if (rawId is Any) {
-        return rawId;
-    } else if (rawId is GeneratedMessage) {
-        return pack(rawId);
-    } else  if (rawId is String) {
-        return pack(StringValue()..value = rawId);
-    } else if (rawId is int) {
-        return pack(Int32Value()..value = rawId);
-    } else if (rawId is Int64) {
-        return pack(Int64Value()..value = rawId);
+    ArgumentError.checkNotNull(rawId);
+    if (rawId is GeneratedMessage || rawId is String || rawId is int || rawId is Int64) {
+        return packObject(rawId);
     } else {
         throw ArgumentError('Instance of type ${rawId.runtimeType} cannot be an ID.');
+    }
+}
+
+/// Packs the given [value] into an [Any].
+///
+/// Supported types are:
+///  - `int`, packed as an `Int32Value`.
+///  - `fixnum.Int64`, packed as an `Int64Value`.
+///  - `Sting`, packed as a `StringValue`.
+///  - `bool`, packed as a `BoolValue`.
+///  - `double`, packed as a `DoubleValue`.
+///  - `GeneratedMessage`, packed as itself.
+///
+/// Other types are not supported and would cause an `ArgumentError`.
+///
+Any packObject(Object value) {
+    ArgumentError.checkNotNull(value);
+    if (value is Any) {
+        return value;
+    } else if (value is GeneratedMessage) {
+        return pack(value);
+    } else  if (value is String) {
+        return pack(StringValue()..value = value);
+    } else if (value is int) {
+        return pack(Int32Value()..value = value);
+    } else if (value is Int64) {
+        return pack(Int64Value()..value = value);
+    } else if (value is double) {
+        return pack(DoubleValue()..value = value);
+    } else if (value is bool) {
+        return pack(BoolValue()..value = value);
+    } else if (value is List && (value.isEmpty || value[0] is int)) {
+        return pack(BytesValue()..value = value);
+    } else {
+        throw ArgumentError('Instance of type ${value.runtimeType} cannot be '
+                            'packed into a `google.protobuf.Any`.');
     }
 }
 

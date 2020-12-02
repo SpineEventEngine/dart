@@ -27,13 +27,11 @@ import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/spine/client/subscription.pb.dart' as pb;
 import 'package:spine_client/spine/core/ack.pb.dart';
 import 'package:spine_client/spine/core/command.pb.dart';
-import 'package:spine_client/spine/web/firebase/query/response.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
 import 'package:spine_client/spine_client.dart';
-import 'package:spine_client/src/any_packer.dart';
-import 'package:spine_client/src/http_endpoint.dart';
-import 'package:spine_client/src/json.dart';
+import 'package:spine_client/src/http_client.dart';
 import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/src/query_processor.dart';
 
 import 'subscription.dart';
 
@@ -55,7 +53,7 @@ class BackendClient {
 
     final HttpClient _httpClient;
     final FirebaseClient _database;
-    final List<Subscription> _activeSubscriptions = [];
+    final List<StateSubscription> _activeSubscriptions = [];
 
     /// Endpoints to which this client connects.
     Endpoints _endpoints;
@@ -74,7 +72,7 @@ class BackendClient {
     ///
     final Duration subscriptionKeepUpPeriod;
 
-    final _QueryResponseProcessor _queryProcessor;
+    final QueryResponseProcessor _queryProcessor;
 
     /// Creates a new instance of `BackendClient`.
     ///
@@ -122,8 +120,8 @@ class BackendClient {
             : _httpClient = HttpClient(serverUrl),
               _database = firebase,
               _queryProcessor = ArgumentError.checkNotNull(queryMode) == QueryMode.FIREBASE
-                                ? _FirebaseResponseProcessor(firebase)
-                                : _DirectResponseProcessor() {
+                                ? FirebaseResponseProcessor(firebase)
+                                : DirectResponseProcessor() {
         ArgumentError.checkNotNull(serverUrl);
         ArgumentError.checkNotNull(typeRegistries);
         this._endpoints = endpoints ?? Endpoints();
@@ -159,13 +157,13 @@ class BackendClient {
     /// Sends a subscription request to the server and receives a path to the Firebase Realtime
     /// Database node where the entity changes are reflected.
     ///
-    /// Based on the given location in the database, builds a [Subscription] which allows to listen
+    /// Based on the given location in the database, builds a [StateSubscription] which allows to listen
     /// to the entity or event changes in the convenient format of [Stream]s.
     ///
     /// Throws an exception if the query is invalid or if any kind of network or server error
     /// occurs.
     ///
-    Future<Subscription<T>> subscribeTo<T extends GeneratedMessage>(pb.Topic topic) async {
+    Future<StateSubscription<T>> subscribeTo<T extends GeneratedMessage>(pb.Topic topic) async {
         if (_database == null) {
             throw StateError('Cannot create a subscription. No Firebase client is provided.');
         }
@@ -178,7 +176,7 @@ class BackendClient {
             .postMessage(_endpoints.subscription.create, topic)
             .then(_parseFirebaseSubscription);
 
-        Subscription<T> subscription = Subscription.of(response, _database);
+        StateSubscription<T> subscription = StateSubscription.of(response, _database);
         _activeSubscriptions.add(subscription);
         return subscription;
     }
@@ -199,7 +197,7 @@ class BackendClient {
         _activeSubscriptions.forEach(_keepUpSubscription);
     }
 
-    void _keepUpSubscription(Subscription subscription) {
+    void _keepUpSubscription(StateSubscription subscription) {
         var subscriptionMessage = subscription.subscription;
         if (subscription.closed) {
             _cancel(subscriptionMessage);
@@ -227,72 +225,6 @@ enum QueryMode {
     /// HTTP responses received from the backend are references in a Firebase database to where
     /// the actual query responses are.
     FIREBASE
-}
-
-/// A strategy of processing HTTP responses from the query endpoint.
-abstract class _QueryResponseProcessor {
-
-    Stream<T> process<T extends GeneratedMessage>(Future<http.Response> httpResponse, Query query);
-}
-
-/// Parses the HTTP response as a Firebase database reference and reads the query response from
-/// by that reference.
-class _FirebaseResponseProcessor implements _QueryResponseProcessor {
-
-    final FirebaseClient _database;
-
-    _FirebaseResponseProcessor(this._database) {
-        ArgumentError.checkNotNull(_database, 'FirebaseClient');
-    }
-
-    @override
-    Stream<T> process<T extends GeneratedMessage>(
-        Future<http.Response> httpResponse, Query query
-    ) async* {
-        var targetTypeUrl = query.target.type;
-        var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
-        if (builder == null) {
-            throw ArgumentError.value(query, 'query', 'Target type `$targetTypeUrl` is unknown.');
-        }
-        var qr = await httpResponse.then(_parse);
-        yield* _database
-            .get(qr.path)
-            .take(qr.count.toInt())
-            .map((json) => parseIntoNewInstance(builder, json));
-    }
-
-    FirebaseQueryResponse _parse(http.Response response) {
-        var queryResponse = FirebaseQueryResponse();
-        _parseInto(queryResponse, response);
-        return queryResponse;
-    }
-}
-
-/// Parses the HTTP response as a [QueryResponse].
-class _DirectResponseProcessor extends _QueryResponseProcessor {
-
-    @override
-    Stream<T> process<T extends GeneratedMessage>(
-        Future<http.Response> httpResponse, Query query
-    ) async* {
-        var qr = httpResponse.then(_parse);
-        var entities = await qr.then((response) => response.message);
-        for (var entity in entities) {
-            var message = unpack(entity.state);
-            yield message as T;
-        }
-    }
-
-    QueryResponse _parse(http.Response response) {
-        var queryResponse = QueryResponse();
-        _parseInto(queryResponse, response);
-        return queryResponse;
-    }
-}
-
-void _parseInto(GeneratedMessage message, http.Response response) {
-    var json = response.body;
-    parseInto(message, json);
 }
 
 /// URL paths to which the client should send requests.

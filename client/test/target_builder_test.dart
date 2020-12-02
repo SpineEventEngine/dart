@@ -34,23 +34,23 @@ void main() {
         });
 
         test('build "all" targets', () {
-            var target = targetAll(Empty.getDefault());
-            expect(target, isNotNull);
-            expect(target.type, equals('type.googleapis.com/google.protobuf.Empty'));
-            expect(target.includeAll, equals(true));
+            var t = target(Empty.getDefault());
+            expect(t, isNotNull);
+            expect(t.type, equals('type.googleapis.com/google.protobuf.Empty'));
+            expect(t.includeAll, equals(true));
         });
 
         test('convert raw IDs to Any', () {
             var ids = [42, 314, 271];
-            var target = targetByIds(Timestamp.getDefault(), ids);
-            expect(target, isNotNull);
-            expect(target.type, equals('type.googleapis.com/google.protobuf.Timestamp'));
-            expect(target.filters.idFilter.id, hasLength(equals(ids.length)));
+            var t = target(Timestamp.getDefault(), ids: ids);
+            expect(t, isNotNull);
+            expect(t.type, equals('type.googleapis.com/google.protobuf.Timestamp'));
+            expect(t.filters.idFilter.id, hasLength(equals(ids.length)));
         });
 
         test('not allow generic IDs', () {
             var ids = [StringBuffer().writeln('this is not allowed')];
-            expect(() => targetByIds(Empty.getDefault(), ids), throwsA(isA<ArgumentError>()));
+            expect(() => target(Empty.getDefault(), ids: ids), throwsA(isA<ArgumentError>()));
         });
     });
 }

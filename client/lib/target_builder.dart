@@ -22,25 +22,28 @@ import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/known_types.dart';
-
-/// Creates a target which matches all messages of type.
-Target targetAll(GeneratedMessage instance) {
-    var target = Target();
-    target
-        ..type = _typeUrl(instance)
-        ..includeAll = true;
-    return target;
-}
+import 'package:spine_client/validate.dart';
 
 /// Creates a target which matches messages with the given IDs.
-Target targetByIds(GeneratedMessage instance, List<Object> ids) {
+Target target(GeneratedMessage instance,
+              {List<Object> ids,
+               List<CompositeFilter> fieldFilters}) {
     var target = Target();
     target.type = _typeUrl(instance);
     var filters = TargetFilters();
-    var idFilter = IdFilter();
-    idFilter.id.addAll(ids.map(packId));
-    filters.idFilter = idFilter;
-    target.filters = filters;
+    if (ids != null && ids.isNotEmpty) {
+        var idFilter = IdFilter();
+        idFilter.id.addAll(ids.map(packId));
+        filters.idFilter = idFilter;
+    }
+    if (fieldFilters != null && fieldFilters.isNotEmpty) {
+        filters.filter.addAll(fieldFilters);
+    }
+    if (isDefault(filters)) {
+        target.includeAll = true;
+    } else {
+        target.filters = filters;
+    }
     return target;
 }
 

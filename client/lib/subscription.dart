@@ -21,9 +21,33 @@
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/spine/client/subscription.pb.dart' as pb;
+import 'package:spine_client/spine/core/event.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
+import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/json.dart';
 import 'package:spine_client/src/known_types.dart';
+
+class Subscription<T extends GeneratedMessage> {
+
+    final pb.Subscription subscription;
+
+    final Stream<T> _itemAdded;
+
+    bool _closed;
+
+    Subscription(this.subscription, Stream<T> itemAdded)
+        : _itemAdded = _checkIsBroadCast(itemAdded), _closed = false;
+
+    bool get closed => _closed;
+
+    /// Closes this subscription.
+    ///
+    /// The server will stop reflecting the updates for the topic.
+    ///
+    void unsubscribe() {
+        _closed = true;
+    }
+}
 
 /// A subscription for event or entity changes.
 ///
@@ -35,27 +59,26 @@ import 'package:spine_client/src/known_types.dart';
 /// subscription both on the client and on the server, stopping the changes from being reflected to
 /// Firebase.
 ///
-class Subscription<T extends GeneratedMessage> {
+class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
 
-    final pb.Subscription subscription;
-
-    final Stream<T> itemAdded;
     final Stream<T> itemChanged;
     final Stream<T> itemRemoved;
 
+    Stream<T> get itemAdded => _itemAdded;
+
     bool _closed;
 
-    Subscription(this.subscription,
-                 Stream<T> itemAdded,
-                 Stream<T> itemChanged,
-                 Stream<T> itemRemoved)
-            : itemAdded = _checkIsBroadCast(itemAdded),
-              itemChanged = _checkIsBroadCast(itemChanged),
-              itemRemoved = _checkIsBroadCast(itemRemoved),
-              _closed = false;
+    StateSubscription(pb.Subscription subscription,
+                      Stream<T> itemAdded,
+                      Stream<T> itemChanged,
+                      Stream<T> itemRemoved):
+            itemChanged = _checkIsBroadCast(itemChanged),
+            itemRemoved = _checkIsBroadCast(itemRemoved),
+            _closed = false,
+            super(subscription, itemAdded);
 
     /// Creates a new instance which broadcasts updates from under the given Firebase node.
-    factory Subscription.of(FirebaseSubscription firebaseSubscription,
+    factory StateSubscription.of(FirebaseSubscription firebaseSubscription,
                             FirebaseClient database) {
         var subscription = firebaseSubscription.subscription;
         var typeUrl = subscription.topic.target.type;
@@ -76,24 +99,37 @@ class Subscription<T extends GeneratedMessage> {
             .childRemoved(nodePath)
             .map((json) => parseIntoNewInstance<T>(builderInfo, json));
 
-        return Subscription(subscription, itemAdded, itemChanged, itemRemoved);
+        return StateSubscription(subscription, itemAdded, itemChanged, itemRemoved);
+    }
+}
+
+class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> {
+
+    EventSubscription(pb.Subscription subscription, Stream<Event> itemAdded) :
+            super(subscription, itemAdded);
+
+    factory EventSubscription.of(FirebaseSubscription firebaseSubscription,
+                                 FirebaseClient database) {
+        var subscription = firebaseSubscription.subscription;
+        var nodePath = firebaseSubscription.nodePath.value;
+        var itemAdded = database
+            .childAdded(nodePath)
+            .map((json) => parseIntoNewInstance<Event>(Event.getDefault().info_, json));
+
+        return EventSubscription(subscription, itemAdded);
     }
 
-    bool get closed => _closed;
+    Stream<Event> get events => _itemAdded;
 
-    /// Closes this subscription.
-    ///
-    /// The server will stop reflecting the updates for the topic.
-    ///
-    void unsubscribe() {
-        _closed = true;
-    }
+    Stream<T> get eventMessages => events
+        .map((event) => unpack(event.message));
+}
 
-    static Stream<T> _checkIsBroadCast<T>(Stream<T> stream) {
-        if (!stream.isBroadcast) {
-            throw ArgumentError(
-                'All streams passed to an `EntitySubscription` instance should be broadcast.');
-        }
-        return stream;
+Stream<T> _checkIsBroadCast<T>(Stream<T> stream) {
+    if (!stream.isBroadcast) {
+        throw ArgumentError(
+            'All streams passed to an `EntitySubscription` instance should be broadcast.'
+        );
     }
+    return stream;
 }

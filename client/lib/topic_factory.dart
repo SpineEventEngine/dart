@@ -20,6 +20,7 @@
 
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/actor_request_factory.dart';
+import 'package:spine_client/spine/client/filters.pb.dart';
 import 'package:spine_client/spine/client/subscription.pb.dart';
 import 'package:spine_client/target_builder.dart';
 import 'package:spine_client/uuids.dart';
@@ -31,12 +32,23 @@ class TopicFactory {
 
     TopicFactory(this._context);
 
+    /// Creates a topic which matches entities of the given type, IDs, and field values.
+    Topic withFilters(GeneratedMessage instance,
+                      {List<Object> ids = const [], List<CompositeFilter> filters = const []}) {
+        var topic = Topic();
+        topic
+            ..id = _newId()
+            ..target = target(instance, ids: ids, fieldFilters: filters)
+            ..context = _context();
+        return topic;
+    }
+
     /// Creates a topic which matches entities of the given type with the specified IDs.
     Topic byIds(GeneratedMessage instance, List<Object> ids) {
         var topic = Topic();
         topic
             ..id = _newId()
-            ..target = targetByIds(instance, ids)
+            ..target = target(instance, ids: ids)
             ..context = _context();
         return topic;
     }
@@ -46,7 +58,7 @@ class TopicFactory {
         var topic = Topic();
         topic
             ..id = _newId()
-            ..target = targetAll(instance)
+            ..target = target(instance)
             ..context = _context();
         return topic;
     }
