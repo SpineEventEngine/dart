@@ -20,8 +20,10 @@
 
 import 'dart:async';
 
+import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/actor_request_factory.dart';
+import 'package:spine_client/google/protobuf/field_mask.pb.dart';
 import 'package:spine_client/spine/base/error.pb.dart' as pbError;
 import 'package:spine_client/spine/base/field_path.pb.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
@@ -34,9 +36,11 @@ import 'package:spine_client/spine/core/event.pb.dart';
 import 'package:spine_client/spine/core/tenant_id.pb.dart';
 import 'package:spine_client/spine/core/user_id.pb.dart';
 import 'package:spine_client/spine/time/time.pb.dart';
+import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/http_client.dart';
 import 'package:spine_client/src/json.dart';
+import 'package:spine_client/src/known_types.dart';
 import 'package:spine_client/src/query_processor.dart';
 import 'package:spine_client/subscription.dart';
 import 'package:spine_client/validate.dart';
@@ -129,13 +133,13 @@ class Clients {
         _activeSubscriptions.forEach(_keepUpSubscription);
     }
 
-    void _keepUpSubscription(StateSubscription subscription) {
+    void _keepUpSubscription(Subscription subscription) {
         var subscriptionMessage = subscription.subscription;
         if (subscription.closed) {
-            _cancel(subscriptionMessage);
+            subscriptionMessage.then(_cancel);
             _activeSubscriptions.remove(subscription);
         } else {
-            _keepUp(subscriptionMessage);
+            subscriptionMessage.then(_keepUp);
         }
     }
 
@@ -170,15 +174,18 @@ class Client {
     }
 
     QueryRequest<M> select<M extends GeneratedMessage>(M prototype) {
-
+        ArgumentError.checkNotNull(prototype, 'entity state type');
+        return QueryRequest(this, prototype);
     }
 
-    SubscriptionRequest subscribeTo<M extends GeneratedMessage>(M prototype) {
-
+    StateSubscriptionRequest<M> subscribeTo<M extends GeneratedMessage>(M prototype) {
+        ArgumentError.checkNotNull(prototype, 'entity state type');
+        return StateSubscriptionRequest(this, prototype);
     }
 
-    SubscriptionRequest subscribeToEvents<M extends GeneratedMessage>(M prototype) {
-
+    EventSubscriptionRequest<M> subscribeToEvents<M extends GeneratedMessage>(M prototype) {
+        ArgumentError.checkNotNull(prototype, 'event type');
+        return EventSubscriptionRequest(this, prototype);
     }
 
     void _postCommand(Command command, CommandErrorCallback onError) {
@@ -195,14 +202,45 @@ class Client {
 
     EventSubscription<E>
     _subscribeToEvents<E extends GeneratedMessage>(pbSubscription.Topic topic) {
-
+        return _subscribe(topic, (s, d) => EventSubscription.of(s, d));
     }
 
     StateSubscription<S>
-    _subscribeToStateUpdates<S extends GeneratedMessage>(pbSubscription.Topic topic) {
+    _subscribeToStateUpdates<S extends GeneratedMessage>(pbSubscription.Topic topic,
+                                                         BuilderInfo builderInfo) {
+        return _subscribe(topic, (s, d) => StateSubscription.of(s, builderInfo, d));
+    }
 
+    S _subscribe<S extends Subscription>(pbSubscription.Topic topic,
+                                         NewSubscription newSubscription) {
+        if (_firebase == null) {
+            throw StateError('Cannot create a subscription. No Firebase client is provided.');
+        }
+        var targetTypeUrl = topic.target.type;
+        var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
+        if (builder == null) {
+            throw ArgumentError.value(topic, 'topic', 'Target type `$targetTypeUrl` is unknown.');
+        }
+        var fbSubscription = _httpClient
+            .postMessage(_endpoints.subscription.create, topic)
+            .then(_parseFirebaseSubscription);
+        return newSubscription(fbSubscription, _firebase);
+    }
+
+    FirebaseSubscription _parseFirebaseSubscription(http.Response response) {
+        var firebaseSubscription = FirebaseSubscription();
+        parseInto(firebaseSubscription, response.body);
+        return firebaseSubscription;
+    }
+
+    Stream<S> _execute<S extends GeneratedMessage>(Query query) {
+        var httpResponse = _httpClient.postMessage(_endpoints.query, query);
+        return _queryProcessor.process(httpResponse, query);
     }
 }
+
+typedef NewSubscription<S extends Subscription> =
+    S Function(Future<FirebaseSubscription>, FirebaseClient);
 
 CompositeFilter all(Iterable<Filter> filters) {
     ArgumentError.checkNotNull(filters);
@@ -278,6 +316,7 @@ class CommandRequest<M extends GeneratedMessage> {
             .where(all([eq(['context', 'past_message'], _commandAsOrigin())]))
             .post();
         _subscriptions.add(subscription);
+
         return subscription.events;
     }
 
@@ -305,44 +344,93 @@ class CommandRequest<M extends GeneratedMessage> {
 
 class QueryRequest<M extends GeneratedMessage> {
 
-    QueryRequest<M> fields(List<String> field_paths) {
+    final Client _client;
+    final M _prototype;
 
+    final Set<Object> _ids = Set();
+    final Set<CompositeFilter> _filters = Set();
+    final Set<String> _fields = Set();
+    OrderBy _orderBy;
+    int _limit;
+
+
+    QueryRequest(this._client, this._prototype);
+
+    QueryRequest<M> fields(List<String> fieldPaths) {
+        ArgumentError.checkNotNull(fieldPaths, 'field paths');
+        _fields.addAll(fieldPaths);
         return this;
     }
 
     QueryRequest<M> where(CompositeFilter filter) {
+        ArgumentError.checkNotNull(filter, 'filter');
+        _filters.add(filter);
         return this;
     }
 
-    QueryRequest<M> whereIds(List<Object> ids) {
-
+    QueryRequest<M> whereIds(Iterable<Object> ids) {
+        ArgumentError.checkNotNull(ids, 'ids');
+        _ids.addAll(_ids);
         return this;
     }
 
     QueryRequest<M> orderBy(String column, OrderBy_Direction direction) {
-
+        ArgumentError.checkNotNull(column, 'column');
+        ArgumentError.checkNotNull(direction, 'direction');
+        _orderBy = OrderBy()
+            ..column = column
+            ..direction = direction;
         return this;
     }
 
     QueryRequest<M> limit(int count) {
-
+        ArgumentError.checkNotNull(count, 'limit');
+        if (count <= 0) {
+            throw ArgumentError('Invalid value of limit = $count');
+        }
+        _limit = count;
         return this;
     }
 
     Stream<M> post() {
-
+        var mask = FieldMask()
+            ..paths.addAll(_fields);
+        var query = _client._requests.query().build(
+            _prototype,
+            ids: _ids,
+            filters: _filters,
+            fieldMask: mask,
+            orderBy: _orderBy,
+            limit: _limit
+        );
+        return _client._execute(query);
     }
 }
 
-class SubscriptionRequest<M extends GeneratedMessage> {
+class StateSubscriptionRequest<M extends GeneratedMessage> {
 
-    SubscriptionRequest<M> where(CompositeFilter filter) {
+    final Client _client;
+    final M _prototype;
+    final Set<CompositeFilter> _ids = Set();
+    final Set<CompositeFilter> _filters = Set();
 
+    StateSubscriptionRequest(this._client, this._prototype);
+
+    StateSubscriptionRequest<M> where(CompositeFilter filter) {
+        ArgumentError.checkNotNull(filter, 'filter');
+        _filters.add(filter);
+        return this;
+    }
+
+    StateSubscriptionRequest<M> whereIdIn(Iterable<Object> ids) {
+        ArgumentError.checkNotNull(ids, 'ids');
+        _ids.addAll(ids);
         return this;
     }
 
     StateSubscription<M> post() {
-
+        var topic = _client._requests.topic().withFilters(_prototype, filters: _filters);
+        return _client._subscribeToStateUpdates(topic, _prototype.info_);
     }
 }
 

@@ -34,7 +34,8 @@ class TopicFactory {
 
     /// Creates a topic which matches entities of the given type, IDs, and field values.
     Topic withFilters(GeneratedMessage instance,
-                      {List<Object> ids = const [], List<CompositeFilter> filters = const []}) {
+                      {Iterable<Object> ids = const [],
+                       Iterable<CompositeFilter> filters = const []}) {
         var topic = Topic();
         topic
             ..id = _newId()

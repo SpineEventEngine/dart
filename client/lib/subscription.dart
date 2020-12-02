@@ -18,6 +18,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'dart:async';
+
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/spine/client/subscription.pb.dart' as pb;
@@ -25,11 +27,10 @@ import 'package:spine_client/spine/core/event.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/json.dart';
-import 'package:spine_client/src/known_types.dart';
 
 class Subscription<T extends GeneratedMessage> {
 
-    final pb.Subscription subscription;
+    final Future<pb.Subscription> subscription;
 
     final Stream<T> _itemAdded;
 
@@ -68,55 +69,50 @@ class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
 
     bool _closed;
 
-    StateSubscription(pb.Subscription subscription,
-                      Stream<T> itemAdded,
-                      Stream<T> itemChanged,
-                      Stream<T> itemRemoved):
+    StateSubscription._(Future<pb.Subscription> subscription,
+                        Stream<T> itemAdded,
+                        Stream<T> itemChanged,
+                        Stream<T> itemRemoved):
             itemChanged = _checkIsBroadCast(itemChanged),
             itemRemoved = _checkIsBroadCast(itemRemoved),
             _closed = false,
             super(subscription, itemAdded);
 
     /// Creates a new instance which broadcasts updates from under the given Firebase node.
-    factory StateSubscription.of(FirebaseSubscription firebaseSubscription,
-                            FirebaseClient database) {
-        var subscription = firebaseSubscription.subscription;
-        var typeUrl = subscription.topic.target.type;
-        var builderInfo = theKnownTypes.findBuilderInfo(typeUrl);
-        if (builderInfo == null) {
-            throw ArgumentError.value(firebaseSubscription, 'firebase subscription',
-                                      'Firebase subscription type `${typeUrl} is unknown.');
-        }
-        var nodePath = firebaseSubscription.nodePath.value;
-
-        var itemAdded = database
-            .childAdded(nodePath)
-            .map((json) => parseIntoNewInstance<T>(builderInfo, json));
-        var itemChanged = database
-            .childChanged(nodePath)
-            .map((json) => parseIntoNewInstance<T>(builderInfo, json));
-        var itemRemoved = database
-            .childRemoved(nodePath)
-            .map((json) => parseIntoNewInstance<T>(builderInfo, json));
-
-        return StateSubscription(subscription, itemAdded, itemChanged, itemRemoved);
+    factory StateSubscription.of(Future<FirebaseSubscription> firebaseSubscription,
+                                 BuilderInfo builderInfoForType,
+                                 FirebaseClient database) {
+        var subscription = firebaseSubscription.then((value) => value.subscription);
+        var nodePath = firebaseSubscription
+            .then((value) => value.nodePath.value)
+            .asStream();
+        var itemAdded = nodePath
+            .asyncExpand((element) => database.childAdded(element))
+            .map((json) => parseIntoNewInstance<T>(builderInfoForType, json));
+        var itemChanged = nodePath
+            .asyncExpand((element) => database.childChanged(element))
+            .map((json) => parseIntoNewInstance<T>(builderInfoForType, json));
+        var itemRemoved = nodePath
+            .asyncExpand((element) => database.childChanged(element))
+            .map((json) => parseIntoNewInstance<T>(builderInfoForType, json));
+        return StateSubscription._(subscription, itemAdded, itemChanged, itemRemoved);
     }
 }
 
 class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> {
 
-    EventSubscription(pb.Subscription subscription, Stream<Event> itemAdded) :
+    EventSubscription._(Future<pb.Subscription> subscription, Stream<Event> itemAdded) :
             super(subscription, itemAdded);
 
-    factory EventSubscription.of(FirebaseSubscription firebaseSubscription,
+    factory EventSubscription.of(Future<FirebaseSubscription> firebaseSubscription,
                                  FirebaseClient database) {
-        var subscription = firebaseSubscription.subscription;
-        var nodePath = firebaseSubscription.nodePath.value;
-        var itemAdded = database
-            .childAdded(nodePath)
+        var subscription = firebaseSubscription.then((value) => value.subscription);
+        var itemAdded = firebaseSubscription
+            .then((value) => value.nodePath.value)
+            .asStream()
+            .asyncExpand((path) => database.childAdded(path))
             .map((json) => parseIntoNewInstance<Event>(Event.getDefault().info_, json));
-
-        return EventSubscription(subscription, itemAdded);
+        return EventSubscription._(subscription, itemAdded);
     }
 
     Stream<Event> get events => _itemAdded;

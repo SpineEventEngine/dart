@@ -20,9 +20,13 @@
 
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/actor_request_factory.dart';
+import 'package:spine_client/spine/client/filters.pb.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/target_builder.dart';
 import 'package:spine_client/uuids.dart';
+import 'package:spine_client/validate.dart';
+
+import 'google/protobuf/field_mask.pb.dart';
 
 /// A factory of queries to the server.
 class QueryFactory {
@@ -48,6 +52,37 @@ class QueryFactory {
             ..id = _newId()
             ..target = target(instance)
             ..context = _context();
+        return query;
+    }
+
+    Query build(GeneratedMessage instance,
+                {Iterable<Object> ids = const [],
+                 Iterable<CompositeFilter> filters = const [],
+                 FieldMask fieldMask,
+                 OrderBy orderBy,
+                 int limit}) {
+        var query = Query();
+        var format = ResponseFormat();
+        if (orderBy != null && !isDefault(orderBy)) {
+            format.orderBy = orderBy;
+            if (limit != null && limit > 0) {
+                format.limit = limit;
+            }
+        } else {
+            if (limit != null) {
+                throw ArgumentError('Cannot create a query with `limit` but no `order_by`.');
+            }
+        }
+        if (fieldMask != null && !isDefault(fieldMask)) {
+            format.fieldMask = fieldMask;
+        }
+        query
+            ..id = _newId()
+            ..target = target(instance, ids: ids, fieldFilters: filters)
+            ..context = _context();
+        if (!isDefault(format)) {
+            query.format = format;
+        }
         return query;
     }
 

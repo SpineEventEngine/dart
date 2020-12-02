@@ -26,8 +26,8 @@ import 'package:spine_client/validate.dart';
 
 /// Creates a target which matches messages with the given IDs.
 Target target(GeneratedMessage instance,
-              {List<Object> ids,
-               List<CompositeFilter> fieldFilters}) {
+              {Iterable<Object> ids,
+               Iterable<CompositeFilter> fieldFilters}) {
     var target = Target();
     target.type = _typeUrl(instance);
     var filters = TargetFilters();

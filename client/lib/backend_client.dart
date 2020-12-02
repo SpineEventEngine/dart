@@ -200,10 +200,10 @@ class BackendClient {
     void _keepUpSubscription(StateSubscription subscription) {
         var subscriptionMessage = subscription.subscription;
         if (subscription.closed) {
-            _cancel(subscriptionMessage);
+            subscriptionMessage.then(_cancel);
             _activeSubscriptions.remove(subscription);
         } else {
-            _keepUp(subscriptionMessage);
+            subscriptionMessage.then(_keepUp);
         }
     }
 
