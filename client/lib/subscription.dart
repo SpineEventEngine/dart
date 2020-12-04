@@ -37,7 +37,8 @@ class Subscription<T extends GeneratedMessage> {
     bool _closed;
 
     Subscription(this.subscription, Stream<T> itemAdded)
-        : _itemAdded = _checkIsBroadCast(itemAdded), _closed = false;
+        : _itemAdded = _checkIsBroadCast(itemAdded),
+          _closed = false;
 
     bool get closed => _closed;
 
@@ -101,6 +102,8 @@ class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
 
 class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> {
 
+    static final BuilderInfo _eventBuilderInfo = Event.getDefault().info_;
+
     EventSubscription._(Future<pb.Subscription> subscription, Stream<Event> itemAdded) :
             super(subscription, itemAdded);
 
@@ -111,7 +114,7 @@ class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> 
             .then((value) => value.nodePath.value)
             .asStream()
             .asyncExpand((path) => database.childAdded(path))
-            .map((json) => parseIntoNewInstance<Event>(Event.getDefault().info_, json));
+            .map((json) => parseIntoNewInstance<Event>(_eventBuilderInfo, json));
         return EventSubscription._(subscription, itemAdded);
     }
 
@@ -124,7 +127,7 @@ class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> 
 Stream<T> _checkIsBroadCast<T>(Stream<T> stream) {
     if (!stream.isBroadcast) {
         throw ArgumentError(
-            'All streams passed to an `EntitySubscription` instance should be broadcast.'
+            'All streams passed to an `Subscription` instance should be broadcast.'
         );
     }
     return stream;

@@ -26,6 +26,8 @@ import 'package:spine_client/spine/web/firebase/query/response.pb.dart';
 import 'package:spine_client/src/json.dart';
 import 'package:spine_client/src/known_types.dart';
 
+import 'any_packer.dart';
+
 /// A strategy of processing HTTP responses from the query endpoint.
 abstract class QueryResponseProcessor {
 

@@ -23,6 +23,7 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/actor_request_factory.dart';
+import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/google/protobuf/field_mask.pb.dart';
 import 'package:spine_client/spine/base/error.pb.dart' as pbError;
 import 'package:spine_client/spine/base/field_path.pb.dart';
@@ -44,9 +45,6 @@ import 'package:spine_client/src/known_types.dart';
 import 'package:spine_client/src/query_processor.dart';
 import 'package:spine_client/subscription.dart';
 import 'package:spine_client/validate.dart';
-
-import 'backend_client.dart';
-import 'firebase_client.dart';
 
 class Clients {
 
@@ -74,7 +72,8 @@ class Clients {
             Endpoints endpoints,
             Duration subscriptionKeepUpPeriod = const Duration(minutes: 2),
             QueryMode queryMode = QueryMode.FIREBASE,
-            NetworkErrorCallback onNetworkError}) :
+            NetworkErrorCallback onNetworkError = _noOpCallback,
+            List<dynamic> typeRegistries = const []}) :
             _httpClient = HttpClient(baseUrl),
             _guestId = guestId ?? DEFAULT_GUEST_ID,
             _tenant = tenantId,
@@ -86,11 +85,21 @@ class Clients {
             _networkErrorCallback = onNetworkError
     {
         _checkNonNullOrDefault(_guestId, 'guestId');
-        ArgumentError.checkNotNull(
-            subscriptionKeepUpPeriod, 'subscriptionKeepUpPeriod'
-        );
+        ArgumentError.checkNotNull(subscriptionKeepUpPeriod, 'subscriptionKeepUpPeriod');
+        ArgumentError.checkNotNull(_networkErrorCallback, 'onNetworkError callback');
+        theKnownTypes.registerAll(typeRegistries);
         Timer.periodic(subscriptionKeepUpPeriod,
                        (timer) => _keepUpSubscriptions());
+    }
+
+    static void _noOpCallback(dynamic _) {}
+
+    static void _checkNonNullOrDefault(GeneratedMessage argument, String name) {
+        if (argument == null || isDefault(argument)) {
+            throw ArgumentError.value(argument,
+                name,
+                '$name should not be null or default.');
+        }
     }
 
     static QueryResponseProcessor _chooseProcessor(QueryMode queryMode, FirebaseClient firebase) {
@@ -121,12 +130,12 @@ class Clients {
     ActorRequestFactory _requests(UserId actor) =>
         ActorRequestFactory(actor, _tenant, _zoneOffset, _zoneId);
 
-    void _checkNonNullOrDefault(GeneratedMessage argument, String name) {
-        if (argument == null || isDefault(argument)) {
-            throw ArgumentError.value(argument,
-                                      name,
-                                      '$name should not be null or default.');
+    void cancelAllSubscriptions() {
+        for (Subscription subscription in _activeSubscriptions) {
+            subscription.unsubscribe();
+            subscription.subscription.then(_cancel);
         }
+        _activeSubscriptions.clear();
     }
 
     void _keepUpSubscriptions() {
@@ -190,13 +199,13 @@ class Client {
 
     void _postCommand(Command command, CommandErrorCallback onError) {
         _httpClient.postMessage(_endpoints.command, command)
-            .catchError(_networkErrorCallback)
-            .then((response) {
-                var ack = Ack();
-                parseInto(ack, response.body);
-                if (ack.status.hasError() && onError != null) {
-                    onError(ack.status.error);
-                }
+                   .catchError(_networkErrorCallback)
+                   .then((response) {
+                       var ack = Ack();
+                       parseInto(ack, response.body);
+                       if (ack.status.hasError() && onError != null) {
+                           onError(ack.status.error);
+                       }
         });
     }
 
@@ -212,7 +221,7 @@ class Client {
     }
 
     S _subscribe<S extends Subscription>(pbSubscription.Topic topic,
-                                         NewSubscription newSubscription) {
+                                         NewSubscription<S> newSubscription) {
         if (_firebase == null) {
             throw StateError('Cannot create a subscription. No Firebase client is provided.');
         }
@@ -321,7 +330,7 @@ class CommandRequest<M extends GeneratedMessage> {
     }
 
     Set<EventSubscription> post({CommandErrorCallback onError}) {
-        if (_subscriptions.isNotEmpty) {
+        if (_subscriptions.isEmpty) {
             throw StateError('Use `observeEvents(..)` or `observeEventsWithContexts(..)` to observe'
                 ' command results or call `postAndForget()` instead of `post()` if you observe'
                 ' command results elsewhere.');
@@ -456,3 +465,58 @@ class EventSubscriptionRequest<M extends GeneratedMessage> {
 
 typedef NetworkErrorCallback(Error error);
 typedef CommandErrorCallback(pbError.Error error);
+
+/// The mode in which the backend serves query responses.
+enum QueryMode {
+
+    /// HTTP responses received from backend are query responses.
+    DIRECT,
+
+    /// HTTP responses received from the backend are references in a Firebase database to where
+    /// the actual query responses are.
+    FIREBASE
+}
+
+/// URL paths to which the client should send requests.
+///
+class Endpoints {
+
+    final String query;
+    final String command;
+    SubscriptionEndpoints _subscription;
+
+    Endpoints({
+        this.query = 'query',
+        this.command = 'command',
+        SubscriptionEndpoints subscription
+    }) {
+        ArgumentError.checkNotNull(query, 'query');
+        ArgumentError.checkNotNull(command, 'command');
+        this._subscription = subscription ?? SubscriptionEndpoints();
+    }
+
+    SubscriptionEndpoints get subscription {
+        return _subscription;
+    }
+}
+
+/// URL paths to which the client should send requests regarding entity and event subscriptions.
+///
+/// See [Endpoints].
+///
+class SubscriptionEndpoints {
+
+    final String create;
+    final String keepUp;
+    final String cancel;
+
+    SubscriptionEndpoints({
+        this.create = 'subscription/create',
+        this.keepUp = 'subscription/keep-up',
+        this.cancel = 'subscription/cancel'
+    }) {
+        ArgumentError.checkNotNull(create, 'subscription.create');
+        ArgumentError.checkNotNull(keepUp, 'subscription.keepUp');
+        ArgumentError.checkNotNull(cancel, 'subscription.cancel');
+    }
+}
