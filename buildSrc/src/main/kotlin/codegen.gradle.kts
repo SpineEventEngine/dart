@@ -22,17 +22,15 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import java.io.File
 
 val windows = Os.isFamily(Os.FAMILY_WINDOWS)
-var pubCache: String
-var scriptExtension: String
-if (windows) {
-    pubCache = "${System.getenv("LOCALAPPDATA")}/Pub/Cache/bin"
-    scriptExtension = ".bat"
-} else {
-    pubCache = "${System.getProperty("user.home")}/.pub-cache/bin"
-    scriptExtension = ""
+var pubCache: String = System.getenv("PUB_CACHE")
+var scriptExtension: String = if (windows) ".bat" else ""
+if (pubCache.isBlank() && windows) {
+    pubCache = "${System.getenv("LOCALAPPDATA")}/Pub/Cache"
+} else if (pubCache.isBlank()) {
+    pubCache = "${System.getProperty("user.home")}/.pub-cache"
 }
 
-val command = "$pubCache/dart_code_gen$scriptExtension"
+val command = "$pubCache/bin/dart_code_gen$scriptExtension"
 
 if (!file(command).exists()) {
     logger.warn("Cannot locate `dart_code_gen` under `$command`.")
