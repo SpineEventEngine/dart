@@ -18,11 +18,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
 import java.io.File
+import org.apache.tools.ant.taskdefs.condition.Os
 
 val windows = Os.isFamily(Os.FAMILY_WINDOWS)
-var pubCache: String = System.getenv("PUB_CACHE")
+var pubCache: String = System.getenv().getOrDefault("PUB_CACHE", "")
 var scriptExtension: String = if (windows) ".bat" else ""
 if (pubCache.isBlank() && windows) {
     pubCache = "${System.getenv("LOCALAPPDATA")}/Pub/Cache"
@@ -37,13 +37,13 @@ if (!file(command).exists()) {
 }
 
 fun composeCommandLine(descriptor: File, targetDir: String, standardTypesPackage: String) =
-        listOf(
-                command,
-                "--descriptor", "${file(descriptor)}",
-                "--destination", "$targetDir/types.dart",
-                "--standard-types", standardTypesPackage,
-                "--import-prefix", "."
-        )
+    listOf(
+        command,
+        "--descriptor", "${file(descriptor)}",
+        "--destination", "$targetDir/types.dart",
+        "--standard-types", standardTypesPackage,
+        "--import-prefix", "."
+    )
 
 /**
  * Task which launches Dart code generation from Protobuf.
@@ -52,8 +52,10 @@ open class GenerateDart : Exec() {
 
     @Internal
     var descriptor: Provider<out Any> = project.objects.property(File::class.java)
+
     @Internal
     var target: String = ""
+
     @Internal
     var standardTypesPackage: String = ""
 }
@@ -62,14 +64,16 @@ val generateDartName = "generateDart"
 
 tasks.create(generateDartName, GenerateDart::class) {
     @Suppress("UNCHECKED_CAST")
-    descriptor = project.extensions["protoDart"].withGroovyBuilder { getProperty("mainDescriptorSet") } as Property<File>
+    descriptor = project.extensions["protoDart"]
+        .withGroovyBuilder { getProperty("mainDescriptorSet") } as Property<File>
     target = "$projectDir/lib"
     standardTypesPackage = "spine_client"
 }
 
 tasks.create("generateTestDart", GenerateDart::class) {
     @Suppress("UNCHECKED_CAST")
-    descriptor = project.extensions["protoDart"].withGroovyBuilder { getProperty("testDescriptorSet") } as Property<File>
+    descriptor = project.extensions["protoDart"]
+        .withGroovyBuilder { getProperty("testDescriptorSet") } as Property<File>
     target = "$projectDir/test"
     standardTypesPackage = "spine_client"
 
