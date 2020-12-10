@@ -190,14 +190,13 @@ class Client {
     }
 
     void _postCommand(Command command, CommandErrorCallback onError) {
-        _httpClient.postMessage(_endpoints.command, command)
-                   .catchError(_networkErrorCallback)
-                   .then((response) {
-                       var ack = Ack();
-                       parseInto(ack, response.body);
-                       if (ack.status.hasError() && onError != null) {
-                           onError(ack.status.error);
-                       }
+        var response = _httpClient.postMessage(_endpoints.command, command);
+        response.then((response) {
+            var ack = Ack();
+            parseInto(ack, response.body);
+            if (ack.status.hasError() && onError != null) {
+                onError(ack.status.error);
+            }
         });
     }
 
@@ -294,13 +293,8 @@ class CommandRequest<M extends GeneratedMessage> {
     CommandRequest(this._client, M command) :
             _command = _client._requests.command().create(command);
 
-
     Stream<E> observeEvents<E extends GeneratedMessage>(E prototype) {
-        var subscription = EventSubscriptionRequest(_client, prototype)
-            .where(all([eq(['context', 'past_message'], _commandAsOrigin())]))
-            .post();
-        _subscriptions.add(subscription);
-        return subscription.eventMessages;
+        return _observeEvents(prototype).eventMessages;
     }
 
     Origin _commandAsOrigin() {
@@ -313,12 +307,15 @@ class CommandRequest<M extends GeneratedMessage> {
     }
 
     Stream<Event> observeEventsWithContexts(GeneratedMessage prototype) {
-        var subscription = EventSubscriptionRequest(_client, prototype)
+        return _observeEvents(prototype).events;
+    }
+
+    EventSubscription<E> _observeEvents<E extends GeneratedMessage>(E prototype) {
+        var subscription = _client.subscribeToEvents(prototype)
             .where(all([eq(['context', 'past_message'], _commandAsOrigin())]))
             .post();
         _subscriptions.add(subscription);
-
-        return subscription.events;
+        return subscription;
     }
 
     Set<EventSubscription> post({CommandErrorCallback onError}) {
@@ -327,7 +324,8 @@ class CommandRequest<M extends GeneratedMessage> {
                 ' command results or call `postAndForget()` instead of `post()` if you observe'
                 ' command results elsewhere.');
         }
-        _doPost(onError);
+        Future.wait(_subscriptions.map((s) => s.subscription))
+              .then((_) => _doPost(onError));
         return Set()..addAll(_subscriptions);
     }
 
