@@ -38,6 +38,7 @@ import io.spine.web.query.BlockingQueryBridge;
 import java.io.IOException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static io.spine.io.Resource.file;
 import static io.spine.web.firebase.FirebaseClientFactory.remoteClient;
 import static io.spine.web.firebase.FirebaseCredentials.fromGoogleCredentials;
 
@@ -90,12 +91,12 @@ final class Application {
     }
 
     private static FirebaseClient buildClient() {
-        Resource googleCredentialsFile = Resource.file("spine-dev.json");
+        Resource googleCredentials = file("spine-dev.json", Application.class.getClassLoader());
 
         // Same credentials but represented with different Java objects.
         GoogleCredentials credentials;
         try {
-            credentials = GoogleCredentials.fromStream(googleCredentialsFile.open());
+            credentials = GoogleCredentials.fromStream(googleCredentials.open());
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
