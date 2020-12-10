@@ -56,7 +56,6 @@ in order to have the Dart in available all the time.
    pub global activate protoc_plugin
    ```
 
-
 ### With Flutter SDK
 
 If you're using Flutter SDK, please execute the following steps to configure
