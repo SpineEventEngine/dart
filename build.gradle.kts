@@ -32,7 +32,7 @@ buildscript {
     val deps = io.spine.gradle.internal.Deps
 
     val spineBaseVersion: String by extra
-    
+
     resolution.defaultRepositories(repositories)
     dependencies {
         classpath(deps.build.gradlePlugins.protobuf)
