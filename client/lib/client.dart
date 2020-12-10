@@ -46,6 +46,36 @@ import 'package:spine_client/src/query_processor.dart';
 import 'package:spine_client/subscription.dart';
 import 'package:spine_client/validate.dart';
 
+/// A factory of [Client]s.
+///
+/// Creates [Clients] for posting commands, sending queries, and managing subscriptions on behalf
+/// of a certain user.
+///
+/// Example:
+/// ```dart
+/// import 'package:spine_client/client.dart';
+/// import './types.dart' as myTypes;
+///
+/// var clients = Clients(
+///     'https://example.org/',
+///     firebase: WebFirebaseClient(FirebaseApp().database),
+///     typeRegistries: [myTypes.types()]
+/// );
+/// var actor = UserId()
+///     ..value = 'some-user-id';
+/// var client = clients.onBehalfOf(actor);
+///
+/// /// ...
+///
+/// var cmdRequest = client.command(postComment);
+/// var events = cmdRequest.observeEvents(CommentPosted());
+/// cmdRequest.post();
+///
+/// events.forEach((event) {
+///     // Do something when an event is fired.
+/// });
+/// ```
+///
 class Clients {
 
     static final UserId DEFAULT_GUEST_ID = UserId()
@@ -62,15 +92,38 @@ class Clients {
     final QueryResponseProcessor _queryProcessor;
     final Set<Subscription> _activeSubscriptions = Set();
 
+    /// Creates a new instance of `Clients`.
+    ///
+    /// Parameters:
+    ///  - [baseUrl] — the base URL of the server which receives the requests from the clients;
+    ///  - [guestId] — the default `UserId` to use in the "guest" mode;
+    ///    the default is `UserId(value = "guest")`;
+    ///  - [tenantId] — the tenant ID; use this argument only in multitenant systems;
+    ///  - [zoneOffset] and [zoneId] — the time zone in which the created clients operate;
+    ///    by default, uses the system time zone;
+    ///  - [queryMode] — the query processing mode which should be used by the created clients;
+    ///    see [QueryMode] for more info; the default value is `FIREBASE`;
+    ///  - [firebase] — a [FirebaseClient] which precesses queries and subscriptions;
+    ///    if [queryMode] is [QueryMode.DIRECT] and subscriptions are not required, this argument
+    ///    can be skipped;
+    ///  - [endpoints] — the custom endpoints of the backend; see [Endpoints] for the defaults;
+    ///  - [subscriptionKeepUpPeriod] — the time between subscription keep-up requests;
+    ///    2 minutes by default;
+    ///  - [onNetworkError] — a callback handling network errors;
+    ///    should receive either error as the only argument or error and [StackTrace];
+    ///    should return a `FutureOr<Response>`;
+    ///  - [typeRegistries] — a list of known type registries.
+    /// ```
+    ///
     Clients(String baseUrl,
            {UserId guestId,
             TenantId tenantId,
             ZoneOffset zoneOffset,
             ZoneId zoneId,
+            QueryMode queryMode = QueryMode.FIREBASE,
             FirebaseClient firebase,
             Endpoints endpoints,
             Duration subscriptionKeepUpPeriod = const Duration(minutes: 2),
-            QueryMode queryMode = QueryMode.FIREBASE,
             OnNetworkError onNetworkError,
             List<dynamic> typeRegistries = const []}) :
             _httpClient = HttpClient(baseUrl, onNetworkError),
