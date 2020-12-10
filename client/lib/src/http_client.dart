@@ -18,6 +18,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -32,8 +33,9 @@ const _protobufContentType = {'Content-Type': 'application/x-protobuf'};
 class HttpClient {
 
     final String _baseUrl;
+    final OnNetworkError _onNetworkError;
 
-    HttpClient(this._baseUrl) {
+    HttpClient(this._baseUrl, this._onNetworkError) {
         ArgumentError.checkNotNull(_baseUrl, 'base URL');
     }
 
@@ -41,12 +43,15 @@ class HttpClient {
     ///
     /// The given [path] will be concatenated with the [_baseUrl].
     ///
-    Future<http.Response> postMessage(String path, GeneratedMessage message) async {
+    Future<http.Response> postMessage(String path, GeneratedMessage message) {
         var bytes = message.writeToBuffer();
         var url = Url.from(_baseUrl, path).stringUrl;
-        var response = await http.post(url,
-                                       body: _base64.encode(bytes),
-                                       headers: _protobufContentType);
+        var response = http.post(url, body: _base64.encode(bytes), headers: _protobufContentType);
+        if (_onNetworkError != null) {
+            response.catchError(_onNetworkError);
+        }
         return response;
     }
 }
+
+typedef OnNetworkError = FutureOr<http.Response> Function(dynamic, [StackTrace]);

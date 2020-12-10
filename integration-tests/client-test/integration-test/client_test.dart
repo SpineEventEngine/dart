@@ -45,7 +45,7 @@ void main() {
             clients = Clients(BACKEND,
                               firebase: firebaseClient,
                               typeRegistries: [testTypes.types()]);
-            actor = UserId()..value = newUuid();
+            actor = UserId()..value = 'Dart-integration-tests';
         });
 
         tearDown(() {
@@ -53,7 +53,6 @@ void main() {
         });
 
         test('send commands and obtain query data', () async {
-            print('----> Starting test.');
             var taskId = TaskId()
                 ..value = newUuid();
             var cmd = CreateTask()
@@ -65,13 +64,10 @@ void main() {
             request.observeEvents(TaskCreated());
             var subscriptions = request.post();
             expect(subscriptions, hasLength(equals(1)));
-            print('----> Waiting for event.');
             await subscriptions.first.events.first;
-            print('----> Received event.');
             var tasks = await client.select(Task())
                                     .post()
                                     .toList();
-            print('----> Received entity states.');
             expect(tasks, hasLength(greaterThanOrEqualTo(1)));
             var matchingById = tasks.where((task) => task.id == taskId);
             expect(matchingById, hasLength(1));
@@ -80,6 +76,7 @@ void main() {
         test('query server directly', () async {
             clients = Clients(BACKEND,
                               queryMode: QueryMode.DIRECT,
+                              firebase: firebaseClient,
                               endpoints: Endpoints(
                                   query: 'direct-query'
                               ));
@@ -89,9 +86,11 @@ void main() {
                 ..id = taskId
                 ..name = 'Task name'
                 ..description = "long";
-            clients.onBehalfOf(actor)
-                   .command(cmd)
-                   .postAndForget();
+            var commandRequest = clients.onBehalfOf(actor)
+                                        .command(cmd);
+            var events = commandRequest.observeEvents(TaskCreated());
+            commandRequest.post();
+            await events.first;
             var tasks = await clients.asGuest()
                                      .select(Task())
                                      .post()
@@ -106,10 +105,7 @@ void main() {
             StateSubscription<Task> entitySubscription =
                     client.subscribeTo(Task())
                           .post();
-
-            var taskName = "";
             Stream<Task> itemAdded = entitySubscription.itemAdded;
-            itemAdded.listen((task) => taskName = task.name);
             var taskId = TaskId()
                 ..value = newUuid();
             var createTaskCmd = CreateTask()
@@ -122,21 +118,18 @@ void main() {
 
             var newTaskEvent = await taskCreatedEvents.first;
             expect(newTaskEvent.id, equals(taskId));
-            expect(taskName, equals(createTaskCmd.name));
+            var newTask = await itemAdded.first;
+            expect(newTask.name, equals(createTaskCmd.name));
 
-            var newTaskName = "";
             Stream<Task> itemChanged = entitySubscription.itemChanged;
-            itemChanged.listen((task) => newTaskName = task.name);
             var renameTaskCmd = RenameTask()
                 ..id = taskId
                 ..name = 'New task name';
-            var renameTaskRequest = client.command(renameTaskCmd);
-            var taskRenamedEvents = renameTaskRequest.observeEvents(TaskRenamed());
-            renameTaskRequest.post();
+            client.command(renameTaskCmd)
+                  .postAndForget();
 
-            var taskRenamedEvent = await taskRenamedEvents.first;
-            expect(taskRenamedEvent, equals(taskId));
-            expect(newTaskName, equals(renameTaskCmd.name));
+            var changedTask = await itemChanged.first;
+            expect(changedTask.name, equals(renameTaskCmd.name));
             entitySubscription.unsubscribe();
         });
     });

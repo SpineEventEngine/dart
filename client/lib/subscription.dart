@@ -37,7 +37,7 @@ class Subscription<T extends GeneratedMessage> {
     bool _closed;
 
     Subscription(this.subscription, Stream<T> itemAdded)
-        : _itemAdded = _checkIsBroadCast(itemAdded),
+        : _itemAdded = _checkBroadcast(itemAdded),
           _closed = false;
 
     bool get closed => _closed;
@@ -54,8 +54,7 @@ class Subscription<T extends GeneratedMessage> {
 /// A subscription for event or entity changes.
 ///
 /// The [itemAdded], [itemChanged] and [itemRemoved] streams reflect the changes of a corresponding
-/// event/entity type. The streams are broadcast ([Stream.isBroadcast]]), i.e. can have any number
-/// of listeners simultaneously.
+/// event/entity type.
 ///
 /// To stop receiving updates from the server, invoke [unsubscribe]. This will cancel the
 /// subscription both on the client and on the server, stopping the changes from being reflected to
@@ -74,8 +73,8 @@ class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
                         Stream<T> itemAdded,
                         Stream<T> itemChanged,
                         Stream<T> itemRemoved):
-            itemChanged = _checkIsBroadCast(itemChanged),
-            itemRemoved = _checkIsBroadCast(itemRemoved),
+            itemChanged = _checkBroadcast(itemChanged),
+            itemRemoved = _checkBroadcast(itemRemoved),
             _closed = false,
             super(subscription, itemAdded);
 
@@ -84,17 +83,15 @@ class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
                                  BuilderInfo builderInfoForType,
                                  FirebaseClient database) {
         var subscription = firebaseSubscription.then((value) => value.subscription);
-        var nodePath = firebaseSubscription
-            .then((value) => value.nodePath.value)
-            .asStream();
-        var itemAdded = nodePath
+        var nodePath = _nodePath(firebaseSubscription);
+        var itemAdded = _nodePathStream(nodePath)
             .asyncExpand((element) => database.childAdded(element))
             .map((json) => parseIntoNewInstance<T>(builderInfoForType, json));
-        var itemChanged = nodePath
+        var itemChanged = _nodePathStream(nodePath)
             .asyncExpand((element) => database.childChanged(element))
             .map((json) => parseIntoNewInstance<T>(builderInfoForType, json));
-        var itemRemoved = nodePath
-            .asyncExpand((element) => database.childChanged(element))
+        var itemRemoved = _nodePathStream(nodePath)
+            .asyncExpand((element) => database.childRemoved(element))
             .map((json) => parseIntoNewInstance<T>(builderInfoForType, json));
         return StateSubscription._(subscription, itemAdded, itemChanged, itemRemoved);
     }
@@ -110,9 +107,7 @@ class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> 
     factory EventSubscription.of(Future<FirebaseSubscription> firebaseSubscription,
                                  FirebaseClient database) {
         var subscription = firebaseSubscription.then((value) => value.subscription);
-        var itemAdded = firebaseSubscription
-            .then((value) => value.nodePath.value)
-            .asStream()
+        var itemAdded = _nodePathStream(_nodePath(firebaseSubscription))
             .asyncExpand((path) => database.childAdded(path))
             .map((json) => parseIntoNewInstance<Event>(_eventBuilderInfo, json));
         return EventSubscription._(subscription, itemAdded);
@@ -124,7 +119,15 @@ class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> 
         .map((event) => unpack(event.message));
 }
 
-Stream<T> _checkIsBroadCast<T>(Stream<T> stream) {
+Future<String> _nodePath(Future<FirebaseSubscription> subscription) =>
+    subscription
+        .then((value) => value.nodePath.value);
+
+Stream<String> _nodePathStream(Future<String> futureValue) =>
+    futureValue.asStream().asBroadcastStream();
+
+
+Stream<T> _checkBroadcast<T>(Stream<T> stream) {
     if (!stream.isBroadcast) {
         throw ArgumentError(
             'All streams passed to an `Subscription` instance should be broadcast.'

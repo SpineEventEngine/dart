@@ -61,7 +61,6 @@ class Clients {
     final Endpoints _endpoints;
     final QueryResponseProcessor _queryProcessor;
     final Set<Subscription> _activeSubscriptions = Set();
-    final NetworkErrorCallback _networkErrorCallback;
 
     Clients(String baseUrl,
            {UserId guestId,
@@ -72,27 +71,23 @@ class Clients {
             Endpoints endpoints,
             Duration subscriptionKeepUpPeriod = const Duration(minutes: 2),
             QueryMode queryMode = QueryMode.FIREBASE,
-            NetworkErrorCallback onNetworkError = _noOpCallback,
+            OnNetworkError onNetworkError,
             List<dynamic> typeRegistries = const []}) :
-            _httpClient = HttpClient(baseUrl),
+            _httpClient = HttpClient(baseUrl, onNetworkError),
             _guestId = guestId ?? DEFAULT_GUEST_ID,
             _tenant = tenantId,
             _zoneOffset = zoneOffset,
             _zoneId = zoneId,
             _queryProcessor = _chooseProcessor(queryMode, firebase),
             _endpoints = endpoints ?? Endpoints(),
-            _firebase = firebase,
-            _networkErrorCallback = onNetworkError
+            _firebase = firebase
     {
         _checkNonNullOrDefault(_guestId, 'guestId');
         ArgumentError.checkNotNull(subscriptionKeepUpPeriod, 'subscriptionKeepUpPeriod');
-        ArgumentError.checkNotNull(_networkErrorCallback, 'onNetworkError callback');
         theKnownTypes.registerAll(typeRegistries);
         Timer.periodic(subscriptionKeepUpPeriod,
                        (timer) => _keepUpSubscriptions());
     }
-
-    static void _noOpCallback(dynamic _) {}
 
     static void _checkNonNullOrDefault(GeneratedMessage argument, String name) {
         if (argument == null || isDefault(argument)) {
@@ -124,8 +119,7 @@ class Clients {
                  requests,
                  _firebase,
                  _endpoints,
-                 _queryProcessor,
-                 _networkErrorCallback);
+                 _queryProcessor);
 
     ActorRequestFactory _requests(UserId actor) =>
         ActorRequestFactory(actor, _tenant, _zoneOffset, _zoneId);
@@ -168,14 +162,12 @@ class Client {
     final FirebaseClient _firebase;
     final Endpoints _endpoints;
     final QueryResponseProcessor _queryProcessor;
-    final NetworkErrorCallback _networkErrorCallback;
 
     Client._(this._httpClient,
              this._requests,
              this._firebase,
              this._endpoints,
-             this._queryProcessor,
-             this._networkErrorCallback);
+             this._queryProcessor);
 
     CommandRequest<M> command<M extends GeneratedMessage>(M commandMessage) {
         ArgumentError.checkNotNull(commandMessage, 'command message');
@@ -463,8 +455,7 @@ class EventSubscriptionRequest<M extends GeneratedMessage> {
     }
 }
 
-typedef NetworkErrorCallback(Error error);
-typedef CommandErrorCallback(pbError.Error error);
+typedef CommandErrorCallback = void Function(pbError.Error error);
 
 /// The mode in which the backend serves query responses.
 enum QueryMode {
