@@ -77,13 +77,9 @@
 ///
 library spine_client;
 
-export 'actor_request_factory.dart';
 export 'client.dart';
-export 'command_factory.dart';
 export 'firebase_client.dart';
-export 'query_factory.dart';
 export 'spine/core/tenant_id.pb.dart';
 export 'spine/core/user_id.pb.dart';
 export 'spine/time/time.pb.dart';
 export 'subscription.dart';
-export 'topic_factory.dart';

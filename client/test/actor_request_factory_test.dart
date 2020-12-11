@@ -18,8 +18,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:spine_client/actor_request_factory.dart';
 import 'package:spine_client/spine/core/user_id.pbserver.dart';
+import 'package:spine_client/src/actor_request_factory.dart';
 import 'package:test/test.dart';
 
 void main() {

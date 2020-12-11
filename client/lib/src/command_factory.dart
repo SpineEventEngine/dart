@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -19,34 +19,39 @@
  */
 
 import 'package:protobuf/protobuf.dart';
-import 'package:spine_client/spine/client/filters.pb.dart';
+import 'package:spine_client/spine/core/command.pb.dart';
+import 'package:spine_client/src/actor_request_factory.dart';
 import 'package:spine_client/src/any_packer.dart';
-import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/uuids.dart';
 import 'package:spine_client/validate.dart';
 
-/// Creates a target which matches messages with the given IDs.
-Target target(GeneratedMessage instance,
-              {Iterable<Object> ids,
-               Iterable<CompositeFilter> fieldFilters}) {
-    var target = Target();
-    target.type = _typeUrl(instance);
-    var filters = TargetFilters();
-    if (ids != null && ids.isNotEmpty) {
-        var idFilter = IdFilter();
-        idFilter.id.addAll(ids.map(packId));
-        filters.idFilter = idFilter;
-    }
-    if (fieldFilters != null && fieldFilters.isNotEmpty) {
-        filters.filter.addAll(fieldFilters);
-    }
-    if (isDefault(filters)) {
-        target.includeAll = true;
-    } else {
-        target.filters = filters;
-    }
-    return target;
-}
+/// A factory of commands to send to the server.
+class CommandFactory {
 
-String _typeUrl(GeneratedMessage message) {
-    return theKnownTypes.typeUrlOf(message);
+    final ActorProvider _context;
+
+    CommandFactory(this._context);
+
+    /// Creates a command with the given message.
+    Command create(GeneratedMessage message) {
+        checkValid(message);
+        var cmd = Command();
+        cmd
+            ..id = _newId()
+            ..message = pack(message)
+            ..context = _buildContext();
+        return cmd;
+    }
+
+    CommandContext _buildContext() {
+        var ctx = CommandContext();
+        ctx.actorContext = _context();
+        return ctx;
+    }
+
+    CommandId _newId() {
+        var id = CommandId();
+        id.uuid = newUuid();
+        return id;
+    }
 }

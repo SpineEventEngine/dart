@@ -22,7 +22,6 @@ import 'dart:async';
 
 import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
-import 'package:spine_client/actor_request_factory.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/google/protobuf/field_mask.pb.dart';
 import 'package:spine_client/spine/base/error.pb.dart' as pbError;
@@ -38,6 +37,7 @@ import 'package:spine_client/spine/core/tenant_id.pb.dart';
 import 'package:spine_client/spine/core/user_id.pb.dart';
 import 'package:spine_client/spine/time/time.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
+import 'package:spine_client/src/actor_request_factory.dart';
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/http_client.dart';
 import 'package:spine_client/src/json.dart';

@@ -19,7 +19,7 @@
  */
 
 import 'package:spine_client/src/known_types.dart';
-import 'package:spine_client/target_builder.dart';
+import 'package:spine_client/src/target_builder.dart';
 import 'package:test/test.dart';
 
 import 'google/protobuf/empty.pb.dart';

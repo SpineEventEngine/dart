@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -19,14 +19,14 @@
  */
 
 import 'package:protobuf/protobuf.dart';
-import 'package:spine_client/actor_request_factory.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
-import 'package:spine_client/target_builder.dart';
+import 'package:spine_client/src/actor_request_factory.dart';
+import 'package:spine_client/src/target_builder.dart';
 import 'package:spine_client/uuids.dart';
 import 'package:spine_client/validate.dart';
 
-import 'google/protobuf/field_mask.pb.dart';
+import '../google/protobuf/field_mask.pb.dart';
 
 /// A factory of queries to the server.
 class QueryFactory {
