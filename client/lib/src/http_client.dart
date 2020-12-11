@@ -33,9 +33,8 @@ const _protobufContentType = {'Content-Type': 'application/x-protobuf'};
 class HttpClient {
 
     final String _baseUrl;
-    final OnNetworkError _onNetworkError;
 
-    HttpClient(this._baseUrl, this._onNetworkError) {
+    HttpClient(this._baseUrl) {
         ArgumentError.checkNotNull(_baseUrl, 'base URL');
     }
 
@@ -47,11 +46,6 @@ class HttpClient {
         var bytes = message.writeToBuffer();
         var url = Url.from(_baseUrl, path).stringUrl;
         var response = http.post(url, body: _base64.encode(bytes), headers: _protobufContentType);
-        if (_onNetworkError != null) {
-            response.catchError(_onNetworkError);
-        }
         return response;
     }
 }
-
-typedef OnNetworkError = FutureOr<http.Response> Function(dynamic, [StackTrace]);

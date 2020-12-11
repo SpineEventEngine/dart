@@ -90,7 +90,7 @@ class Clients {
     final FirebaseClient _firebase;
     final Endpoints _endpoints;
     final QueryResponseProcessor _queryProcessor;
-    final Set<Subscription> _activeSubscriptions = Set();
+    final Set<Client> _activeClients = Set();
 
     /// Creates a new instance of `Clients`.
     ///
@@ -124,9 +124,8 @@ class Clients {
             FirebaseClient firebase,
             Endpoints endpoints,
             Duration subscriptionKeepUpPeriod = const Duration(minutes: 2),
-            OnNetworkError onNetworkError,
             List<dynamic> typeRegistries = const []}) :
-            _httpClient = HttpClient(baseUrl, onNetworkError),
+            _httpClient = HttpClient(baseUrl),
             _guestId = guestId ?? DEFAULT_GUEST_ID,
             _tenant = tenantId,
             _zoneOffset = zoneOffset,
@@ -139,7 +138,7 @@ class Clients {
         ArgumentError.checkNotNull(subscriptionKeepUpPeriod, 'subscriptionKeepUpPeriod');
         theKnownTypes.registerAll(typeRegistries);
         Timer.periodic(subscriptionKeepUpPeriod,
-                       (timer) => _keepUpSubscriptions());
+                       (timer) => _refreshSubscriptions());
     }
 
     static void _checkNonNullOrDefault(GeneratedMessage argument, String name) {
@@ -178,33 +177,16 @@ class Clients {
         ActorRequestFactory(actor, _tenant, _zoneOffset, _zoneId);
 
     void cancelAllSubscriptions() {
-        for (Subscription subscription in _activeSubscriptions) {
-            subscription.unsubscribe();
-            subscription.subscription.then(_cancel);
+        for (var client in _activeClients) {
+            client.cancelAllSubscriptions();
         }
-        _activeSubscriptions.clear();
+        _activeClients.clear();
     }
 
-    void _keepUpSubscriptions() {
-        _activeSubscriptions.forEach(_keepUpSubscription);
-    }
-
-    void _keepUpSubscription(Subscription subscription) {
-        var subscriptionMessage = subscription.subscription;
-        if (subscription.closed) {
-            subscriptionMessage.then(_cancel);
-            _activeSubscriptions.remove(subscription);
-        } else {
-            subscriptionMessage.then(_keepUp);
+    void _refreshSubscriptions() {
+        for (var client in _activeClients) {
+            client._refreshSubscriptions();
         }
-    }
-
-    void _keepUp(pbSubscription.Subscription subscription) {
-        _httpClient.postMessage(_endpoints.subscription.keepUp, subscription);
-    }
-
-    void _cancel(pbSubscription.Subscription subscription) {
-        _httpClient.postMessage(_endpoints.subscription.cancel, subscription);
     }
 }
 
@@ -215,6 +197,7 @@ class Client {
     final FirebaseClient _firebase;
     final Endpoints _endpoints;
     final QueryResponseProcessor _queryProcessor;
+    final Set<Subscription> _activeSubscriptions = Set();
 
     Client._(this._httpClient,
              this._requests,
@@ -242,9 +225,17 @@ class Client {
         return EventSubscriptionRequest(this, prototype);
     }
 
-    void _postCommand(Command command, CommandErrorCallback onError) {
+    void cancelAllSubscriptions() {
+        for (Subscription subscription in _activeSubscriptions) {
+            subscription.unsubscribe();
+            subscription.subscription.then(_cancel);
+        }
+        _activeSubscriptions.clear();
+    }
+
+    Future<void> _postCommand(Command command, CommandErrorCallback onError) {
         var response = _httpClient.postMessage(_endpoints.command, command);
-        response.then((response) {
+        return response.then((response) {
             var ack = Ack();
             parseInto(ack, response.body);
             if (ack.status.hasError() && onError != null) {
@@ -290,6 +281,28 @@ class Client {
         var httpResponse = _httpClient.postMessage(_endpoints.query, query);
         return _queryProcessor.process(httpResponse, query);
     }
+
+    void _refreshSubscriptions() {
+        _activeSubscriptions.forEach(_refreshSubscription);
+    }
+
+    void _refreshSubscription(Subscription subscription) {
+        var subscriptionMessage = subscription.subscription;
+        if (subscription.closed) {
+            subscriptionMessage.then(_cancel);
+            _activeSubscriptions.remove(subscription);
+        } else {
+            subscriptionMessage.then(_keepUp);
+        }
+    }
+
+    void _keepUp(pbSubscription.Subscription subscription) {
+        _httpClient.postMessage(_endpoints.subscription.keepUp, subscription);
+    }
+
+    void _cancel(pbSubscription.Subscription subscription) {
+        _httpClient.postMessage(_endpoints.subscription.cancel, subscription);
+    }
 }
 
 typedef NewSubscription<S extends Subscription> =
@@ -311,31 +324,31 @@ CompositeFilter either(Iterable<Filter> filters) {
         ..freeze();
 }
 
-Filter eq(List<String> fieldPath, Object value) =>
+Filter eq(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.EQUAL, value);
 
-Filter le(List<String> fieldPath, Object value) =>
+Filter le(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.LESS_OR_EQUAL, value);
 
-Filter ge(List<String> fieldPath, Object value) =>
+Filter ge(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.GREATER_OR_EQUAL, value);
 
-Filter lt(List<String> fieldPath, Object value) =>
+Filter lt(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.LESS_THAN, value);
 
-Filter gt(List<String> fieldPath, Object value) =>
+Filter gt(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.GREATER_THAN, value);
 
-Filter _filter(List<String> fieldPath, Filter_Operator operator, Object value) {
+Filter _filter(String fieldPath, Filter_Operator operator, Object value) {
     ArgumentError.checkNotNull(fieldPath);
     ArgumentError.checkNotNull(value);
+    var pathElements = fieldPath.split('.');
     return Filter()
-        ..fieldPath = (FieldPath()..fieldName.addAll(fieldPath))
+        ..fieldPath = (FieldPath()..fieldName.addAll(pathElements))
         ..operator = operator
         ..value = packObject(value)
         ..freeze();
 }
-
 
 class CommandRequest<M extends GeneratedMessage> {
 
@@ -346,8 +359,18 @@ class CommandRequest<M extends GeneratedMessage> {
     CommandRequest(this._client, M command) :
             _command = _client._requests.command().create(command);
 
-    Stream<E> observeEvents<E extends GeneratedMessage>(E prototype) {
-        return _observeEvents(prototype).eventMessages;
+    Stream<E> observeEvents<E extends GeneratedMessage>(E prototype) =>
+        _observeEvents(prototype).eventMessages;
+
+    Stream<Event> observeEventsWithContexts(GeneratedMessage prototype) =>
+        _observeEvents(prototype).events;
+
+    EventSubscription<E> _observeEvents<E extends GeneratedMessage>(E prototype) {
+        var subscription = _client.subscribeToEvents(prototype)
+            .where(all([eq('context.past_message', _commandAsOrigin())]))
+            .post();
+        _subscriptions.add(subscription);
+        return subscription;
     }
 
     Origin _commandAsOrigin() {
@@ -359,38 +382,21 @@ class CommandRequest<M extends GeneratedMessage> {
             ..actorContext = _command.context.actorContext;
     }
 
-    Stream<Event> observeEventsWithContexts(GeneratedMessage prototype) {
-        return _observeEvents(prototype).events;
-    }
-
-    EventSubscription<E> _observeEvents<E extends GeneratedMessage>(E prototype) {
-        var subscription = _client.subscribeToEvents(prototype)
-            .where(all([eq(['context', 'past_message'], _commandAsOrigin())]))
-            .post();
-        _subscriptions.add(subscription);
-        return subscription;
-    }
-
-    Set<EventSubscription> post({CommandErrorCallback onError}) {
+    Future<void> post({CommandErrorCallback onError}) {
         if (_subscriptions.isEmpty) {
             throw StateError('Use `observeEvents(..)` or `observeEventsWithContexts(..)` to observe'
                 ' command results or call `postAndForget()` instead of `post()` if you observe'
                 ' command results elsewhere.');
         }
-        Future.wait(_subscriptions.map((s) => s.subscription))
-              .then((_) => _doPost(onError));
-        return Set()..addAll(_subscriptions);
+        return Future.wait(_subscriptions.map((s) => s.subscription))
+                     .then((_) => _client._postCommand(_command, onError));
     }
 
-    void postAndForget({CommandErrorCallback onError}) {
+    Future<void> postAndForget({CommandErrorCallback onError}) {
         if (_subscriptions.isNotEmpty) {
             throw StateError('Use `post()` to add event subscriptions.');
         }
-        _doPost(onError);
-    }
-
-    void _doPost(CommandErrorCallback onError) {
-        _client._postCommand(_command, onError);
+        return _client._postCommand(_command, onError);
     }
 }
 
