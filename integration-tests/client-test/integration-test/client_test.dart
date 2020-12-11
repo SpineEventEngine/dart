@@ -61,10 +61,9 @@ void main() {
                 ..description = "long";
             var client = clients.onBehalfOf(actor);
             var request = client.command(cmd);
-            request.observeEvents(TaskCreated());
-            var subscriptions = request.post();
-            expect(subscriptions, hasLength(equals(1)));
-            await subscriptions.first.events.first;
+            var events = request.observeEvents(TaskCreated());
+            request.post();
+            await events.first;
             var tasks = await client.select(Task())
                                     .post()
                                     .toList();
