@@ -18,34 +18,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
 import java.io.File
+import org.apache.tools.ant.taskdefs.condition.Os
 
 val windows = Os.isFamily(Os.FAMILY_WINDOWS)
-var pubCache: String
-var scriptExtension: String
-if (windows) {
-    pubCache = "${System.getenv("LOCALAPPDATA")}/Pub/Cache/bin"
-    scriptExtension = ".bat"
-} else {
-    pubCache = "${System.getProperty("user.home")}/.pub-cache/bin"
-    scriptExtension = ""
+var pubCache: String = System.getenv().getOrDefault("PUB_CACHE", "")
+var scriptExtension: String = if (windows) ".bat" else ""
+if (pubCache.isBlank() && windows) {
+    pubCache = "${System.getenv("LOCALAPPDATA")}/Pub/Cache"
+} else if (pubCache.isBlank()) {
+    pubCache = "${System.getProperty("user.home")}/.pub-cache"
 }
 
-val command = "$pubCache/dart_code_gen$scriptExtension"
+val command = "$pubCache/bin/dart_code_gen$scriptExtension"
 
 if (!file(command).exists()) {
     logger.warn("Cannot locate `dart_code_gen` under `$command`.")
 }
 
 fun composeCommandLine(descriptor: File, targetDir: String, standardTypesPackage: String) =
-        listOf(
-                command,
-                "--descriptor", "${file(descriptor)}",
-                "--destination", "$targetDir/types.dart",
-                "--standard-types", standardTypesPackage,
-                "--import-prefix", "."
-        )
+    listOf(
+        command,
+        "--descriptor", "${file(descriptor)}",
+        "--destination", "$targetDir/types.dart",
+        "--standard-types", standardTypesPackage,
+        "--import-prefix", "."
+    )
 
 /**
  * Task which launches Dart code generation from Protobuf.
@@ -54,8 +52,10 @@ open class GenerateDart : Exec() {
 
     @Internal
     var descriptor: Provider<out Any> = project.objects.property(File::class.java)
+
     @Internal
     var target: String = ""
+
     @Internal
     var standardTypesPackage: String = ""
 }
@@ -64,14 +64,16 @@ val generateDartName = "generateDart"
 
 tasks.create(generateDartName, GenerateDart::class) {
     @Suppress("UNCHECKED_CAST")
-    descriptor = project.extensions["protoDart"].withGroovyBuilder { getProperty("mainDescriptorSet") } as Property<File>
+    descriptor = project.extensions["protoDart"]
+        .withGroovyBuilder { getProperty("mainDescriptorSet") } as Property<File>
     target = "$projectDir/lib"
     standardTypesPackage = "spine_client"
 }
 
 tasks.create("generateTestDart", GenerateDart::class) {
     @Suppress("UNCHECKED_CAST")
-    descriptor = project.extensions["protoDart"].withGroovyBuilder { getProperty("testDescriptorSet") } as Property<File>
+    descriptor = project.extensions["protoDart"]
+        .withGroovyBuilder { getProperty("testDescriptorSet") } as Property<File>
     target = "$projectDir/test"
     standardTypesPackage = "spine_client"
 
