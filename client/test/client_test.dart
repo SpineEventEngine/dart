@@ -23,6 +23,7 @@ import 'package:test/test.dart';
 
 import 'fake_firebase_client.dart';
 import 'spine/test/tools/dart/commands.pb.dart';
+import 'spine/test/tools/dart/events.pb.dart';
 import 'spine/test/tools/dart/project.pb.dart';
 import 'types.dart' as testTypes;
 
@@ -59,6 +60,14 @@ void main() {
                                     .subscribeTo(Project())
                                     .post();
                 var stream = result.itemAdded;
+                expect(() async => await stream.first, throwsA(isNotNull));
+            });
+
+            test('when subscribing to event updates', () async {
+                var result = clients.asGuest()
+                    .subscribeToEvents(ProjectCreated())
+                    .post();
+                var stream = result.eventMessages;
                 expect(() async => await stream.first, throwsA(isNotNull));
             });
         });
