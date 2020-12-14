@@ -45,20 +45,18 @@ class FirebaseResponseProcessor implements QueryResponseProcessor {
     }
 
     @override
-    Stream<T> process<T extends GeneratedMessage>(
-        Future<http.Response> httpResponse, Query query
-        ) async* {
+    Stream<T> process<T extends GeneratedMessage>(Future<http.Response> httpResponse, Query query) {
         var targetTypeUrl = query.target.type;
         var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
         if (builder == null) {
             throw ArgumentError.value(query, 'query', 'Target type `$targetTypeUrl` is unknown.');
         }
-        var qr = await httpResponse.then(_parse);
-        yield* _database
-            .get(qr.path)
-            .take(qr.count.toInt())
-            .map((json) => parseIntoNewInstance(builder, json));
-    }
+        return httpResponse.then(_parse)
+                           .asStream()
+                           .asyncExpand((response) => _database.get(response.path)
+                                                               .take(response.count.toInt()))
+                           .map((json) => parseIntoNewInstance(builder, json));
+  }
 
     FirebaseQueryResponse _parse(http.Response response) {
         var queryResponse = FirebaseQueryResponse();
@@ -71,15 +69,12 @@ class FirebaseResponseProcessor implements QueryResponseProcessor {
 class DirectResponseProcessor extends QueryResponseProcessor {
 
     @override
-    Stream<T> process<T extends GeneratedMessage>(
-        Future<http.Response> httpResponse, Query query
-        ) async* {
-        var qr = httpResponse.then(_parse);
-        var entities = await qr.then((response) => response.message);
-        for (var entity in entities) {
-            var message = unpack(entity.state);
-            yield message as T;
-        }
+    Stream<T> process<T extends GeneratedMessage>(Future<http.Response> httpResponse, Query query) {
+        var response = httpResponse.then(_parse);
+        var entities = response.asStream()
+                               .expand((r) => r.message)
+                               .map((entity) => unpack(entity.state) as T);
+        return entities;
     }
 
     QueryResponse _parse(http.Response response) {
