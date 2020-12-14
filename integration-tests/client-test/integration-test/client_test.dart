@@ -52,25 +52,25 @@ void main() {
             clients.cancelAllSubscriptions();
         });
 
-        test('send commands and obtain query data', () async {
+        test('send commands and obtain query data through Firebase RDB', () async {
             var taskId = TaskId()
                 ..value = newUuid();
             var cmd = CreateTask()
                 ..id = taskId
-                ..name = 'Task name'
-                ..description = "long";
+                ..name = 'Task name 1'
+                ..description = 'Firebase query test';
             var client = clients.onBehalfOf(actor);
             var request = client.command(cmd);
-            var events = request.observeEvents(TaskCreated());
-            request.post();
-            await events.first;
+            var stateSubscription = client.subscribeTo(Task())
+                                          .whereIdIn([taskId])
+                                          .post();
+            request.postAndForget();
+            await stateSubscription.itemAdded.first;
             var tasks = await client.select(Task())
                                     .post()
                                     .toList();
             expect(tasks, hasLength(greaterThanOrEqualTo(1)));
             var matchingById = tasks.where((task) => task.id == taskId);
-            print(taskId);
-            print(tasks);
             expect(matchingById, hasLength(1));
         });
 
@@ -85,22 +85,24 @@ void main() {
                 ..value = newUuid();
             var cmd = CreateTask()
                 ..id = taskId
-                ..name = 'Task name'
-                ..description = "long";
-            var commandRequest = clients.onBehalfOf(actor)
-                                        .command(cmd);
-            var events = commandRequest.observeEvents(TaskCreated());
-            commandRequest.post();
-            await events.first;
+                ..name = 'Task name 2'
+                ..description = 'direct query test';
+
+            var client = clients.onBehalfOf(actor);
+            var newTasks = client.subscribeTo(Task())
+                                 .whereIdIn([taskId])
+                                 .post();
+            client.command(cmd)
+                  .postAndForget();
+            await newTasks.itemAdded.first; // Make sure command is processed.
             var tasks = await clients.asGuest()
                                      .select(Task())
+                                     .whereIds([taskId])
                                      .post()
                                      .toList();
-            expect(tasks, hasLength(greaterThanOrEqualTo(1)));
-            print(taskId);
-            print(tasks);
-            var matchingById = tasks.where((task) => task.id == taskId);
-            expect(matchingById, hasLength(1));
+            expect(tasks, hasLength(1));
+            expect(tasks[0].id, equals(taskId));
+            expect(tasks[0].name, equals(cmd.name));
         });
 
         test('subscribe to entity changes', () async {
@@ -113,8 +115,8 @@ void main() {
                 ..value = newUuid();
             var createTaskCmd = CreateTask()
                 ..id = taskId
-                ..name = 'Task name'
-                ..description = "long";
+                ..name = 'Task name 3'
+                ..description = 'subscription test';
             var createTaskRequest = client.command(createTaskCmd);
             var taskCreatedEvents = createTaskRequest.observeEvents(TaskCreated());
             createTaskRequest.post();

@@ -428,7 +428,7 @@ class QueryRequest<M extends GeneratedMessage> {
 
     QueryRequest<M> whereIds(Iterable<Object> ids) {
         ArgumentError.checkNotNull(ids, 'ids');
-        _ids.addAll(_ids);
+        _ids.addAll(ids);
         return this;
     }
 
@@ -469,7 +469,7 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
 
     final Client _client;
     final M _prototype;
-    final Set<CompositeFilter> _ids = Set();
+    final Set<Object> _ids = Set();
     final Set<CompositeFilter> _filters = Set();
 
     StateSubscriptionRequest(this._client, this._prototype);
@@ -487,7 +487,7 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
     }
 
     StateSubscription<M> post() {
-        var topic = _client._requests.topic().withFilters(_prototype, filters: _filters);
+        var topic = _client._requests.topic().withFilters(_prototype, ids: _ids, filters: _filters);
         return _client._subscribeToStateUpdates(topic, _prototype.info_);
     }
 }
