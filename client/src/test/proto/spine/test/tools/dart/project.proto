@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package spine.test.tools;
+
+import "spine/options.proto";
+
+option (type_url_prefix) = "type.spine.io";
+
+message Project {
+    string uuid = 1;
+    string name = 2;
+}
