@@ -38,7 +38,9 @@ class Subscription<T extends GeneratedMessage> {
 
     Subscription(this.subscription, Stream<T> itemAdded)
         : _itemAdded = _checkBroadcast(itemAdded),
-          _closed = false;
+          _closed = false {
+        subscription.catchError((e) => unsubscribe());
+    }
 
     bool get closed => _closed;
 

@@ -59,12 +59,7 @@ void main() {
                                     .subscribeTo(Project())
                                     .post();
                 var stream = result.itemAdded;
-                var err = null;
-                stream.handleError((error) {
-                    err = error;
-                });
-                await stream;
-                expect(err, isNotNull);
+                expect(() async => await stream.first, throwsA(isNotNull));
             });
         });
     });
