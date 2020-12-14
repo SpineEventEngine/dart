@@ -7,6 +7,8 @@ import "spine/options.proto";
 option (type_url_prefix) = "type.spine.io";
 
 message Project {
+    option (entity).kind = AGGREGATE;
+
     string uuid = 1;
     string name = 2;
 }
