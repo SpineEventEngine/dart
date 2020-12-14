@@ -19,16 +19,20 @@
  */
 
 import 'package:spine_client/client.dart';
+import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/spine_client.dart';
+import 'package:spine_client/time.dart';
 import 'package:spine_client/uuids.dart';
 import 'package:spine_client/web_firebase_client.dart';
 import 'package:test/test.dart';
 
 import 'endpoints.dart';
 import 'firebase_app.dart';
+import 'spine/core/user_id.pb.dart' as testUserId;
 import 'spine/web/test/given/commands.pb.dart';
 import 'spine/web/test/given/events.pb.dart';
 import 'spine/web/test/given/task.pb.dart';
+import 'spine/web/test/given/user_tasks.pb.dart';
 import 'types.dart' as testTypes;
 
 @TestOn("browser")
@@ -136,6 +140,72 @@ void main() {
             var changedTask = await itemChanged.first;
             expect(changedTask.name, equals(renameTaskCmd.name));
             entitySubscription.unsubscribe();
+        });
+
+        test('query entities by column values', () async {
+            var newTasks = clients.asGuest()
+                                  .subscribeTo(UserTasks())
+                                  .post();
+            var client = clients.onBehalfOf(actor);
+            var olderTaskId = TaskId()..value = newUuid();
+            client.command(CreateTask()
+                                ..id = olderTaskId
+                                ..name = 'Task name-182'
+                                ..description = 'Query by fields test'
+                                ..assignee = (testUserId.UserId()..value = newUuid()))
+                  .postAndForget();
+            var firstTask = newTasks.itemAdded.elementAt(0);
+            var secondTask = newTasks.itemAdded.elementAt(1);
+            await firstTask;
+            var thresholdTime = now();
+            client.command(CreateTask()
+                                ..id = (TaskId()..value = newUuid())
+                                ..name = 'Task name 42'
+                                ..description = 'Query by fields test'
+                                ..assignee = (testUserId.UserId()..value = newUuid()))
+                  .postAndForget();
+            await secondTask;
+            var tasks = await client.select(UserTasks())
+                                    .where(all([lt('last_updated', thresholdTime)]))
+                                    .post()
+                                    .toList();
+            expect(tasks, hasLength(1));
+            expect(tasks[0].tasks.first, equals(olderTaskId));
+        });
+
+        test('query entities with order and limit', () async {
+            var newProjections = clients.asGuest()
+                .subscribeTo(UserTasks())
+                .post();
+            var client = clients.onBehalfOf(actor);
+            client.command(CreateTask()
+                ..id = (TaskId()..value = newUuid())
+                ..name = 'Task name 1'
+                ..description = 'Query with limit'
+                ..assignee = (testUserId.UserId()..value = newUuid()))
+                .postAndForget();
+            client.command(CreateTask()
+                ..id = (TaskId()..value = newUuid())
+                ..name = 'Task name 42'
+                ..description = 'Query with limit'
+                ..assignee = (testUserId.UserId()..value = newUuid()))
+                .postAndForget();
+            client.command(CreateTask()
+                ..id = (TaskId()..value = newUuid())
+                ..name = 'Task name 3.14'
+                ..description = 'Query with limit'
+                ..assignee = (testUserId.UserId()..value = newUuid()))
+                .postAndForget();
+            await newProjections.itemAdded.elementAt(2);
+            var limit = 2;
+            var tasks = await client.select(UserTasks())
+                .orderBy('last_updated', OrderBy_Direction.DESCENDING)
+                .limit(limit)
+                .post()
+                .toList();
+            expect(tasks, hasLength(limit));
+            expect(tasks[0].lastUpdated.seconds,
+                   greaterThanOrEqualTo(tasks[0].lastUpdated.seconds));
         });
     });
 }

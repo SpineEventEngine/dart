@@ -432,7 +432,8 @@ class QueryRequest<M extends GeneratedMessage> {
         return this;
     }
 
-    QueryRequest<M> orderBy(String column, OrderBy_Direction direction) {
+    QueryRequest<M> orderBy(String column,
+                            [OrderBy_Direction direction = OrderBy_Direction.ASCENDING]) {
         ArgumentError.checkNotNull(column, 'column');
         ArgumentError.checkNotNull(direction, 'direction');
         _orderBy = OrderBy()
