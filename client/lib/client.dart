@@ -256,7 +256,7 @@ class Client {
     }
 
     S _subscribe<S extends Subscription>(pbSubscription.Topic topic,
-                                         NewSubscription<S> newSubscription) {
+                                         CreateSubscription<S> newSubscription) {
         if (_firebase == null) {
             throw StateError('Cannot create a subscription. No Firebase client is provided.');
         }
@@ -305,7 +305,7 @@ class Client {
     }
 }
 
-typedef NewSubscription<S extends Subscription> =
+typedef CreateSubscription<S extends Subscription> =
     S Function(Future<FirebaseSubscription>, FirebaseClient);
 
 CompositeFilter all(Iterable<Filter> filters) {
