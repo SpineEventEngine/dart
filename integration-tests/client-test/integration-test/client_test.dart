@@ -97,6 +97,8 @@ void main() {
                                      .post()
                                      .toList();
             expect(tasks, hasLength(greaterThanOrEqualTo(1)));
+            print(taskId);
+            print(tasks);
             var matchingById = tasks.where((task) => task.id == taskId);
             expect(matchingById, hasLength(1));
         });
