@@ -69,6 +69,8 @@ void main() {
                                     .toList();
             expect(tasks, hasLength(greaterThanOrEqualTo(1)));
             var matchingById = tasks.where((task) => task.id == taskId);
+            print(taskId);
+            print(tasks);
             expect(matchingById, hasLength(1));
         });
 
@@ -94,8 +96,6 @@ void main() {
                                      .select(Task())
                                      .post()
                                      .toList();
-            print(taskId);
-            print(tasks);
             expect(tasks, hasLength(greaterThanOrEqualTo(1)));
             var matchingById = tasks.where((task) => task.id == taskId);
             expect(matchingById, hasLength(1));
