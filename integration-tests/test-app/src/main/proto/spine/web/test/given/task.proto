@@ -30,5 +30,5 @@ message Task {
 
     string description = 4;
 
-    google.protobuf.Timestamp when_created = 5 [(column) = true];
+    google.protobuf.Timestamp when_created = 5;
 }
