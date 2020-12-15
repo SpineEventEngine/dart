@@ -119,7 +119,6 @@ class Clients {
     ///    should receive either error as the only argument or error and [StackTrace];
     ///    should return a `FutureOr<Response>`;
     ///  - [typeRegistries] — a list of known type registries.
-    /// ```
     ///
     Clients(String baseUrl,
            {UserId guestId,
@@ -162,13 +161,19 @@ class Clients {
                : DirectResponseProcessor();
     }
 
+    /// Creates a new client which sends requests on behalf of a guest user.
+    ///
+    /// Specify `guestId` when creating `Clients` to change the placeholder ID for the guest user.
+    ///
     Client asGuest() {
         ActorRequestFactory requests = _requests(_guestId);
         return _newClient(requests);
     }
 
+    /// Creates a new client which sends requests on behalf of the given user.
+    ///
     Client onBehalfOf(UserId user) {
-        ActorRequestFactory requests = _requests(_guestId);
+        ActorRequestFactory requests = _requests(user);
         return _newClient(requests);
     }
 
@@ -182,6 +187,7 @@ class Clients {
     ActorRequestFactory _requests(UserId actor) =>
         ActorRequestFactory(actor, _tenant, _zoneOffset, _zoneId);
 
+    /// Cancels all the active subscriptions
     void cancelAllSubscriptions() {
         for (var client in _activeClients) {
             client.cancelAllSubscriptions();
@@ -196,6 +202,9 @@ class Clients {
     }
 }
 
+/// A client which connects to a Spine-based backend, posts commands, sends queries, and creates
+/// and managed subscriptions on behalf of a certain user.
+///
 class Client {
 
     final HttpClient _httpClient;
@@ -211,26 +220,31 @@ class Client {
              this._endpoints,
              this._queryProcessor);
 
+    /// Constructs a request to post a command to the server.
     CommandRequest<M> command<M extends GeneratedMessage>(M commandMessage) {
         ArgumentError.checkNotNull(commandMessage, 'command message');
-        return CommandRequest(this, commandMessage, );
+        return CommandRequest._(this, commandMessage, );
     }
 
+    /// Constructs a request to send a query to the server.
     QueryRequest<M> select<M extends GeneratedMessage>(M prototype) {
         ArgumentError.checkNotNull(prototype, 'entity state type');
-        return QueryRequest(this, prototype);
+        return QueryRequest._(this, prototype);
     }
 
+    /// Constructs a request to create an entity state subscription.
     StateSubscriptionRequest<M> subscribeTo<M extends GeneratedMessage>(M prototype) {
         ArgumentError.checkNotNull(prototype, 'entity state type');
-        return StateSubscriptionRequest(this, prototype);
+        return StateSubscriptionRequest._(this, prototype);
     }
 
+    /// Constructs a request to create an event subscription.
     EventSubscriptionRequest<M> subscribeToEvents<M extends GeneratedMessage>(M prototype) {
         ArgumentError.checkNotNull(prototype, 'event type');
-        return EventSubscriptionRequest(this, prototype);
+        return EventSubscriptionRequest._(this, prototype);
     }
 
+    /// Cancels all the subscriptions created by this client.
     void cancelAllSubscriptions() {
         for (Subscription subscription in _activeSubscriptions) {
             subscription.unsubscribe();
@@ -262,7 +276,7 @@ class Client {
     }
 
     S _subscribe<S extends Subscription>(pbSubscription.Topic topic,
-                                         CreateSubscription<S> newSubscription) {
+                                         _CreateSubscription<S> newSubscription) {
         if (_firebase == null) {
             throw StateError('Cannot create a subscription. No Firebase client is provided.');
         }
@@ -311,9 +325,15 @@ class Client {
     }
 }
 
-typedef CreateSubscription<S extends Subscription> =
+/// A function which accepts a future of `FirebaseSubscription` and a firebase client and creates
+/// an instance of [Subscription].
+typedef _CreateSubscription<S extends Subscription> =
     S Function(Future<FirebaseSubscription>, FirebaseClient);
 
+/// Creates a composite filter which groups one or more field filters with the `ALL` operator.
+///
+/// All the field filters should pass in order for the composite filter to pass.
+///
 CompositeFilter all(Iterable<Filter> filters) {
     ArgumentError.checkNotNull(filters);
     return CompositeFilter()
@@ -322,6 +342,10 @@ CompositeFilter all(Iterable<Filter> filters) {
         ..freeze();
 }
 
+/// Creates a composite filter which groups one or more field filters with the `EITHER` operator.
+///
+/// At least one field filter should pass in order for the composite filter to pass.
+///
 CompositeFilter either(Iterable<Filter> filters) {
     ArgumentError.checkNotNull(filters);
     return CompositeFilter()
@@ -330,18 +354,23 @@ CompositeFilter either(Iterable<Filter> filters) {
         ..freeze();
 }
 
+/// Creates a field filter with the `=` operator.
 Filter eq(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.EQUAL, value);
 
+/// Creates a field filter with the `<=` operator.
 Filter le(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.LESS_OR_EQUAL, value);
 
+/// Creates a field filter with the `>=` operator.
 Filter ge(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.GREATER_OR_EQUAL, value);
 
+/// Creates a field filter with the `<` operator.
 Filter lt(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.LESS_THAN, value);
 
+/// Creates a field filter with the `>` operator.
 Filter gt(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.GREATER_THAN, value);
 
@@ -356,18 +385,39 @@ Filter _filter(String fieldPath, Filter_Operator operator, Object value) {
         ..freeze();
 }
 
+/// A request to the server to post a command.
 class CommandRequest<M extends GeneratedMessage> {
 
     final Client _client;
     final Command _command;
     final List<EventSubscription> _subscriptions = [];
 
-    CommandRequest(this._client, M command) :
+    CommandRequest._(this._client, M command) :
             _command = _client._requests.command().create(command);
 
+    /// Creates an event subscription for events produced as a direct result of this command.
+    ///
+    /// Events down the line, i.e. events produced as the result of other messages which where
+    /// produced as the result of this command, do not match this subscription.
+    ///
+    /// Returns a broadcast stream of event messages.
+    ///
+    /// See `CommandRequest.observeEventsWithContexts(..)` to receive metadata, as well as the event
+    /// messages.
+    ///
+    ///
     Stream<E> observeEvents<E extends GeneratedMessage>(E prototype) =>
         _observeEvents(prototype).eventMessages;
 
+    /// Creates an event subscription for events produced as a direct result of this command.
+    ///
+    /// Events down the line, i.e. events produced as the result of other messages which where
+    /// produced as the result of this command, do not match this subscription.
+    ///
+    /// Returns a broadcast stream of events with their metadata.
+    ///
+    /// See `CommandRequest.observeEvents(..)` to unpacked event messages.
+    ///
     Stream<Event> observeEventsWithContexts(GeneratedMessage prototype) =>
         _observeEvents(prototype).events;
 
@@ -388,6 +438,17 @@ class CommandRequest<M extends GeneratedMessage> {
             ..actorContext = _command.context.actorContext;
     }
 
+    /// Asynchronously sends this request to the server.
+    ///
+    /// Fails if there are no event subscription to monitor the command execution. If this is
+    /// the desired behaviour, use `CommandRequest.postAndForget(..)`.
+    ///
+    /// Returns a future which completes when the request is sent. If there was a network problem,
+    /// the future, completes with an error.
+    ///
+    /// If the server rejects the command with an error and the [onError] callback is set,
+    /// the callback will be triggered with the error. Otherwise, the error is silently ignored.
+    ///
     Future<void> post({CommandErrorCallback onError}) {
         if (_subscriptions.isEmpty) {
             throw StateError('Use `observeEvents(..)` or `observeEventsWithContexts(..)` to observe'
@@ -398,6 +459,17 @@ class CommandRequest<M extends GeneratedMessage> {
                      .then((_) => _client._postCommand(_command, onError));
     }
 
+    /// Asynchronously sends this request to the server.
+    ///
+    /// Fails if there are any event subscription to monitor the command execution. Use
+    /// `CommandRequest.post(..)` for such scenarios.
+    ///
+    /// Returns a future which completes when the request is sent. If there was a network problem,
+    /// the future, completes with an error.
+    ///
+    /// If the server rejects the command with an error and the [onError] callback is set,
+    /// the callback will be triggered with the error. Otherwise, the error is silently ignored.
+    ///
     Future<void> postAndForget({CommandErrorCallback onError}) {
         if (_subscriptions.isNotEmpty) {
             throw StateError('Use `post()` to add event subscriptions.');
@@ -406,6 +478,18 @@ class CommandRequest<M extends GeneratedMessage> {
     }
 }
 
+/// A callback which notifies the user about an error when posting a command.
+///
+/// A server may reject a command for several reasons. For example, a command type may not be
+/// supported by the target server. In such cases, the server acknowledges the command and responds
+/// with a `spine.base.Error`.
+///
+/// To find out the actual reason of the error, explore the `Error.type` and `Error.code`.
+///
+typedef CommandErrorCallback = void Function(pbError.Error error);
+
+/// A request to query the server for data.
+///
 class QueryRequest<M extends GeneratedMessage> {
 
     final Client _client;
@@ -417,27 +501,49 @@ class QueryRequest<M extends GeneratedMessage> {
     OrderBy _orderBy;
     int _limit;
 
+    QueryRequest._(this._client, this._prototype);
 
-    QueryRequest(this._client, this._prototype);
-
+    /// Specifies the fields to include in the query result.
+    ///
+    /// By default, all the fields are included.
+    ///
     QueryRequest<M> fields(List<String> fieldPaths) {
         ArgumentError.checkNotNull(fieldPaths, 'field paths');
         _fields.addAll(fieldPaths);
         return this;
     }
 
+    /// Adds field filters for the query results.
+    ///
+    /// See `all(..)`, `either(..)`, `eq(..)`, `le(..)`, `ge(..)`, `lt(..)`, `gt(..)`.
+    ///
+    /// If called multiple times, the composite filters are composed with the `ALL` operator, i.e.
+    /// an entity state should pass all of the composite filters to be included in the query
+    /// results.
+    ///
     QueryRequest<M> where(CompositeFilter filter) {
         ArgumentError.checkNotNull(filter, 'filter');
         _filters.add(filter);
         return this;
     }
 
+    /// Adds IDs to the query.
+    ///
+    /// Only entities with the given IDs are included in the query results.
+    ///
+    /// If called multiple times, the IDs add up.
+    ///
     QueryRequest<M> whereIds(Iterable<Object> ids) {
         ArgumentError.checkNotNull(ids, 'ids');
         _ids.addAll(ids);
         return this;
     }
 
+    /// Adds ordering to this query.
+    ///
+    /// The query results will be ordered by the given column. Specify the [direction] parameter
+    /// to change the ordering direction (ascending by default).
+    ///
     QueryRequest<M> orderBy(String column,
                             [OrderBy_Direction direction = OrderBy_Direction.ASCENDING]) {
         ArgumentError.checkNotNull(column, 'column');
@@ -448,6 +554,10 @@ class QueryRequest<M extends GeneratedMessage> {
         return this;
     }
 
+    /// Adds a limit to the number of returned entity states.
+    ///
+    /// A limit can only be used along with `orderBy(..)`.
+    ///
     QueryRequest<M> limit(int count) {
         ArgumentError.checkNotNull(count, 'limit');
         if (count <= 0) {
@@ -457,6 +567,10 @@ class QueryRequest<M extends GeneratedMessage> {
         return this;
     }
 
+    /// Asynchronously sends this request to the server.
+    ///
+    /// Returns a stream of query results. If there was a network problem, the stream has an error.
+    ///
     Stream<M> post() {
         var mask = FieldMask()
             ..paths.addAll(_fields);
@@ -472,6 +586,8 @@ class QueryRequest<M extends GeneratedMessage> {
     }
 }
 
+/// A request to subscribe to entity state updates.
+///
 class StateSubscriptionRequest<M extends GeneratedMessage> {
 
     final Client _client;
@@ -479,47 +595,71 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
     final Set<Object> _ids = Set();
     final Set<CompositeFilter> _filters = Set();
 
-    StateSubscriptionRequest(this._client, this._prototype);
+    StateSubscriptionRequest._(this._client, this._prototype);
 
+    /// Adds field filters to the subscription.
+    ///
+    /// See `all(..)`, `either(..)`, `eq(..)`, `le(..)`, `ge(..)`, `lt(..)`, `gt(..)`.
+    ///
+    /// If called multiple times, the composite filters are composed with the `ALL` operator, i.e.
+    /// an entity state should pass all of the composite filters to match the subscription.
+    ///
     StateSubscriptionRequest<M> where(CompositeFilter filter) {
         ArgumentError.checkNotNull(filter, 'filter');
         _filters.add(filter);
         return this;
     }
 
+    /// Adds an ID filter to the subscription.
+    ///
+    /// Only entities with the given IDs match the subscription.
+    ///
+    /// If called multiple times, the IDs add up.
+    ///
     StateSubscriptionRequest<M> whereIdIn(Iterable<Object> ids) {
         ArgumentError.checkNotNull(ids, 'ids');
         _ids.addAll(ids);
         return this;
     }
 
+    /// Asynchronously sends this request to the server.
+    ///
     StateSubscription<M> post() {
         var topic = _client._requests.topic().withFilters(_prototype, ids: _ids, filters: _filters);
         return _client._subscribeToStateUpdates(topic, _prototype.info_);
     }
 }
 
+/// A request to subscribe to events.
+///
 class EventSubscriptionRequest<M extends GeneratedMessage> {
 
     final M _prototype;
     final Client _client;
     final List<CompositeFilter> _filers = [];
 
-    EventSubscriptionRequest(this._client, this._prototype);
+    EventSubscriptionRequest._(this._client, this._prototype);
 
+    /// Adds field filters to the subscription.
+    ///
+    /// See `all(..)`, `either(..)`, `eq(..)`, `le(..)`, `ge(..)`, `lt(..)`, `gt(..)`.
+    ///
+    /// If called multiple times, the composite filters are composed with the `ALL` operator, i.e.
+    /// an event should pass all of the composite filters to match the subscription.
+    ///
     EventSubscriptionRequest<M> where(CompositeFilter filter) {
         ArgumentError.checkNotNull(filter, 'filter');
         _filers.add(filter);
         return this;
     }
 
+    /// Asynchronously sends this request to the server.
+    ///
     EventSubscription<M> post() {
         var topic = _client._requests.topic().withFilters(_prototype, filters: _filers);
         return _client._subscribeToEvents(topic);
     }
 }
-
-typedef CommandErrorCallback = void Function(pbError.Error error);
 
 /// The mode in which the backend serves query responses.
 enum QueryMode {
