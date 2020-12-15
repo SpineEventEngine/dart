@@ -61,6 +61,7 @@ class QueryFactory {
         return query;
     }
 
+    /// Creates a new query with the given parameters.
     Query build(GeneratedMessage instance,
                 {Iterable<Object> ids = const [],
                  Iterable<CompositeFilter> filters = const [],

@@ -84,7 +84,7 @@ import 'package:spine_client/validate.dart';
 ///
 class Clients {
 
-    static final UserId DEFAULT_GUEST_ID = UserId()
+    static final UserId _DEFAULT_GUEST_ID = UserId()
         ..value = 'guest'
         ..freeze();
 
@@ -131,7 +131,7 @@ class Clients {
             Duration subscriptionKeepUpPeriod = const Duration(minutes: 2),
             List<dynamic> typeRegistries = const []}) :
             _httpClient = HttpClient(baseUrl),
-            _guestId = guestId ?? DEFAULT_GUEST_ID,
+            _guestId = guestId ?? _DEFAULT_GUEST_ID,
             _tenant = tenantId,
             _zoneOffset = zoneOffset,
             _zoneId = zoneId,
