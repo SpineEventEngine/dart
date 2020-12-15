@@ -30,7 +30,7 @@ import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/known_types.dart';
 import 'package:spine_client/validate.dart';
 
-/// Creates a target which matches messages with the given IDs.
+/// Creates a target which matches messages with the given IDs and field filters.
 Target target(GeneratedMessage instance,
               {Iterable<Object> ids,
                Iterable<CompositeFilter> fieldFilters}) {
