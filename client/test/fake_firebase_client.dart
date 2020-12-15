@@ -26,6 +26,9 @@
 
 import 'package:spine_client/firebase_client.dart';
 
+/// A Firebase client which does not connect to a Firebase Database and always returns empty steams
+/// instead.
+///
 class FakeFirebase extends FirebaseClient {
 
     @override
