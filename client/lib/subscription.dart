@@ -34,20 +34,26 @@ import 'package:spine_client/spine/web/firebase/subscription/firebase_subscripti
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/json.dart';
 
+/// A subscription to updates from server.
 class Subscription<T extends GeneratedMessage> {
 
+    /// A future for the subscription message.
+    ///
+    /// Completes when the subscription is created.
+    ///
     final Future<pb.Subscription> subscription;
 
     final Stream<T> _itemAdded;
 
     bool _closed;
 
-    Subscription(this.subscription, Stream<T> itemAdded)
+    Subscription._(this.subscription, Stream<T> itemAdded)
         : _itemAdded = _checkBroadcast(itemAdded),
           _closed = false {
         subscription.catchError((e) => unsubscribe());
     }
 
+    /// Shows if this subscription is still active or already closed.
     bool get closed => _closed;
 
     /// Closes this subscription.
@@ -59,10 +65,10 @@ class Subscription<T extends GeneratedMessage> {
     }
 }
 
-/// A subscription for event or entity changes.
+/// A subscription for entity state changes.
 ///
 /// The [itemAdded], [itemChanged] and [itemRemoved] streams reflect the changes of a corresponding
-/// event/entity type.
+/// entity type.
 ///
 /// To stop receiving updates from the server, invoke [unsubscribe]. This will cancel the
 /// subscription both on the client and on the server, stopping the changes from being reflected to
@@ -84,7 +90,7 @@ class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
             itemChanged = _checkBroadcast(itemChanged),
             itemRemoved = _checkBroadcast(itemRemoved),
             _closed = false,
-            super(subscription, itemAdded);
+            super._(subscription, itemAdded);
 
     /// Creates a new instance which broadcasts updates from under the given Firebase node.
     factory StateSubscription.of(Future<FirebaseSubscription> firebaseSubscription,
@@ -105,12 +111,21 @@ class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
     }
 }
 
+/// A subscription for events.
+///
+/// To consume unpacked typed event messages, use [eventMessages]. To use events with metadata,
+/// use [events].
+///
+/// To stop receiving updates from the server, invoke [unsubscribe]. This will cancel the
+/// subscription both on the client and on the server, stopping the changes from being reflected to
+/// Firebase.
+///
 class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> {
 
     static final BuilderInfo _eventBuilderInfo = Event.getDefault().info_;
 
     EventSubscription._(Future<pb.Subscription> subscription, Stream<Event> itemAdded) :
-            super(subscription, itemAdded);
+            super._(subscription, itemAdded);
 
     factory EventSubscription.of(Future<FirebaseSubscription> firebaseSubscription,
                                  FirebaseClient database) {
@@ -121,8 +136,10 @@ class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> 
         return EventSubscription._(subscription, itemAdded);
     }
 
+    /// A stream of events along with their metadata, such as `EventContext`s.
     Stream<Event> get events => _itemAdded;
 
+    /// A stream of typed event messages.
     Stream<T> get eventMessages => events
         .map((event) => unpack(event.message));
 }
