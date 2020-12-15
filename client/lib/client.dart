@@ -71,7 +71,7 @@ import 'package:spine_client/validate.dart';
 ///     ..value = 'some-user-id';
 /// var client = clients.onBehalfOf(actor);
 ///
-/// /// ...
+/// // ...
 ///
 /// var cmdRequest = client.command(postComment);
 /// var events = cmdRequest.observeEvents(CommentPosted());
