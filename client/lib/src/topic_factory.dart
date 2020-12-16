@@ -24,7 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
 import 'package:spine_client/spine/client/subscription.pb.dart';
 import 'package:spine_client/src/actor_request_factory.dart';
@@ -39,33 +38,13 @@ class TopicFactory {
     TopicFactory(this._context);
 
     /// Creates a topic which matches entities of the given type, IDs, and field values.
-    Topic withFilters(GeneratedMessage instance,
+    Topic withFilters(Type type,
                       {Iterable<Object> ids = const [],
                        Iterable<CompositeFilter> filters = const []}) {
         var topic = Topic();
         topic
             ..id = _newId()
-            ..target = target(instance, ids: ids, fieldFilters: filters)
-            ..context = _context();
-        return topic;
-    }
-
-    /// Creates a topic which matches entities of the given type with the specified IDs.
-    Topic byIds(GeneratedMessage instance, List<Object> ids) {
-        var topic = Topic();
-        topic
-            ..id = _newId()
-            ..target = target(instance, ids: ids)
-            ..context = _context();
-        return topic;
-    }
-
-    /// Creates a topic which matches all entities of the given type.
-    Topic all(GeneratedMessage instance) {
-        var topic = Topic();
-        topic
-            ..id = _newId()
-            ..target = target(instance)
+            ..target = target(type, ids: ids, fieldFilters: filters)
             ..context = _context();
         return topic;
     }

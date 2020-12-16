@@ -227,21 +227,22 @@ class Client {
     }
 
     /// Constructs a request to send a query to the server.
-    QueryRequest<M> select<M extends GeneratedMessage>(M prototype) {
-        ArgumentError.checkNotNull(prototype, 'entity state type');
-        return QueryRequest._(this, prototype);
+    QueryRequest<M> select<M extends GeneratedMessage>() {
+        var type = M;
+        return QueryRequest._(this, type);
     }
 
     /// Constructs a request to create an entity state subscription.
-    StateSubscriptionRequest<M> subscribeTo<M extends GeneratedMessage>(M prototype) {
-        ArgumentError.checkNotNull(prototype, 'entity state type');
-        return StateSubscriptionRequest._(this, prototype);
+    StateSubscriptionRequest<M> subscribeTo<M extends GeneratedMessage>() {
+        var type = M;
+        return StateSubscriptionRequest._(this, type);
     }
 
     /// Constructs a request to create an event subscription.
-    EventSubscriptionRequest<M> subscribeToEvents<M extends GeneratedMessage>(M prototype) {
-        ArgumentError.checkNotNull(prototype, 'event type');
-        return EventSubscriptionRequest._(this, prototype);
+    EventSubscriptionRequest<M> subscribeToEvents<M extends GeneratedMessage>() {
+        var type = M;
+        print(type);
+        return EventSubscriptionRequest._(this, type);
     }
 
     /// Cancels all the subscriptions created by this client.
@@ -406,8 +407,8 @@ class CommandRequest<M extends GeneratedMessage> {
     /// messages.
     ///
     ///
-    Stream<E> observeEvents<E extends GeneratedMessage>(E prototype) =>
-        _observeEvents(prototype).eventMessages;
+    Stream<E> observeEvents<E extends GeneratedMessage>(Type prototype) =>
+        _observeEvents<E>().eventMessages;
 
     /// Creates an event subscription for events produced as a direct result of this command.
     ///
@@ -418,11 +419,11 @@ class CommandRequest<M extends GeneratedMessage> {
     ///
     /// See `CommandRequest.observeEvents(..)` to unpacked event messages.
     ///
-    Stream<Event> observeEventsWithContexts(GeneratedMessage prototype) =>
-        _observeEvents(prototype).events;
+    Stream<Event> observeEventsWithContexts<E extends GeneratedMessage>() =>
+        _observeEvents<E>().events;
 
-    EventSubscription<E> _observeEvents<E extends GeneratedMessage>(E prototype) {
-        var subscription = _client.subscribeToEvents(prototype)
+    EventSubscription<E> _observeEvents<E extends GeneratedMessage>() {
+        var subscription = _client.subscribeToEvents<E>()
             .where(all([eq('context.past_message', _commandAsOrigin())]))
             .post();
         _subscriptions.add(subscription);
@@ -493,7 +494,7 @@ typedef CommandErrorCallback = void Function(pbError.Error error);
 class QueryRequest<M extends GeneratedMessage> {
 
     final Client _client;
-    final M _prototype;
+    final Type _type;
 
     final Set<Object> _ids = Set();
     final Set<CompositeFilter> _filters = Set();
@@ -501,7 +502,7 @@ class QueryRequest<M extends GeneratedMessage> {
     OrderBy _orderBy;
     int _limit;
 
-    QueryRequest._(this._client, this._prototype);
+    QueryRequest._(this._client, this._type);
 
     /// Specifies the fields to include in the query result.
     ///
@@ -575,7 +576,7 @@ class QueryRequest<M extends GeneratedMessage> {
         var mask = FieldMask()
             ..paths.addAll(_fields);
         var query = _client._requests.query().build(
-            _prototype,
+            _type,
             ids: _ids,
             filters: _filters,
             fieldMask: mask,
@@ -591,11 +592,11 @@ class QueryRequest<M extends GeneratedMessage> {
 class StateSubscriptionRequest<M extends GeneratedMessage> {
 
     final Client _client;
-    final M _prototype;
+    final Type _type;
     final Set<Object> _ids = Set();
     final Set<CompositeFilter> _filters = Set();
 
-    StateSubscriptionRequest._(this._client, this._prototype);
+    StateSubscriptionRequest._(this._client, this._type);
 
     /// Adds field filters to the subscription.
     ///
@@ -625,8 +626,12 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
     /// Asynchronously sends this request to the server.
     ///
     StateSubscription<M> post() {
-        var topic = _client._requests.topic().withFilters(_prototype, ids: _ids, filters: _filters);
-        return _client._subscribeToStateUpdates(topic, _prototype.info_);
+        var topic = _client._requests.topic().withFilters(_type, ids: _ids, filters: _filters);
+        var builderInfo = theKnownTypes.findBuilderInfo(theKnownTypes.typeUrlFrom(_type));
+        if (builderInfo == null) {
+            throw StateError('Unknown type `${_type}`.');
+        }
+        return _client._subscribeToStateUpdates(topic, builderInfo);
     }
 }
 
@@ -634,11 +639,11 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
 ///
 class EventSubscriptionRequest<M extends GeneratedMessage> {
 
-    final M _prototype;
     final Client _client;
+    final Type _type;
     final List<CompositeFilter> _filers = [];
 
-    EventSubscriptionRequest._(this._client, this._prototype);
+    EventSubscriptionRequest._(this._client, this._type);
 
     /// Adds field filters to the subscription.
     ///
@@ -656,7 +661,7 @@ class EventSubscriptionRequest<M extends GeneratedMessage> {
     /// Asynchronously sends this request to the server.
     ///
     EventSubscription<M> post() {
-        var topic = _client._requests.topic().withFilters(_prototype, filters: _filers);
+        var topic = _client._requests.topic().withFilters(_type, filters: _filers);
         return _client._subscribeToEvents(topic);
     }
 }

@@ -40,7 +40,7 @@ void main() {
         });
 
         test('build "all" targets', () {
-            var t = target(Empty.getDefault());
+            var t = target(Empty);
             expect(t, isNotNull);
             expect(t.type, equals('type.googleapis.com/google.protobuf.Empty'));
             expect(t.includeAll, equals(true));
@@ -48,7 +48,8 @@ void main() {
 
         test('convert raw IDs to Any', () {
             var ids = [42, 314, 271];
-            var t = target(Timestamp.getDefault(), ids: ids);
+            var type = Timestamp;
+            var t = target(type, ids: ids);
             expect(t, isNotNull);
             expect(t.type, equals('type.googleapis.com/google.protobuf.Timestamp'));
             expect(t.filters.idFilter.id, hasLength(equals(ids.length)));
@@ -56,7 +57,7 @@ void main() {
 
         test('not allow generic IDs', () {
             var ids = [StringBuffer().writeln('this is not allowed')];
-            expect(() => target(Empty.getDefault(), ids: ids), throwsA(isA<ArgumentError>()));
+            expect(() => target(Empty, ids: ids), throwsA(isA<ArgumentError>()));
         });
     });
 }

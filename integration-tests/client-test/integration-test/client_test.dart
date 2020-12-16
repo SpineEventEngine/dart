@@ -71,12 +71,12 @@ void main() {
                 ..description = 'Firebase query test';
             var client = clients.onBehalfOf(actor);
             var request = client.command(cmd);
-            var stateSubscription = client.subscribeTo(Task())
+            var stateSubscription = client.subscribeTo<Task>()
                                           .whereIdIn([taskId])
                                           .post();
             request.postAndForget();
             await stateSubscription.itemAdded.first;
-            var tasks = await client.select(Task())
+            var tasks = await client.select<Task>()
                                     .post()
                                     .toList();
             expect(tasks, hasLength(greaterThanOrEqualTo(1)));
@@ -99,14 +99,14 @@ void main() {
                 ..description = 'direct query test';
 
             var client = clients.onBehalfOf(actor);
-            var newTasks = client.subscribeTo(Task())
+            var newTasks = client.subscribeTo<Task>()
                                  .whereIdIn([taskId])
                                  .post();
             client.command(cmd)
                   .postAndForget();
             await newTasks.itemAdded.first; // Make sure command is processed.
             var tasks = await clients.asGuest()
-                                     .select(Task())
+                                     .select<Task>()
                                      .whereIds([taskId])
                                      .post()
                                      .toList();
@@ -118,7 +118,7 @@ void main() {
         test('subscribe to entity changes', () async {
             var client = clients.onBehalfOf(actor);
             StateSubscription<Task> entitySubscription =
-                    client.subscribeTo(Task())
+                    client.subscribeTo<Task>()
                           .post();
             Stream<Task> itemAdded = entitySubscription.itemAdded;
             var taskId = TaskId()
@@ -128,7 +128,7 @@ void main() {
                 ..name = 'Task name 3'
                 ..description = 'subscription test';
             var createTaskRequest = client.command(createTaskCmd);
-            var taskCreatedEvents = createTaskRequest.observeEvents(TaskCreated());
+            var taskCreatedEvents = createTaskRequest.observeEvents<TaskCreated>(TaskCreated);
             createTaskRequest.post();
 
             var newTaskEvent = await taskCreatedEvents.first;
@@ -150,7 +150,7 @@ void main() {
 
         test('query entities by column values', () async {
             var newTasks = clients.asGuest()
-                                  .subscribeTo(UserTasks())
+                                  .subscribeTo<UserTasks>()
                                   .post();
             var client = clients.onBehalfOf(actor);
             var olderTaskId = TaskId()..value = newUuid();
@@ -171,7 +171,7 @@ void main() {
                                 ..assignee = (testUserId.UserId()..value = newUuid()))
                   .postAndForget();
             await secondTask;
-            var tasks = await client.select(UserTasks())
+            var tasks = await client.select<UserTasks>()
                                     .where(all([lt('last_updated', thresholdTime)]))
                                     .post()
                                     .toList();
@@ -181,7 +181,7 @@ void main() {
 
         test('query entities with order and limit', () async {
             var newProjections = clients.asGuest()
-                .subscribeTo(UserTasks())
+                .subscribeTo<UserTasks>()
                 .post();
             var client = clients.onBehalfOf(actor);
             client.command(CreateTask()
@@ -204,7 +204,7 @@ void main() {
                 .postAndForget();
             await newProjections.itemAdded.elementAt(2);
             var limit = 2;
-            var tasks = await client.select(UserTasks())
+            var tasks = await client.select<UserTasks>()
                 .orderBy('last_updated', OrderBy_Direction.DESCENDING)
                 .limit(limit)
                 .post()

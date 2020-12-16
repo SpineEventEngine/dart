@@ -24,18 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/known_types.dart';
 import 'package:spine_client/validate.dart';
 
 /// Creates a target which matches messages with the given IDs and field filters.
-Target target(GeneratedMessage instance,
+Target target(Type type,
               {Iterable<Object> ids,
                Iterable<CompositeFilter> fieldFilters}) {
     var target = Target();
-    target.type = _typeUrl(instance);
+    target.type = _typeUrl(type);
     var filters = TargetFilters();
     if (ids != null && ids.isNotEmpty) {
         var idFilter = IdFilter();
@@ -53,6 +52,6 @@ Target target(GeneratedMessage instance,
     return target;
 }
 
-String _typeUrl(GeneratedMessage message) {
-    return theKnownTypes.typeUrlOf(message);
+String _typeUrl(Type type) {
+    return theKnownTypes.typeUrlFrom(type);
 }

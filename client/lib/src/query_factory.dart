@@ -24,15 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:protobuf/protobuf.dart';
+import 'package:spine_client/google/protobuf/field_mask.pb.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/src/actor_request_factory.dart';
 import 'package:spine_client/src/target_builder.dart';
 import 'package:spine_client/uuids.dart';
 import 'package:spine_client/validate.dart';
-
-import '../google/protobuf/field_mask.pb.dart';
 
 /// A factory of queries to the server.
 class QueryFactory {
@@ -41,28 +39,8 @@ class QueryFactory {
 
     QueryFactory(this._context);
 
-    /// Creates a query which matches all entities of the given type with the given IDs.
-    Query byIds(GeneratedMessage instance, List<Object> ids) {
-        var query = Query();
-        query
-            ..id = _newId()
-            ..target = target(instance, ids: ids)
-            ..context = _context();
-        return query;
-    }
-
-    /// Creates a query which matches all entities of the given type.
-    Query all(GeneratedMessage instance) {
-        var query = Query();
-        query
-            ..id = _newId()
-            ..target = target(instance)
-            ..context = _context();
-        return query;
-    }
-
     /// Creates a new query with the given parameters.
-    Query build(GeneratedMessage instance,
+    Query build(Type type,
                 {Iterable<Object> ids = const [],
                  Iterable<CompositeFilter> filters = const [],
                  FieldMask fieldMask,
@@ -85,7 +63,7 @@ class QueryFactory {
         }
         query
             ..id = _newId()
-            ..target = target(instance, ids: ids, fieldFilters: filters)
+            ..target = target(type, ids: ids, fieldFilters: filters)
             ..context = _context();
         if (!isDefault(format)) {
             query.format = format;

@@ -56,14 +56,14 @@ void main() {
 
             test('when sending queries', () async {
                 var stream = clients.asGuest()
-                                    .select(Project())
+                                    .select<Project>()
                                     .post();
                 expect(() async => await stream.first, throwsA(isNotNull));
             });
 
             test('when subscribing to updates', () async {
                 var result = clients.asGuest()
-                                    .subscribeTo(Project())
+                                    .subscribeTo<Project>()
                                     .post();
                 var stream = result.itemAdded;
                 expect(() async => await stream.first, throwsA(isNotNull));
@@ -71,7 +71,7 @@ void main() {
 
             test('when subscribing to event updates', () async {
                 var result = clients.asGuest()
-                    .subscribeToEvents(ProjectCreated())
+                    .subscribeToEvents<ProjectCreated>()
                     .post();
                 var stream = result.eventMessages;
                 expect(() async => await stream.first, throwsA(isNotNull));
