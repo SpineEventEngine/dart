@@ -441,7 +441,7 @@ class CommandRequest<M extends GeneratedMessage> {
 
     /// Asynchronously sends this request to the server.
     ///
-    /// Fails if there are no event subscription to monitor the command execution. If this is
+    /// Fails if there are no event subscriptions to monitor the command execution. If this is
     /// the desired behaviour, use `CommandRequest.postAndForget(..)`.
     ///
     /// Returns a future which completes when the request is sent. If there was a network problem,
@@ -462,7 +462,7 @@ class CommandRequest<M extends GeneratedMessage> {
 
     /// Asynchronously sends this request to the server.
     ///
-    /// Fails if there are any event subscription to monitor the command execution. Use
+    /// Fails if there are any event subscriptions to monitor the command execution. Use
     /// `CommandRequest.post(..)` for such scenarios.
     ///
     /// Returns a future which completes when the request is sent. If there was a network problem,
