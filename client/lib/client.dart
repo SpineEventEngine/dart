@@ -74,7 +74,7 @@ import 'package:spine_client/validate.dart';
 /// // ...
 ///
 /// var cmdRequest = client.command(postComment);
-/// var events = cmdRequest.observeEvents(CommentPosted());
+/// var events = cmdRequest.observeEvents<CommentPosted>();
 /// cmdRequest.post();
 ///
 /// events.forEach((event) {
