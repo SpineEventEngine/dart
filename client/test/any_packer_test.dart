@@ -31,6 +31,7 @@ import 'package:spine_client/google/protobuf/wrappers.pb.dart';
 import 'package:spine_client/spine/core/user_id.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/time.dart';
+import 'package:spine_client/unknown_type.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -46,7 +47,7 @@ void main() {
             var any = Any()
                 ..typeUrl = 'types.example.com/unknown.Type'
                 ..value = [42];
-            expect(() { unpack(any); }, throwsA(isA<ArgumentError>()));
+            expect(() { unpack(any); }, throwsA(isA<UnknownTypeError>()));
         });
 
         test('convert int IDs to Any', () {

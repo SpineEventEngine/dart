@@ -27,6 +27,7 @@
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/validate/validation_error.pb.dart';
 import 'package:spine_client/types.dart' as standardTypes;
+import 'package:spine_client/unknown_type.dart';
 
 /// The only instance of [KnownTypes].
 final theKnownTypes = KnownTypes._instance();
@@ -67,14 +68,14 @@ class KnownTypes {
     String typeUrlFrom(Type type) {
         var typeUrl = _typeToUrl[type];
         if (typeUrl == null) {
-            throw StateError('Unknown type `${type}`');
+            throw UnknownTypeError(runtimeType: type);
         }
         return typeUrl;
     }
 
     /// Looks up a type URL of the given message.
     ///
-    /// Throws an `ArgumentException` if the type is unknown.
+    /// Throws an `UnknownTypeError` if the type is unknown.
     ///
     String typeUrlOf(GeneratedMessage message) {
         return typeUrlFrom(message.runtimeType);

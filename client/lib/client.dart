@@ -118,7 +118,10 @@ class Clients {
     ///  - [onNetworkError] — a callback handling network errors;
     ///    should receive either error as the only argument or error and [StackTrace];
     ///    should return a `FutureOr<Response>`;
-    ///  - [typeRegistries] — a list of known type registries.
+    ///  - [typeRegistries] — a list of known type registries; the `dart_code_gen` tool generates
+    ///    the `types.dart` files for each module for main and test scopes. A `types.dart` file
+    ///    contains information about the known Protobuf types of this module. See the class level
+    ///    doc for an example of how to access a type registry and pass it to this constructor.
     ///
     Clients(String baseUrl,
            {UserId guestId,
@@ -628,9 +631,6 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
     StateSubscription<M> post() {
         var topic = _client._requests.topic().withFilters(_type, ids: _ids, filters: _filters);
         var builderInfo = theKnownTypes.findBuilderInfo(theKnownTypes.typeUrlFrom(_type));
-        if (builderInfo == null) {
-            throw StateError('Unknown type `${_type}`.');
-        }
         return _client._subscribeToStateUpdates(topic, builderInfo);
     }
 }

@@ -29,6 +29,7 @@ import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/google/protobuf/any.pb.dart';
 import 'package:spine_client/google/protobuf/wrappers.pb.dart';
 import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/unknown_type.dart';
 
 /// Separates the type URL prefix from the type name.
 const _prefixSeparator = '/';
@@ -42,7 +43,7 @@ GeneratedMessage unpack(Any any) {
     var typeUrl = any.typeUrl;
     var builder = theKnownTypes.findBuilderInfo(typeUrl);
     if (builder == null) {
-        throw ArgumentError('Cannot unpack unknown type `$typeUrl`.');
+        throw UnknownTypeError(typeUrl: typeUrl);
     }
     var emptyInstance = builder.createEmptyInstance();
     return any.unpackInto(emptyInstance);
@@ -110,9 +111,6 @@ Any packObject(Object value) {
 
 String _typeUrlPrefix(GeneratedMessage message) {
     var typeUrl = theKnownTypes.typeUrlOf(message);
-    if (typeUrl == null) {
-        throw ArgumentError('Cannot pack message of unknown type `${message.runtimeType}`.');
-    }
     var typeName = message.info_.qualifiedMessageName;
     var matchingType = typeUrl.endsWith(typeName);
     if (!matchingType) {
