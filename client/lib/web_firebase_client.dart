@@ -38,11 +38,8 @@ class WebFirebaseClient implements FirebaseClient {
     WebFirebaseClient(this._db);
 
     @override
-    Stream<String> get(String path) async* {
-        yield* _db
-            .ref(path)
-            .onChildAdded
-            .map(_toJsonString);
+    Stream<String> get(String path) {
+        return childAdded(path);
     }
 
     @override
