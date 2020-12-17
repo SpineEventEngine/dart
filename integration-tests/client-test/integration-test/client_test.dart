@@ -62,6 +62,16 @@ void main() {
             clients.cancelAllSubscriptions();
         });
 
+        /// Creates a future which waits for two seconds.
+        ///
+        /// Tests need for a process on the server to end before sending a query. Since the entity
+        /// state update is broadcast before the entity state is stored (by design), we have to way
+        /// of knowing when it's safe to make a query. This is not an issue for end-users, since,
+        /// if they already create subscriptions, they are not likely to make a query as soon as
+        /// an update occurs.
+        ///
+        Future<void> _sleep() => Future.delayed(Duration(seconds: 2));
+
         test('send commands and obtain query data through Firebase RDB', () async {
             var taskId = TaskId()
                 ..value = newUuid();
@@ -76,6 +86,7 @@ void main() {
                                           .post();
             request.postAndForget();
             await stateSubscription.itemAdded.first;
+            await _sleep();
             var tasks = await client.select<Task>()
                                     .post()
                                     .toList();
@@ -104,7 +115,11 @@ void main() {
                                  .post();
             client.command(cmd)
                   .postAndForget();
-            await newTasks.itemAdded.first; // Make sure command is processed.
+            // Make sure command is processed...
+            await newTasks.itemAdded.first;
+            // ... and the entity is saved.
+            await _sleep();
+
             var tasks = await clients.asGuest()
                                      .select<Task>()
                                      .whereIds([taskId])
@@ -171,6 +186,7 @@ void main() {
                                 ..assignee = (testUserId.UserId()..value = newUuid()))
                   .postAndForget();
             await secondTask;
+            await _sleep();
             var tasks = await client.select<UserTasks>()
                                     .where(all([lt('last_updated', thresholdTime)]))
                                     .post()
@@ -203,6 +219,7 @@ void main() {
                 ..assignee = (testUserId.UserId()..value = newUuid()))
                 .postAndForget();
             await newProjections.itemAdded.elementAt(2);
+            await _sleep();
             var limit = 2;
             var tasks = await client.select<UserTasks>()
                 .orderBy('last_updated', OrderBy_Direction.DESCENDING)
