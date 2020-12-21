@@ -26,3 +26,9 @@
 
  It is expected that, after a testing stage, this API will soon be finalized, and the library —
  promoted to "production-ready".
+
+## 1.7.0
+
+ The first production release of the client library.
+ Starting from now, the Dart lib API is treated as production level. This means a certain level of
+ API stability, as compared to the pre-release non-stable API of versions `0.2.2` and older.
