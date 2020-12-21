@@ -409,7 +409,7 @@ class CommandRequest<M extends GeneratedMessage> {
     /// messages.
     ///
     ///
-    Stream<E> observeEvents<E extends GeneratedMessage>(Type prototype) =>
+    Stream<E> observeEvents<E extends GeneratedMessage>() =>
         _observeEvents<E>().eventMessages;
 
     /// Creates an event subscription for events produced as a direct result of this command.

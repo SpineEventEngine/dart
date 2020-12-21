@@ -143,7 +143,7 @@ void main() {
                 ..name = 'Task name 3'
                 ..description = 'subscription test';
             var createTaskRequest = client.command(createTaskCmd);
-            var taskCreatedEvents = createTaskRequest.observeEvents<TaskCreated>(TaskCreated);
+            var taskCreatedEvents = createTaskRequest.observeEvents<TaskCreated>();
             createTaskRequest.post();
 
             var newTaskEvent = await taskCreatedEvents.first;
