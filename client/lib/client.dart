@@ -244,7 +244,6 @@ class Client {
     /// Constructs a request to create an event subscription.
     EventSubscriptionRequest<M> subscribeToEvents<M extends GeneratedMessage>() {
         var type = M;
-        print(type);
         return EventSubscriptionRequest._(this, type);
     }
 

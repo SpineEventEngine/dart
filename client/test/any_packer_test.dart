@@ -53,7 +53,6 @@ void main() {
         test('convert int IDs to Any', () {
             var rawId = 42;
             var anyId = packId(rawId);
-            print(unpack(anyId).info_.messageName);
             expect(unpack(anyId), isA<Int32Value>());
             expect((unpack(anyId) as Int32Value).value, equals(rawId));
         });
