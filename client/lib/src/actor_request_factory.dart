@@ -1,5 +1,11 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -18,14 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:spine_client/command_factory.dart';
-import 'package:spine_client/query_factory.dart';
 import 'package:spine_client/spine/core/actor_context.pb.dart';
 import 'package:spine_client/spine/core/tenant_id.pb.dart';
 import 'package:spine_client/spine/core/user_id.pb.dart';
 import 'package:spine_client/spine/time/time.pb.dart';
+import 'package:spine_client/src/command_factory.dart';
+import 'package:spine_client/src/query_factory.dart';
+import 'package:spine_client/src/topic_factory.dart';
 import 'package:spine_client/time.dart' as time;
-import 'package:spine_client/topic_factory.dart';
 
 /// A factory for various requests fired from the client-side by an actor.
 class ActorRequestFactory {

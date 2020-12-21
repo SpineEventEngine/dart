@@ -1,5 +1,11 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -77,13 +83,9 @@
 ///
 library spine_client;
 
-export 'actor_request_factory.dart';
-export 'backend_client.dart';
-export 'command_factory.dart';
-export 'subscription.dart';
+export 'client.dart';
 export 'firebase_client.dart';
-export 'query_factory.dart';
 export 'spine/core/tenant_id.pb.dart';
 export 'spine/core/user_id.pb.dart';
 export 'spine/time/time.pb.dart';
-export 'topic_factory.dart';
+export 'subscription.dart';

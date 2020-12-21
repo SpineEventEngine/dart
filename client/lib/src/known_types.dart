@@ -1,5 +1,11 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -21,6 +27,7 @@
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/validate/validation_error.pb.dart';
 import 'package:spine_client/types.dart' as standardTypes;
+import 'package:spine_client/unknown_type.dart';
 
 /// The only instance of [KnownTypes].
 final theKnownTypes = KnownTypes._instance();
@@ -35,11 +42,15 @@ typedef ValidationError _Validator(GeneratedMessage m);
 class KnownTypes {
 
     final Map<String, BuilderInfo> _typeUrlToBuilderInfo = Map();
-    final Map<GeneratedMessage, String> _msgToTypeUrl = Map();
+    final Set<GeneratedMessage> _defaults = Set();
+    final Map<Type, String> _typeToUrl = Map();
     final Map<String, _Validator> _validators = Map();
+
+    TypeRegistry _jsonRegistry = TypeRegistry([]);
 
     KnownTypes._instance() {
         register(standardTypes.types());
+        _jsonRegistry = _assembleRegistry();
     }
 
     /// Looks up a [BuilderInfo] by the given type URL.
@@ -50,13 +61,24 @@ class KnownTypes {
         return _typeUrlToBuilderInfo[typeUrl];
     }
 
+    /// Looks up a type URL of the given message type.
+    ///
+    /// Throws an `StateError` if the type is unknown.
+    ///
+    String typeUrlFrom(Type type) {
+        var typeUrl = _typeToUrl[type];
+        if (typeUrl == null) {
+            throw UnknownTypeError(runtimeType: type);
+        }
+        return typeUrl;
+    }
+
     /// Looks up a type URL of the given message.
     ///
-    /// Returns `null` if the type is unknown.
+    /// Throws an `UnknownTypeError` if the type is unknown.
     ///
     String typeUrlOf(GeneratedMessage message) {
-        var defaultValue = message.createEmptyInstance();
-        return _msgToTypeUrl[defaultValue];
+        return typeUrlFrom(message.runtimeType);
     }
 
     /// Obtains a validator function for the given message.
@@ -65,9 +87,9 @@ class KnownTypes {
         return _validators[typeUrl];
     }
 
-    /// Constructs a registry for JSON parsing.
+    /// Obtains a registry for JSON parsing.
     TypeRegistry registry() {
-        return TypeRegistry(_msgToTypeUrl.keys);
+        return _jsonRegistry;
     }
 
     /// Registers the given type provider.
@@ -79,7 +101,8 @@ class KnownTypes {
         Map<GeneratedMessage, String> msgToTypeUrl = types.defaultToTypeUrl;
         Map<String, _Validator> validationFunctions = types.validators;
         _typeUrlToBuilderInfo.addAll(typeUrlToBuilderInfo);
-        _msgToTypeUrl.addAll(msgToTypeUrl);
+        _defaults.addAll(msgToTypeUrl.keys);
+        _typeToUrl.addAll(msgToTypeUrl.map((key, value) => MapEntry(key.runtimeType, value)));
         _validators.addAll(validationFunctions);
     }
 
@@ -91,5 +114,11 @@ class KnownTypes {
         for (var registry in typeRegistries) {
             register(registry);
         }
+        _jsonRegistry = _assembleRegistry();
+    }
+
+    /// Constructs a registry for JSON parsing.
+    TypeRegistry _assembleRegistry() {
+        return TypeRegistry(_defaults);
     }
 }

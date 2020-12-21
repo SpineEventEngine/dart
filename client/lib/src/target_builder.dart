@@ -1,5 +1,11 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -18,32 +24,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/validate.dart';
 
-/// Creates a target which matches all messages of type.
-Target targetAll(GeneratedMessage instance) {
+/// Creates a target which matches messages with the given IDs and field filters.
+Target target(Type type,
+              {Iterable<Object> ids,
+               Iterable<CompositeFilter> fieldFilters}) {
     var target = Target();
-    target
-        ..type = _typeUrl(instance)
-        ..includeAll = true;
-    return target;
-}
-
-/// Creates a target which matches messages with the given IDs.
-Target targetByIds(GeneratedMessage instance, List<Object> ids) {
-    var target = Target();
-    target.type = _typeUrl(instance);
+    target.type = _typeUrl(type);
     var filters = TargetFilters();
-    var idFilter = IdFilter();
-    idFilter.id.addAll(ids.map(packId));
-    filters.idFilter = idFilter;
-    target.filters = filters;
+    if (ids != null && ids.isNotEmpty) {
+        var idFilter = IdFilter();
+        idFilter.id.addAll(ids.map(packId));
+        filters.idFilter = idFilter;
+    }
+    if (fieldFilters != null && fieldFilters.isNotEmpty) {
+        filters.filter.addAll(fieldFilters);
+    }
+    if (isDefault(filters)) {
+        target.includeAll = true;
+    } else {
+        target.filters = filters;
+    }
     return target;
 }
 
-String _typeUrl(GeneratedMessage message) {
-    return theKnownTypes.typeUrlOf(message);
+String _typeUrl(Type type) {
+    return theKnownTypes.typeUrlFrom(type);
 }

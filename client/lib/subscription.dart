@@ -1,5 +1,11 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -18,67 +24,36 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'dart:async';
+
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/spine/client/subscription.pb.dart' as pb;
+import 'package:spine_client/spine/core/event.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
+import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/json.dart';
-import 'package:spine_client/src/known_types.dart';
 
-/// A subscription for event or entity changes.
-///
-/// The [itemAdded], [itemChanged] and [itemRemoved] streams reflect the changes of a corresponding
-/// event/entity type. The streams are broadcast ([Stream.isBroadcast]]), i.e. can have any number
-/// of listeners simultaneously.
-///
-/// To stop receiving updates from the server, invoke [unsubscribe]. This will cancel the
-/// subscription both on the client and on the server, stopping the changes from being reflected to
-/// Firebase.
-///
+/// A subscription to updates from server.
 class Subscription<T extends GeneratedMessage> {
 
-    final pb.Subscription subscription;
+    /// A future for the subscription message.
+    ///
+    /// Completes when the subscription is created.
+    ///
+    final Future<pb.Subscription> subscription;
 
-    final Stream<T> itemAdded;
-    final Stream<T> itemChanged;
-    final Stream<T> itemRemoved;
+    final Stream<T> _itemAdded;
 
     bool _closed;
 
-    Subscription(this.subscription,
-                 Stream<T> itemAdded,
-                 Stream<T> itemChanged,
-                 Stream<T> itemRemoved)
-            : itemAdded = _checkIsBroadCast(itemAdded),
-              itemChanged = _checkIsBroadCast(itemChanged),
-              itemRemoved = _checkIsBroadCast(itemRemoved),
-              _closed = false;
-
-    /// Creates a new instance which broadcasts updates from under the given Firebase node.
-    factory Subscription.of(FirebaseSubscription firebaseSubscription,
-                            FirebaseClient database) {
-        var subscription = firebaseSubscription.subscription;
-        var typeUrl = subscription.topic.target.type;
-        var builderInfo = theKnownTypes.findBuilderInfo(typeUrl);
-        if (builderInfo == null) {
-            throw ArgumentError.value(firebaseSubscription, 'firebase subscription',
-                                      'Firebase subscription type `${typeUrl} is unknown.');
-        }
-        var nodePath = firebaseSubscription.nodePath.value;
-
-        var itemAdded = database
-            .childAdded(nodePath)
-            .map((json) => parseIntoNewInstance<T>(builderInfo, json));
-        var itemChanged = database
-            .childChanged(nodePath)
-            .map((json) => parseIntoNewInstance<T>(builderInfo, json));
-        var itemRemoved = database
-            .childRemoved(nodePath)
-            .map((json) => parseIntoNewInstance<T>(builderInfo, json));
-
-        return Subscription(subscription, itemAdded, itemChanged, itemRemoved);
+    Subscription._(this.subscription, Stream<T> itemAdded)
+        : _itemAdded = _checkBroadcast(itemAdded),
+          _closed = false {
+        subscription.catchError((e) => unsubscribe());
     }
 
+    /// Shows if this subscription is still active or already closed.
     bool get closed => _closed;
 
     /// Closes this subscription.
@@ -88,12 +63,100 @@ class Subscription<T extends GeneratedMessage> {
     void unsubscribe() {
         _closed = true;
     }
+}
 
-    static Stream<T> _checkIsBroadCast<T>(Stream<T> stream) {
-        if (!stream.isBroadcast) {
-            throw ArgumentError(
-                'All streams passed to an `EntitySubscription` instance should be broadcast.');
-        }
-        return stream;
+/// A subscription for entity state changes.
+///
+/// The [itemAdded], [itemChanged] and [itemRemoved] streams reflect the changes of a corresponding
+/// entity type.
+///
+/// To stop receiving updates from the server, invoke [unsubscribe]. This will cancel the
+/// subscription both on the client and on the server, stopping the changes from being reflected to
+/// Firebase.
+///
+class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
+
+    final Stream<T> itemChanged;
+    final Stream<T> itemRemoved;
+
+    Stream<T> get itemAdded => _itemAdded;
+
+    bool _closed;
+
+    StateSubscription._(Future<pb.Subscription> subscription,
+                        Stream<T> itemAdded,
+                        Stream<T> itemChanged,
+                        Stream<T> itemRemoved):
+            itemChanged = _checkBroadcast(itemChanged),
+            itemRemoved = _checkBroadcast(itemRemoved),
+            _closed = false,
+            super._(subscription, itemAdded);
+
+    /// Creates a new instance which broadcasts updates from under the given Firebase node.
+    factory StateSubscription.of(Future<FirebaseSubscription> firebaseSubscription,
+                                 BuilderInfo builderInfoForType,
+                                 FirebaseClient database) {
+        var subscription = firebaseSubscription.then((value) => value.subscription);
+        var nodePath = _nodePath(firebaseSubscription);
+        var itemAdded = _nodePathStream(nodePath)
+            .asyncExpand((element) => database.childAdded(element))
+            .map((json) => parseIntoNewInstance<T>(builderInfoForType, json));
+        var itemChanged = _nodePathStream(nodePath)
+            .asyncExpand((element) => database.childChanged(element))
+            .map((json) => parseIntoNewInstance<T>(builderInfoForType, json));
+        var itemRemoved = _nodePathStream(nodePath)
+            .asyncExpand((element) => database.childRemoved(element))
+            .map((json) => parseIntoNewInstance<T>(builderInfoForType, json));
+        return StateSubscription._(subscription, itemAdded, itemChanged, itemRemoved);
     }
+}
+
+/// A subscription for events.
+///
+/// To consume unpacked typed event messages, use [eventMessages]. To use events with metadata,
+/// use [events].
+///
+/// To stop receiving updates from the server, invoke [unsubscribe]. This will cancel the
+/// subscription both on the client and on the server, stopping the changes from being reflected to
+/// Firebase.
+///
+class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> {
+
+    static final BuilderInfo _eventBuilderInfo = Event.getDefault().info_;
+
+    EventSubscription._(Future<pb.Subscription> subscription, Stream<Event> itemAdded) :
+            super._(subscription, itemAdded);
+
+    factory EventSubscription.of(Future<FirebaseSubscription> firebaseSubscription,
+                                 FirebaseClient database) {
+        var subscription = firebaseSubscription.then((value) => value.subscription);
+        var itemAdded = _nodePathStream(_nodePath(firebaseSubscription))
+            .asyncExpand((path) => database.childAdded(path))
+            .map((json) => parseIntoNewInstance<Event>(_eventBuilderInfo, json));
+        return EventSubscription._(subscription, itemAdded);
+    }
+
+    /// A stream of events along with their metadata, such as `EventContext`s.
+    Stream<Event> get events => _itemAdded;
+
+    /// A stream of typed event messages.
+    Stream<T> get eventMessages => events
+        .map((event) => unpack(event.message));
+}
+
+Future<String> _nodePath(Future<FirebaseSubscription> subscription) =>
+    subscription
+        .then((value) => value.nodePath.value);
+
+Stream<String> _nodePathStream(Future<String> futureValue) =>
+    futureValue.asStream().asBroadcastStream();
+
+
+Stream<T> _checkBroadcast<T>(Stream<T> stream) {
+    if (!stream.isBroadcast) {
+        throw ArgumentError(
+            'All streams passed to an `Subscription` instance should be broadcast.'
+        );
+    }
+    return stream;
 }

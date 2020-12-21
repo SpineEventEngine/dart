@@ -1,5 +1,11 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -19,41 +25,39 @@
  */
 
 import 'package:protobuf/protobuf.dart';
-import 'package:spine_client/actor_request_factory.dart';
-import 'package:spine_client/spine/client/query.pb.dart';
-import 'package:spine_client/target_builder.dart';
+import 'package:spine_client/spine/core/command.pb.dart';
+import 'package:spine_client/src/actor_request_factory.dart';
+import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/uuids.dart';
+import 'package:spine_client/validate.dart';
 
-/// A factory of queries to the server.
-class QueryFactory {
+/// A factory of commands to send to the server.
+class CommandFactory {
 
     final ActorProvider _context;
 
-    QueryFactory(this._context);
+    CommandFactory(this._context);
 
-    /// Creates a query which matches all entities of the given type with the given IDs.
-    Query byIds(GeneratedMessage instance, List<Object> ids) {
-        var query = Query();
-        query
+    /// Creates a command with the given message.
+    Command create(GeneratedMessage message) {
+        checkValid(message);
+        var cmd = Command();
+        cmd
             ..id = _newId()
-            ..target = targetByIds(instance, ids)
-            ..context = _context();
-        return query;
+            ..message = pack(message)
+            ..context = _buildContext();
+        return cmd;
     }
 
-    /// Creates a query which matches all entities of the given type.
-    Query all(GeneratedMessage instance) {
-        var query = Query();
-        query
-            ..id = _newId()
-            ..target = targetAll(instance)
-            ..context = _context();
-        return query;
+    CommandContext _buildContext() {
+        var ctx = CommandContext();
+        ctx.actorContext = _context();
+        return ctx;
     }
 
-    QueryId _newId() {
-        var id = QueryId();
-        id.value = newUuid(prefix: 'q-');
+    CommandId _newId() {
+        var id = CommandId();
+        id.uuid = newUuid();
         return id;
     }
 }

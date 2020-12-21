@@ -16,6 +16,7 @@ before_install:
   - chmod +x ./config/scripts/update-apt.sh
   - ./config/scripts/update-apt.sh
   - sudo apt-get install dart
+  - dart --version
   - pub global activate protoc_plugin
   - chmod +x ./script/unpack-credentials.sh
   - ./script/unpack-credentials.sh

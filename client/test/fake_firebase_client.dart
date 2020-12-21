@@ -24,34 +24,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:code_builder/code_builder.dart';
-import 'package:dart_code_gen/src/field_validator_factory.dart';
-import 'package:dart_code_gen/src/type.dart';
-import 'package:dart_code_gen/src/validator_factory.dart';
+import 'package:spine_client/firebase_client.dart';
 
-import 'field_validator_factory.dart';
-import 'validator_factory.dart';
-
-/// Non-default enum constants start at this number.
-const _minNonEmptyEnumValue = 1;
-
-/// A [FieldValidatorFactory] for `bytes` fields.
+/// A Firebase client which does not connect to a Firebase Database and always returns empty steams
+/// instead.
 ///
-class EnumValidatorFactory extends SingularFieldValidatorFactory {
-
-    EnumValidatorFactory(ValidatorFactory validatorFactory, FieldDeclaration field)
-        : super(validatorFactory, field);
+class FakeFirebase extends FirebaseClient {
 
     @override
-    Iterable<Rule> rules() {
-        var rules = <Rule>[];
-        if (isRequired()) {
-            rules.add(createRequiredRule());
-        }
-        return rules;
+    Stream<String> childAdded(String path) {
+        return Stream.empty();
     }
 
     @override
-    LazyCondition notSetCondition() =>
-            (v) => v.property('value').lessThan(literalNum(_minNonEmptyEnumValue));
+    Stream<String> childChanged(String path) {
+        return Stream.empty();
+    }
+
+    @override
+    Stream<String> childRemoved(String path) {
+        return Stream.empty();
+    }
+
+    @override
+    Stream<String> get(String path) {
+        return Stream.empty();
+    }
 }

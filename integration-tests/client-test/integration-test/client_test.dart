@@ -1,5 +1,11 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -18,108 +24,211 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'package:spine_client/client.dart';
+import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/spine_client.dart';
+import 'package:spine_client/time.dart';
 import 'package:spine_client/uuids.dart';
 import 'package:spine_client/web_firebase_client.dart';
 import 'package:test/test.dart';
 
 import 'endpoints.dart';
 import 'firebase_app.dart';
+import 'spine/core/user_id.pb.dart' as testUserId;
 import 'spine/web/test/given/commands.pb.dart';
+import 'spine/web/test/given/events.pb.dart';
 import 'spine/web/test/given/task.pb.dart';
+import 'spine/web/test/given/user_tasks.pb.dart';
 import 'types.dart' as testTypes;
 
 @TestOn("browser")
 void main() {
 
-    group('BackendClient should', () {
-        ActorRequestFactory requestFactory;
-        BackendClient client;
+    group('Client should', () {
+        Clients clients;
         FirebaseClient firebaseClient;
+        UserId actor;
 
         setUp(() {
             var database = FirebaseApp().database;
             firebaseClient = WebFirebaseClient(database);
-            client = BackendClient(BACKEND,
-                                   firebase: firebaseClient,
-                                   typeRegistries: [testTypes.types()]);
-            var actor = UserId();
-            actor.value = newUuid();
-            requestFactory = ActorRequestFactory(actor);
+            clients = Clients(BACKEND,
+                              firebase: firebaseClient,
+                              typeRegistries: [testTypes.types()]);
+            actor = UserId()..value = 'Dart-integration-tests';
         });
 
-        test('send commands and obtain query data', () async {
+        tearDown(() {
+            clients.cancelAllSubscriptions();
+        });
+
+        /// Creates a future which waits for two seconds.
+        ///
+        /// Tests need for a process on the server to end before sending a query. Since the entity
+        /// state update is broadcast before the entity state is stored (by design), we have to way
+        /// of knowing when it's safe to make a query. This is not an issue for end-users, since,
+        /// if they already create subscriptions, they are not likely to make a query as soon as
+        /// an update occurs.
+        ///
+        Future<void> _sleep() => Future.delayed(Duration(seconds: 2));
+
+        test('send commands and obtain query data through Firebase RDB', () async {
             var taskId = TaskId()
                 ..value = newUuid();
             var cmd = CreateTask()
                 ..id = taskId
-                ..name = 'Task name'
-                ..description = "long";
-            await client.post(requestFactory.command().create(cmd));
-            var query = requestFactory.query().all(Task());
-            var tasks = await client.fetch<Task>(query).toList();
+                ..name = 'Task name 1'
+                ..description = 'Firebase query test';
+            var client = clients.onBehalfOf(actor);
+            var request = client.command(cmd);
+            var stateSubscription = client.subscribeTo<Task>()
+                                          .whereIdIn([taskId])
+                                          .post();
+            request.postAndForget();
+            await stateSubscription.itemAdded.first;
+            await _sleep();
+            var tasks = await client.select<Task>()
+                                    .post()
+                                    .toList();
             expect(tasks, hasLength(greaterThanOrEqualTo(1)));
             var matchingById = tasks.where((task) => task.id == taskId);
             expect(matchingById, hasLength(1));
         });
 
         test('query server directly', () async {
-            client = BackendClient(BACKEND,
-                                   queryMode: QueryMode.DIRECT,
-                                   endpoints: Endpoints(
-                                       query: 'direct-query'
-                                   ));
+            clients = Clients(BACKEND,
+                              queryMode: QueryMode.DIRECT,
+                              firebase: firebaseClient,
+                              endpoints: Endpoints(
+                                  query: 'direct-query'
+                              ));
             var taskId = TaskId()
                 ..value = newUuid();
             var cmd = CreateTask()
                 ..id = taskId
-                ..name = 'Task name'
-                ..description = "long";
-            await client.post(requestFactory.command().create(cmd));
-            var query = requestFactory.query().all(Task());
-            var tasks = await client.fetch<Task>(query).toList();
-            expect(tasks, hasLength(greaterThanOrEqualTo(1)));
-            var matchingById = tasks.where((task) => task.id == taskId);
-            expect(matchingById, hasLength(1));
+                ..name = 'Task name 2'
+                ..description = 'direct query test';
+
+            var client = clients.onBehalfOf(actor);
+            var newTasks = client.subscribeTo<Task>()
+                                 .whereIdIn([taskId])
+                                 .post();
+            client.command(cmd)
+                  .postAndForget();
+            // Make sure command is processed...
+            await newTasks.itemAdded.first;
+            // ... and the entity is saved.
+            await _sleep();
+
+            var tasks = await clients.asGuest()
+                                     .select<Task>()
+                                     .whereIds([taskId])
+                                     .post()
+                                     .toList();
+            expect(tasks, hasLength(1));
+            expect(tasks[0].id, equals(taskId));
+            expect(tasks[0].name, equals(cmd.name));
         });
 
         test('subscribe to entity changes', () async {
-            // Subscribe to the `Task` changes.
-            var topic = requestFactory.topic().all(Task());
-            Subscription<Task> entitySubscription = await client.subscribeTo(topic);
-
-            // Listen to the `itemAdded` event.
-            var taskName = "";
+            var client = clients.onBehalfOf(actor);
+            StateSubscription<Task> entitySubscription =
+                    client.subscribeTo<Task>()
+                          .post();
             Stream<Task> itemAdded = entitySubscription.itemAdded;
-            itemAdded.listen((task) => taskName = task.name);
             var taskId = TaskId()
                 ..value = newUuid();
-
-            // Send `CreateTask` command.
             var createTaskCmd = CreateTask()
                 ..id = taskId
-                ..name = 'Task name'
-                ..description = "long";
-            await client.post(requestFactory.command().create(createTaskCmd));
+                ..name = 'Task name 3'
+                ..description = 'subscription test';
+            var createTaskRequest = client.command(createTaskCmd);
+            var taskCreatedEvents = createTaskRequest.observeEvents<TaskCreated>(TaskCreated);
+            createTaskRequest.post();
 
-            // Check the event is actually fired.
-            expect(taskName, equals(createTaskCmd.name));
+            var newTaskEvent = await taskCreatedEvents.first;
+            expect(newTaskEvent.id, equals(taskId));
+            var newTask = await itemAdded.first;
+            expect(newTask.name, equals(createTaskCmd.name));
 
-            // Listen to the `itemChanged` event.
-            var newTaskName = "";
             Stream<Task> itemChanged = entitySubscription.itemChanged;
-            itemChanged.listen((task) => newTaskName = task.name);
-
-            // Send the `RenameTask` command.
             var renameTaskCmd = RenameTask()
                 ..id = taskId
                 ..name = 'New task name';
-            await client.post(requestFactory.command().create(renameTaskCmd));
+            client.command(renameTaskCmd)
+                  .postAndForget();
 
-            // Verify the event is actually fired.
-            expect(newTaskName, equals(renameTaskCmd.name));
-
+            var changedTask = await itemChanged.first;
+            expect(changedTask.name, equals(renameTaskCmd.name));
             entitySubscription.unsubscribe();
+        });
+
+        test('query entities by column values', () async {
+            var newTasks = clients.asGuest()
+                                  .subscribeTo<UserTasks>()
+                                  .post();
+            var client = clients.onBehalfOf(actor);
+            var olderTaskId = TaskId()..value = newUuid();
+            client.command(CreateTask()
+                                ..id = olderTaskId
+                                ..name = 'Task name-182'
+                                ..description = 'Query by fields test'
+                                ..assignee = (testUserId.UserId()..value = newUuid()))
+                  .postAndForget();
+            var firstTask = newTasks.itemAdded.elementAt(0);
+            var secondTask = newTasks.itemAdded.elementAt(1);
+            await firstTask;
+            var thresholdTime = now();
+            client.command(CreateTask()
+                                ..id = (TaskId()..value = newUuid())
+                                ..name = 'Task name 42'
+                                ..description = 'Query by fields test'
+                                ..assignee = (testUserId.UserId()..value = newUuid()))
+                  .postAndForget();
+            await secondTask;
+            await _sleep();
+            var tasks = await client.select<UserTasks>()
+                                    .where(all([lt('last_updated', thresholdTime)]))
+                                    .post()
+                                    .toList();
+            expect(tasks, hasLength(1));
+            expect(tasks[0].tasks.first, equals(olderTaskId));
+        });
+
+        test('query entities with order and limit', () async {
+            var newProjections = clients.asGuest()
+                .subscribeTo<UserTasks>()
+                .post();
+            var client = clients.onBehalfOf(actor);
+            client.command(CreateTask()
+                ..id = (TaskId()..value = newUuid())
+                ..name = 'Task name 1'
+                ..description = 'Query with limit'
+                ..assignee = (testUserId.UserId()..value = newUuid()))
+                .postAndForget();
+            client.command(CreateTask()
+                ..id = (TaskId()..value = newUuid())
+                ..name = 'Task name 42'
+                ..description = 'Query with limit'
+                ..assignee = (testUserId.UserId()..value = newUuid()))
+                .postAndForget();
+            client.command(CreateTask()
+                ..id = (TaskId()..value = newUuid())
+                ..name = 'Task name 3.14'
+                ..description = 'Query with limit'
+                ..assignee = (testUserId.UserId()..value = newUuid()))
+                .postAndForget();
+            await newProjections.itemAdded.elementAt(2);
+            await _sleep();
+            var limit = 2;
+            var tasks = await client.select<UserTasks>()
+                .orderBy('last_updated', OrderBy_Direction.DESCENDING)
+                .limit(limit)
+                .post()
+                .toList();
+            expect(tasks, hasLength(limit));
+            expect(tasks[0].lastUpdated.seconds,
+                   greaterThanOrEqualTo(tasks[0].lastUpdated.seconds));
         });
     });
 }

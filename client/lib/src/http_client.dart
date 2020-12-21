@@ -1,5 +1,11 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -18,6 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -33,18 +40,18 @@ class HttpClient {
 
     final String _baseUrl;
 
-    HttpClient(this._baseUrl);
+    HttpClient(this._baseUrl) {
+        ArgumentError.checkNotNull(_baseUrl, 'base URL');
+    }
 
     /// Sends an HTTP POST request at the given path with the given message as request body.
     ///
     /// The given [path] will be concatenated with the [_baseUrl].
     ///
-    Future<http.Response> postMessage(String path, GeneratedMessage message) async {
+    Future<http.Response> postMessage(String path, GeneratedMessage message) {
         var bytes = message.writeToBuffer();
         var url = Url.from(_baseUrl, path).stringUrl;
-        var response = await http.post(url,
-                                       body: _base64.encode(bytes),
-                                       headers: _protobufContentType);
+        var response = http.post(url, body: _base64.encode(bytes), headers: _protobufContentType);
         return response;
     }
 }

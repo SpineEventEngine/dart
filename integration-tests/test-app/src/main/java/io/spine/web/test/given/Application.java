@@ -1,5 +1,11 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2020, TeamDev. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -38,6 +44,7 @@ import io.spine.web.query.BlockingQueryBridge;
 import java.io.IOException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static io.spine.io.Resource.file;
 import static io.spine.web.firebase.FirebaseClientFactory.remoteClient;
 import static io.spine.web.firebase.FirebaseCredentials.fromGoogleCredentials;
 
@@ -90,15 +97,12 @@ final class Application {
     }
 
     private static FirebaseClient buildClient() {
-        Resource googleCredentialsFile = Resource.file(
-                "spine-dev.json",
-                Application.class.getClassLoader()
-        );
+        Resource googleCredentials = file("spine-dev.json", Application.class.getClassLoader());
 
         // Same credentials but represented with different Java objects.
         GoogleCredentials credentials;
         try {
-            credentials = GoogleCredentials.fromStream(googleCredentialsFile.open());
+            credentials = GoogleCredentials.fromStream(googleCredentials.open());
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
