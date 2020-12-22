@@ -244,7 +244,6 @@ class Client {
     /// Constructs a request to create an event subscription.
     EventSubscriptionRequest<M> subscribeToEvents<M extends GeneratedMessage>() {
         var type = M;
-        print(type);
         return EventSubscriptionRequest._(this, type);
     }
 
@@ -410,7 +409,7 @@ class CommandRequest<M extends GeneratedMessage> {
     /// messages.
     ///
     ///
-    Stream<E> observeEvents<E extends GeneratedMessage>(Type prototype) =>
+    Stream<E> observeEvents<E extends GeneratedMessage>() =>
         _observeEvents<E>().eventMessages;
 
     /// Creates an event subscription for events produced as a direct result of this command.
