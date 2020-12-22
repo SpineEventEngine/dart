@@ -47,7 +47,7 @@ main(List<String> arguments) {
     var args = parser.parse(arguments);
     var help = args[helpFlag];
     if (help) {
-        stdout.writeln('dart_code_gen — a command line application for generating Dart type '
+        stdout.writeln('dart_code_gen — a command-line application for generating Dart type '
                        'registries and validation code.');
         stdout.writeln(parser.usage);
     } else {

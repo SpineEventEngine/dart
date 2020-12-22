@@ -1,10 +1,10 @@
 # Dart Code Generator
 
-A command line tool which generates Dart code for Protobuf type registries.
+A command-line tool which generates Dart code for Protobuf type registries.
 
 ## Usage 
 
-The generator accepts several command line arguments:
+The generator accepts several command-line arguments:
  - Required option `--descriptor` specifies the path to a file which contains
    a `google.protobuf.FileDescriptorSet`. The descriptor set contains all the Protobuf types
    for which the tool must generate code.
