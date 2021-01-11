@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, TeamDev. All rights reserved.
+ * Copyright 2021, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -29,6 +29,6 @@
  * already in the root directory.
  */
 
-val spineBaseVersion: String by extra("1.7.0")
-val spineWebVersion: String by extra("1.7.0")
-val versionToPublish: String by extra("1.7.0")
+val spineBaseVersion: String by extra("1.7.4")
+val spineWebVersion: String by extra("1.7.1")
+val versionToPublish: String by extra("1.7.1")
