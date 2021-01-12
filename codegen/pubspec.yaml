@@ -1,10 +1,10 @@
 name: dart_code_gen
 description: A command-line tool which generates Dart code for Protobuf type registries.
-version: 1.7.1
+version: 1.7.2
 homepage: https://spine.io
 
 environment:
-  sdk: '>=2.5.0 <3.0.0'
+  sdk: '>=2.7.0 <3.0.0'
 
 dependencies:
   args: 1.5.2

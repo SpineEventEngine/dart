@@ -32,3 +32,8 @@
  The first production release of the client library.
  Starting from now, the Dart lib API is treated as production level. This means a certain level of
  API stability, as compared to the pre-release non-stable API of versions `0.2.2` and older.
+
+## 1.7.2
+
+ The required language level is bumped to `2.7.0` or above (previous was `2.5.0` or above). Now
+ the language features used in the companion CLI tool match the expected level.
