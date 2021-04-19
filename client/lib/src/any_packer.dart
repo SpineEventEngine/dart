@@ -27,6 +27,7 @@
 import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/google/protobuf/any.pb.dart';
+import 'package:spine_client/google/protobuf/type.pb.dart';
 import 'package:spine_client/google/protobuf/wrappers.pb.dart';
 import 'package:spine_client/src/known_types.dart';
 import 'package:spine_client/unknown_type.dart';
@@ -81,6 +82,7 @@ Any packId(Object rawId) {
 ///  - `Sting`, packed as a `StringValue`.
 ///  - `bool`, packed as a `BoolValue`.
 ///  - `double`, packed as a `DoubleValue`.
+///  - `ProtobufEnum`, packed as a `EnumValue`.
 ///  - `GeneratedMessage`, packed as itself.
 ///
 /// Other types are not supported and would cause an `ArgumentError`.
@@ -91,6 +93,11 @@ Any packObject(Object value) {
         return value;
     } else if (value is GeneratedMessage) {
         return pack(value);
+    } else if (value is ProtobufEnum) {
+        var enumValue = EnumValue()
+            ..name = value.name
+            ..number = value.value;
+        return pack(enumValue);
     } else  if (value is String) {
         return pack(StringValue()..value = value);
     } else if (value is int) {
