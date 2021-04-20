@@ -52,7 +52,7 @@ void main() {
             expect(() { unpack(any); }, throwsA(isA<UnknownTypeError>()));
         });
 
-        test('pack enum value', () {
+        test('convert enum value to Any', () {
             var month = Month.JANUARY;
             var any = packObject(month);
             expect(unpack(any), isA<EnumValue>());
