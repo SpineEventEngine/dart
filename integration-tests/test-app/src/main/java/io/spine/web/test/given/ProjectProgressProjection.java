@@ -28,6 +28,7 @@ package io.spine.web.test.given;
 
 import io.spine.core.Subscribe;
 import io.spine.server.projection.Projection;
+import io.spine.server.entity.storage.Column;
 
 import static io.spine.web.test.given.Status.COMPLETED;
 import static io.spine.web.test.given.Status.IN_PROGRESS;
@@ -35,6 +36,10 @@ import static io.spine.web.test.given.Status.NOT_STARTED;
 
 /**
  * A projection representing a progress of tasks completion within a project.
+ *
+ * <p>Calculates the amount of the completed and uncompleted tasks switches status to
+ * {@code COMPLETED} upon all tasks completion. Current status is exposed as
+ * {@linkplain Column column} allowing filtering of completed and uncompleted projects.
  */
 public class ProjectProgressProjection
         extends Projection<ProjectId, ProjectProgress, ProjectProgress.Builder> {

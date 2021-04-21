@@ -36,9 +36,8 @@ import java.util.List;
 /**
  * A projection representing a user and a list of {@link TaskId tasks} assigned to him.
  *
- * <p>Calculates the amount of the completed and uncompleted tasks switches status to
- * {@code COMPLETED} upon all tasks completion. Current status is exposed as
- * {@linkplain Column column} allowing filtering of completed and uncompleted projects.
+ * <p>Assigned tasks count and indication of several tasks assigned are exposed as
+ * {@linkplain Column columns} allowing ordering and filtering when user tasks are queried.
  */
 public class UserTasksProjection
         extends Projection<UserId, UserTasks, UserTasks.Builder> {
@@ -63,7 +62,7 @@ public class UserTasksProjection
             List<TaskId> tasks = state().getTasksList();
             final int reassigned = tasks.indexOf(event.getId());
             builder().removeTasks(reassigned);
-        } else if (reassignedToThisUser(event)){
+        } else if (reassignedToThisUser(event)) {
             builder().setId(event.getTo())
                      .addTasks(event.getId());
         }
@@ -72,10 +71,12 @@ public class UserTasksProjection
     }
 
     private boolean reassignedFromThisUser(TaskReassigned event) {
-        return event.hasFrom() && event.getFrom().equals(id());
+        return event.hasFrom() && event.getFrom()
+                                       .equals(id());
     }
 
     private boolean reassignedToThisUser(TaskReassigned event) {
-        return event.hasTo() && event.getTo().equals(id());
+        return event.hasTo() && event.getTo()
+                                     .equals(id());
     }
 }
