@@ -71,12 +71,10 @@ public class UserTasksProjection
     }
 
     private boolean reassignedFromThisUser(TaskReassigned event) {
-        return event.hasFrom() && event.getFrom()
-                                       .equals(id());
+        return event.hasFrom() && event.getFrom().equals(id());
     }
 
     private boolean reassignedToThisUser(TaskReassigned event) {
-        return event.hasTo() && event.getTo()
-                                     .equals(id());
+        return event.hasTo() && event.getTo().equals(id());
     }
 }
