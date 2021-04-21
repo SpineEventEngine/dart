@@ -36,8 +36,9 @@ import java.util.List;
 /**
  * A projection representing a user and a list of {@link TaskId tasks} assigned to him.
  *
- * <p>Assigned tasks count and indication of several tasks assigned are exposed as
- * {@linkplain Column columns} allowing ordering and filtering when user tasks are queried.
+ * <p>Calculates the amount of the completed and uncompleted tasks switches status to
+ * {@code COMPLETED} upon all tasks completion. Current status is exposed as
+ * {@linkplain Column column} allowing filtering of completed and uncompleted projects.
  */
 public class UserTasksProjection
         extends Projection<UserId, UserTasks, UserTasks.Builder> {

@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package spine.web.test.given;
+
+import "spine/options.proto";
+
+option (type_url_prefix) = "type.spine.io";
+option java_package = "io.spine.web.test.given";
+option java_outer_classname = "ProjectProgressProto";
+option java_multiple_files = true;
+option java_generate_equals_and_hash = true;
+
+import "spine/web/test/given/project.proto";
+
+message ProjectProgress {
+    option (entity).kind = PROJECTION;
+
+    ProjectId id = 1;
+
+    int32 total_tasks = 2;
+
+    int32 completed_tasks = 3;
+
+    Status status = 4 [(column) = true];
+}
+
+enum Status {
+
+    S_UNDEFINED = 0;
+
+    NOT_STARTED = 1;
+
+    IN_PROGRESS = 2;
+
+    COMPLETED = 3;
+}

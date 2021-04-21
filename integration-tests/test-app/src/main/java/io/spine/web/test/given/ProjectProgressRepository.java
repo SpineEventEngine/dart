@@ -26,38 +26,33 @@
 
 package io.spine.web.test.given;
 
-import io.spine.server.BoundedContext;
+import com.google.errorprone.annotations.OverridingMethodsMustInvokeSuper;
+import io.spine.server.projection.ProjectionRepository;
+import io.spine.server.route.EventRouting;
+
+import static io.spine.protobuf.Messages.isDefault;
+import static io.spine.server.route.EventRoute.noTargets;
+import static io.spine.server.route.EventRoute.withId;
 
 /**
- * The test application server.
+ * A repository for the project progress projections.
  */
-final class Server {
-
-    private static final Application app = createApplication();
-
-    /**
-     * Prevents the utility class instantiation.
-     */
-    private Server() {
-    }
+public class ProjectProgressRepository
+        extends ProjectionRepository<ProjectId, ProjectProgressProjection, ProjectProgress> {
 
     /**
-     * Retrieves the {@link Application} instance.
+     * Sets up the event routing for all the types of events handled by {@link
+     * ProjectProgressProjection}.
      */
-    static Application application() {
-        return app;
-    }
-
-    private static Application createApplication() {
-        String name = "Test Bounded Context";
-        BoundedContext context = BoundedContext
-                .singleTenant(name)
-                .add(new TaskRepository())
-                .add(new ProjectRepository())
-                .add(new UserTasksProjectionRepository())
-                .add(new ProjectProgressRepository())
-                .build();
-        Application app = Application.create(context);
-        return app;
+    @OverridingMethodsMustInvokeSuper
+    @Override
+    protected void setupEventRouting(EventRouting<ProjectId> routing) {
+        routing.route(TaskCreated.class, (e, ctx) -> !isDefault(e.getProject())
+                                                     ? withId(e.getProject())
+                                                     : noTargets())
+               .route(TaskCompleted.class, (e, ctx) -> !isDefault(e.getProject())
+                                                       ? withId(e.getProject())
+                                                       : noTargets());
+        super.setupEventRouting(routing);
     }
 }

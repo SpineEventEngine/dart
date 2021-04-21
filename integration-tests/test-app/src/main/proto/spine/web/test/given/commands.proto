@@ -49,6 +49,13 @@ message CreateTask {
     spine.core.UserId assignee = 3;
 
     string description = 4;
+
+    ProjectId project = 5;
+}
+
+message CompleteTask {
+
+    TaskId id = 1;
 }
 
 message RenameTask {

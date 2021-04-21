@@ -52,6 +52,15 @@ message TaskCreated {
     string description = 4;
 
     google.protobuf.Timestamp when = 5 [(required) = true];
+
+    ProjectId project = 6;
+}
+
+message TaskCompleted {
+
+    TaskId id = 1;
+
+    ProjectId project = 2;
 }
 
 message TaskRenamed {

@@ -26,38 +26,45 @@
 
 package io.spine.web.test.given;
 
-import io.spine.server.BoundedContext;
+import io.spine.core.Subscribe;
+import io.spine.server.projection.Projection;
+
+import static io.spine.web.test.given.Status.COMPLETED;
+import static io.spine.web.test.given.Status.IN_PROGRESS;
+import static io.spine.web.test.given.Status.NOT_STARTED;
 
 /**
- * The test application server.
+ * A projection representing a progress of tasks completion within a project.
  */
-final class Server {
+public class ProjectProgressProjection
+        extends Projection<ProjectId, ProjectProgress, ProjectProgress.Builder> {
 
-    private static final Application app = createApplication();
-
-    /**
-     * Prevents the utility class instantiation.
-     */
-    private Server() {
+    @Subscribe
+    void on(ProjectCreated event) {
+        builder().setTotalTasks(0)
+                 .setCompletedTasks(0)
+                 .setStatus(NOT_STARTED);
     }
 
-    /**
-     * Retrieves the {@link Application} instance.
-     */
-    static Application application() {
-        return app;
+    @Subscribe
+    void on(TaskCreated event) {
+        int totalTasks = state().getTotalTasks() + 1;
+        builder().setTotalTasks(totalTasks)
+                 .setStatus(IN_PROGRESS);
     }
 
-    private static Application createApplication() {
-        String name = "Test Bounded Context";
-        BoundedContext context = BoundedContext
-                .singleTenant(name)
-                .add(new TaskRepository())
-                .add(new ProjectRepository())
-                .add(new UserTasksProjectionRepository())
-                .add(new ProjectProgressRepository())
-                .build();
-        Application app = Application.create(context);
-        return app;
+    @Subscribe
+    void on(TaskCompleted event) {
+        int completedTasks = state().getCompletedTasks() + 1;
+        builder().setCompletedTasks(completedTasks)
+                 .setStatus(calculateStatus(completedTasks));
+    }
+
+    private Status calculateStatus(int completedTasks) {
+        if (completedTasks == state().getTotalTasks()) {
+            return COMPLETED;
+        } else {
+            return IN_PROGRESS;
+        }
     }
 }
