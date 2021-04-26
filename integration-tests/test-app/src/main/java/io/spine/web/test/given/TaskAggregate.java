@@ -48,7 +48,8 @@ public class TaskAggregate extends Aggregate<TaskId, Task, Task.Builder> {
                                                      .setId(command.getId())
                                                      .setName(command.getName())
                                                      .setDescription(command.getDescription())
-                                                     .setWhen(currentTime());
+                                                     .setWhen(currentTime())
+                                                     .setProject(command.getProject());
         if (command.hasAssignee()) {
             taskCreated.setAssignee(command.getAssignee());
         }
@@ -79,12 +80,21 @@ public class TaskAggregate extends Aggregate<TaskId, Task, Task.Builder> {
         return taskReassigned.vBuild();
     }
 
+    @Assign
+    TaskCompleted handle(CompleteTask command) {
+        TaskCompleted.Builder taskCompleted = TaskCompleted.newBuilder()
+                                                           .setId(command.getId())
+                                                           .setProject(state().getProject());
+        return taskCompleted.vBuild();
+    }
+
     @Apply
     private void on(TaskCreated event) {
         builder().setId(event.getId())
                  .setName(event.getName())
                  .setWhenCreated(event.getWhen())
-                 .setDescription(event.getDescription());
+                 .setDescription(event.getDescription())
+                 .setProject(event.getProject());
 
         if (event.hasAssignee()) {
             builder().setAssignee(event.getAssignee());
@@ -99,5 +109,10 @@ public class TaskAggregate extends Aggregate<TaskId, Task, Task.Builder> {
     @Apply
     private void on(TaskReassigned event) {
         builder().setAssignee(event.getTo());
+    }
+
+    @Apply
+    private void on(TaskCompleted event) {
+        builder().setCompleted(true);
     }
 }

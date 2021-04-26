@@ -38,6 +38,7 @@ option java_multiple_files = true;
 option java_generate_equals_and_hash = true;
 
 import "google/protobuf/timestamp.proto";
+import "spine/web/test/given/project.proto";
 
 message TaskId {
 
@@ -57,4 +58,8 @@ message Task {
     string description = 4;
 
     google.protobuf.Timestamp when_created = 5;
+
+    ProjectId project = 6;
+
+    bool completed = 7;
 }

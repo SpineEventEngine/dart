@@ -29,10 +29,12 @@ import 'package:spine_client/google/protobuf/any.pb.dart';
 import 'package:spine_client/google/protobuf/timestamp.pb.dart';
 import 'package:spine_client/google/protobuf/wrappers.pb.dart';
 import 'package:spine_client/spine/core/user_id.pb.dart';
+import 'package:spine_client/spine/time/time.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/time.dart';
 import 'package:spine_client/unknown_type.dart';
 import 'package:test/test.dart';
+import 'package:spine_client/google/protobuf/type.pb.dart';
 
 void main() {
     group('AnyPacker should', () {
@@ -48,6 +50,14 @@ void main() {
                 ..typeUrl = 'types.example.com/unknown.Type'
                 ..value = [42];
             expect(() { unpack(any); }, throwsA(isA<UnknownTypeError>()));
+        });
+
+        test('convert enum value to Any', () {
+            var month = Month.JANUARY;
+            var any = packObject(month);
+            expect(unpack(any), isA<EnumValue>());
+            expect((unpack(any) as EnumValue).name, equals(month.name));
+            expect((unpack(any) as EnumValue).number, equals(month.value));
         });
 
         test('convert int IDs to Any', () {

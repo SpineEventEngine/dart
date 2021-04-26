@@ -37,6 +37,8 @@ import 'firebase_app.dart';
 import 'spine/core/user_id.pb.dart' as testUserId;
 import 'spine/web/test/given/commands.pb.dart';
 import 'spine/web/test/given/events.pb.dart';
+import 'spine/web/test/given/project.pb.dart';
+import 'spine/web/test/given/project_progress.pb.dart';
 import 'spine/web/test/given/task.pb.dart';
 import 'spine/web/test/given/user_tasks.pb.dart';
 import 'types.dart' as testTypes;
@@ -229,6 +231,44 @@ void main() {
             expect(tasks, hasLength(limit));
             expect(tasks[0].lastUpdated.seconds,
                    greaterThanOrEqualTo(tasks[0].lastUpdated.seconds));
+        });
+
+        test('query entities by enum column values', () async {
+            var projectProgress = clients.asGuest()
+                .subscribeTo<ProjectProgress>()
+                .post();
+            var client = clients.onBehalfOf(actor);
+            var completedProject = ProjectId()..value = newUuid();
+            client.command(CreateProject()
+                ..id = completedProject)
+                .postAndForget();
+            var newProjectProgress = projectProgress.itemAdded.first;
+            await newProjectProgress;
+
+            var taskToComplete = (TaskId()..value = newUuid());
+            client.command(CreateTask()
+                ..id = taskToComplete
+                ..name = 'Task in the completed project'
+                ..project = completedProject)
+                .postAndForget();
+            var progressUpdate = projectProgress.itemChanged.first;
+            await progressUpdate;
+
+            client.command(CompleteTask()
+                ..id = taskToComplete)
+                .postAndForget();
+            await _sleep();
+
+            var completedProjects = await client.select<ProjectProgress>()
+                .where(all([eq('status', Status.COMPLETED)]))
+                .post()
+                .toList();
+            var projectsInProgress = await client.select<ProjectProgress>()
+                .where(all([eq('status', Status.IN_PROGRESS)]))
+                .post()
+                .toList();
+            expect(completedProjects, hasLength(1));
+            expect(projectsInProgress, hasLength(0));
         });
     });
 }

@@ -62,7 +62,7 @@ public class UserTasksProjection
             List<TaskId> tasks = state().getTasksList();
             final int reassigned = tasks.indexOf(event.getId());
             builder().removeTasks(reassigned);
-        } else if (reassignedToThisUser(event)){
+        } else if (reassignedToThisUser(event)) {
             builder().setId(event.getTo())
                      .addTasks(event.getId());
         }
