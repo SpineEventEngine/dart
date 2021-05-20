@@ -51,7 +51,7 @@ buildscript {
 
     dependencies {
         classpath(deps.build.gradlePlugins.protobuf)
-        classpath("io.spine.tools:spine-proto-dart-plugin:$spineBaseVersion")
+        classpath("io.spine.tools:spine-mc-dart:$spineBaseVersion")
     }
 
     resolution.forceConfiguration(configurations)
@@ -72,7 +72,7 @@ allprojects {
 
 subprojects {
     apply {
-        plugin("io.spine.tools.proto-dart-plugin")
+        plugin("io.spine.mc-dart")
         plugin("com.google.protobuf")
         plugin("maven-publish")
     }

@@ -37,7 +37,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 plugins {
     codegen
     dart
-    id("io.spine.tools.proto-dart-plugin")
+    id("io.spine.mc-dart")
 }
 
 apply {

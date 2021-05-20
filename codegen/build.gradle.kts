@@ -35,7 +35,7 @@ import io.spine.internal.dependency.Protobuf
 
 plugins {
     dart
-    id("io.spine.tools.proto-dart-plugin")
+    id("io.spine.mc-dart")
 }
 
 apply {
