@@ -24,44 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
-import io.spine.internal.gradle.Scripts
-import io.spine.internal.dependency.Protobuf
+package io.spine.internal.dependency
 
-plugins {
-    dart
-    id("io.spine.tools.proto-dart-plugin")
-}
+// https://github.com/jk1/Gradle-License-Report
+@Suppress("unused")
+object LicenseReport {
+    private const val version = "1.16"
+    const val lib = "com.github.jk1:gradle-license-report:${version}"
 
-apply {
-    from(Scripts.dartBuildTasks(project))
-    from(Scripts.pubPublishTasks(project))
-}
-
-val spineBaseVersion: String by extra
-
-dependencies {
-    protobuf("io.spine:spine-base:$spineBaseVersion")
-    protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Protobuf.libs.forEach { protobuf(it) }
-}
-
-tasks["testDart"].enabled = false
-
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
-            }
-            task.builtins {
-                remove("java")
-            }
-        }
+    object GradlePlugin {
+        const val version = LicenseReport.version
+        const val id = "com.github.jk1.dependency-license-report"
+        const val lib = LicenseReport.lib
     }
 }

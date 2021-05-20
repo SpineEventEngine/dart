@@ -24,44 +24,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
-import io.spine.internal.gradle.Scripts
-import io.spine.internal.dependency.Protobuf
 
-plugins {
-    dart
-    id("io.spine.tools.proto-dart-plugin")
+/*
+ * This script configures Gradle PMD plugin.
+ */
+pmd {
+    toolVersion = "${io.spine.internal.dependency.Pmd.version}"
+    consoleOutput = true
+    incrementalAnalysis = true
+
+    // The build is going to fail in case of violations.
+    ignoreFailures = false
+
+    // Disable the default rule set to use the custom rules (see below).
+    ruleSets = []
+
+    // A set of custom rules.
+    ruleSetFiles = files("$rootDir/config/quality/pmd.xml")
+
+    reportsDir = file("build/reports/pmd")
+
+    // Just analyze the main sources; do not analyze tests.
+    sourceSets = [sourceSets.main]
 }
 
-apply {
-    from(Scripts.dartBuildTasks(project))
-    from(Scripts.pubPublishTasks(project))
-}
-
-val spineBaseVersion: String by extra
-
-dependencies {
-    protobuf("io.spine:spine-base:$spineBaseVersion")
-    protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Protobuf.libs.forEach { protobuf(it) }
-}
-
-tasks["testDart"].enabled = false
-
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
-            }
-            task.builtins {
-                remove("java")
-            }
-        }
-    }
-}
+// Workaround for https://github.com/pmd/pmd/issues/1705.
+pmdMain.classpath += sourceSets.main.runtimeClasspath

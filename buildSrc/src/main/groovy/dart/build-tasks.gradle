@@ -24,44 +24,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
-import io.spine.internal.gradle.Scripts
-import io.spine.internal.dependency.Protobuf
+import org.apache.tools.ant.taskdefs.condition.Os
 
-plugins {
-    dart
-    id("io.spine.tools.proto-dart-plugin")
+final def GROUP = 'Dart'
+final def packageIndex = "$projectDir/.packages" as File
+final def extension = Os.isFamily(Os.FAMILY_WINDOWS) ? '.bat' : ''
+final def PUB_EXECUTABLE = 'pub' + extension
+
+task resolveDependencies(type: Exec) {
+    group = GROUP
+    description = 'Fetches the dependencies declared via `pubspec.yaml`.'
+
+    inputs.file "$projectDir/pubspec.yaml"
+    outputs.file packageIndex
+
+    commandLine PUB_EXECUTABLE, 'get'
+
+    mustRunAfter 'cleanPackageIndex'
 }
 
-apply {
-    from(Scripts.dartBuildTasks(project))
-    from(Scripts.pubPublishTasks(project))
+tasks['assemble'].dependsOn 'resolveDependencies'
+
+task cleanPackageIndex(type: Delete) {
+    group = GROUP
+    description = 'Deletes the `.packages` file on this Dart module.'
+    delete = [packageIndex]
 }
 
-val spineBaseVersion: String by extra
+tasks['clean'].dependsOn 'cleanPackageIndex'
 
-dependencies {
-    protobuf("io.spine:spine-base:$spineBaseVersion")
-    protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Protobuf.libs.forEach { protobuf(it) }
+task testDart(type: Exec) {
+    group = GROUP
+    description = 'Runs Dart tests declared in the `./test` directory. See `https://pub.dev/packages/test#running-tests`.'
+
+    commandLine PUB_EXECUTABLE, 'run', 'test'
+
+    dependsOn 'resolveDependencies'
 }
 
-tasks["testDart"].enabled = false
-
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
-            }
-            task.builtins {
-                remove("java")
-            }
-        }
-    }
-}
+tasks['check'].dependsOn 'testDart'

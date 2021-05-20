@@ -1,3 +1,5 @@
+import io.spine.internal.gradle.Scripts
+
 /*
  * Copyright 2021, TeamDev. All rights reserved.
  *
@@ -28,6 +30,12 @@ buildscript {
 
     io.spine.gradle.internal.DependencyResolution.defaultRepositories(repositories)
 
+    repositories {
+        repositories.maven {
+            url = uri(io.spine.gradle.internal.Repos.spineSnapshots)
+        }
+    }
+
     val spineBaseVersion: String by extra
 
     dependencies {
@@ -43,7 +51,7 @@ plugins {
 
 apply {
     plugin("io.spine.tools.spine-model-compiler")
-    from("$rootDir/config/gradle/model-compiler.gradle")
+    from(Scripts.modelCompiler(project))
 }
 
 val sourcesRootDir = "$projectDir/src"

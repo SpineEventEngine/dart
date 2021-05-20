@@ -24,44 +24,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
-import io.spine.internal.gradle.Scripts
-import io.spine.internal.dependency.Protobuf
+package io.spine.internal.dependency
 
-plugins {
-    dart
-    id("io.spine.tools.proto-dart-plugin")
-}
-
-apply {
-    from(Scripts.dartBuildTasks(project))
-    from(Scripts.pubPublishTasks(project))
-}
-
-val spineBaseVersion: String by extra
-
-dependencies {
-    protobuf("io.spine:spine-base:$spineBaseVersion")
-    protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Protobuf.libs.forEach { protobuf(it) }
-}
-
-tasks["testDart"].enabled = false
-
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
-            }
-            task.builtins {
-                remove("java")
-            }
-        }
-    }
+// https://github.com/grpc/grpc-java
+@Suppress("unused")
+object Grpc {
+    @Suppress("MemberVisibilityCanBePrivate")
+    const val version     = "1.35.1"
+    const val core        = "io.grpc:grpc-core:${version}"
+    const val stub        = "io.grpc:grpc-stub:${version}"
+    const val okHttp      = "io.grpc:grpc-okhttp:${version}"
+    const val protobuf    = "io.grpc:grpc-protobuf:${version}"
+    const val netty       = "io.grpc:grpc-netty:${version}"
+    const val nettyShaded = "io.grpc:grpc-netty-shaded:${version}"
+    const val context     = "io.grpc:grpc-context:${version}"
 }

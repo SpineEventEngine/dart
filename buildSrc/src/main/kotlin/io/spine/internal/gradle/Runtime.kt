@@ -24,44 +24,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
-import io.spine.internal.gradle.Scripts
-import io.spine.internal.dependency.Protobuf
+package io.spine.internal.gradle
 
-plugins {
-    dart
-    id("io.spine.tools.proto-dart-plugin")
-}
+import io.spine.internal.dependency.Flogger
 
-apply {
-    from(Scripts.dartBuildTasks(project))
-    from(Scripts.pubPublishTasks(project))
-}
-
-val spineBaseVersion: String by extra
-
-dependencies {
-    protobuf("io.spine:spine-base:$spineBaseVersion")
-    protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Protobuf.libs.forEach { protobuf(it) }
-}
-
-tasks["testDart"].enabled = false
-
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
-            }
-            task.builtins {
-                remove("java")
-            }
-        }
-    }
+object Runtime {
+    @Suppress("unused")
+    val flogger = Flogger.Runtime
 }

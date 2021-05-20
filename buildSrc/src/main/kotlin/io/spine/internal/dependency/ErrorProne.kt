@@ -24,44 +24,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
-import io.spine.internal.gradle.Scripts
-import io.spine.internal.dependency.Protobuf
+package io.spine.internal.dependency
 
-plugins {
-    dart
-    id("io.spine.tools.proto-dart-plugin")
-}
+// https://errorprone.info/
+@Suppress("unused")
+object ErrorProne {
+    private const val version = "2.6.0"
+    // https://github.com/tbroyer/gradle-errorprone-plugin/blob/v0.8/build.gradle.kts
+    private const val javacPluginVersion = "9+181-r4173-1"
 
-apply {
-    from(Scripts.dartBuildTasks(project))
-    from(Scripts.pubPublishTasks(project))
-}
+    val annotations = listOf(
+        "com.google.errorprone:error_prone_annotations:${version}",
+        "com.google.errorprone:error_prone_type_annotations:${version}"
+    )
+    const val core = "com.google.errorprone:error_prone_core:${version}"
+    const val checkApi = "com.google.errorprone:error_prone_check_api:${version}"
+    const val testHelpers = "com.google.errorprone:error_prone_test_helpers:${version}"
+    const val javacPlugin  = "com.google.errorprone:javac:${javacPluginVersion}"
 
-val spineBaseVersion: String by extra
-
-dependencies {
-    protobuf("io.spine:spine-base:$spineBaseVersion")
-    protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Protobuf.libs.forEach { protobuf(it) }
-}
-
-tasks["testDart"].enabled = false
-
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
-            }
-            task.builtins {
-                remove("java")
-            }
-        }
+    object GradlePlugin {
+        const val id = "net.ltgt.errorprone"
+        const val version = "1.3.0"
+        const val lib = "net.ltgt.gradle:gradle-errorprone-plugin:${version}"
     }
 }

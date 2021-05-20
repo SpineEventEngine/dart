@@ -25,12 +25,13 @@
  */
 
 import io.spine.gradle.internal.DependencyResolution
+import io.spine.gradle.internal.Repos
 
 buildscript {
 
     // As long as `buildscript` section is always evaluated first,
     // we need to apply explicitly here.
-    apply(from = "$rootDir/config/gradle/dependencies.gradle")
+    apply(from = "$rootDir/buildSrc/src/main/groovy/dependencies.gradle")
     apply(from = "$rootDir/version.gradle.kts")
 
     @Suppress("RemoveRedundantQualifierName") // Cannot use imports here.
@@ -40,6 +41,14 @@ buildscript {
     val spineBaseVersion: String by extra
 
     resolution.defaultRepositories(repositories)
+
+    repositories {
+        repositories.maven {
+            @Suppress("RemoveRedundantQualifierName") // Cannot use imports here.
+            url = uri(io.spine.gradle.internal.Repos.spineSnapshots)
+        }
+    }
+
     dependencies {
         classpath(deps.build.gradlePlugins.protobuf)
         classpath("io.spine.tools:spine-proto-dart-plugin:$spineBaseVersion")
@@ -53,6 +62,12 @@ allprojects {
     apply(from = "$rootDir/version.gradle.kts")
 
     DependencyResolution.defaultRepositories(repositories)
+
+    repositories {
+        repositories.maven {
+            url = uri(Repos.spineSnapshots)
+        }
+    }
 }
 
 subprojects {

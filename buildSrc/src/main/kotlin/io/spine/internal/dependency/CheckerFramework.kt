@@ -24,44 +24,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
-import io.spine.internal.gradle.Scripts
-import io.spine.internal.dependency.Protobuf
+package io.spine.internal.dependency
 
-plugins {
-    dart
-    id("io.spine.tools.proto-dart-plugin")
-}
-
-apply {
-    from(Scripts.dartBuildTasks(project))
-    from(Scripts.pubPublishTasks(project))
-}
-
-val spineBaseVersion: String by extra
-
-dependencies {
-    protobuf("io.spine:spine-base:$spineBaseVersion")
-    protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Protobuf.libs.forEach { protobuf(it) }
-}
-
-tasks["testDart"].enabled = false
-
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
-            }
-            task.builtins {
-                remove("java")
-            }
-        }
-    }
+// https://checkerframework.org/
+object CheckerFramework {
+    private const val version = "3.12.0"
+    const val annotations = "org.checkerframework:checker-qual:${version}"
+    @Suppress("unused")
+    val dataflow = listOf(
+        "org.checkerframework:dataflow:${version}",
+        "org.checkerframework:javacutil:${version}"
+    )
+    /**
+     * This is discontinued artifact, which we do not use directly.
+     * This is a transitive dependency for us, which we force in
+     * [DependencyResolution.forceConfiguration]
+     */
+    const val compatQual = "org.checkerframework:checker-compat-qual:2.5.5"
 }

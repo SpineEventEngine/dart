@@ -24,44 +24,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
-import io.spine.internal.gradle.Scripts
-import io.spine.internal.dependency.Protobuf
+package io.spine.internal.dependency
 
-plugins {
-    dart
-    id("io.spine.tools.proto-dart-plugin")
-}
-
-apply {
-    from(Scripts.dartBuildTasks(project))
-    from(Scripts.pubPublishTasks(project))
-}
-
-val spineBaseVersion: String by extra
-
-dependencies {
-    protobuf("io.spine:spine-base:$spineBaseVersion")
-    protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Protobuf.libs.forEach { protobuf(it) }
-}
-
-tasks["testDart"].enabled = false
-
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
-            }
-            task.builtins {
-                remove("java")
-            }
-        }
-    }
+/**
+ * Spine used to log with SLF4J. Now we use Flogger. Whenever a choice comes up, we recommend to
+ * use the latter.
+ *
+ * Some third-party libraries may clash with different versions of the library. Thus, we specify
+ * this version and force it via [forceConfiguration(..)][DependencyResolution.forceConfiguration].
+ */
+@Deprecated("Use Flogger over SLF4J.", replaceWith = ReplaceWith("flogger"))
+object Slf4J {
+    private const val version = "1.7.30"
+    const val lib = "org.slf4j:slf4j-api:${version}"
+    const val jdk14 = "org.slf4j:slf4j-jdk14:${version}"
 }

@@ -29,6 +29,6 @@
  * already in the root directory.
  */
 
-val spineBaseVersion: String by extra("1.7.4")
+val spineBaseVersion: String by extra("2.0.0-SNAPSHOT.21")
 val spineWebVersion: String by extra("1.7.1")
 val versionToPublish: String by extra("1.7.1")

@@ -24,44 +24,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
-import io.spine.internal.gradle.Scripts
-import io.spine.internal.dependency.Protobuf
+package io.spine.internal.dependency
 
-plugins {
-    dart
-    id("io.spine.tools.proto-dart-plugin")
-}
+// https://junit.org/junit5/
+object JUnit {
+    private const val version            = "5.7.1"
+    private const val platformVersion    = "1.7.1"
+    private const val legacyVersion      = "4.13.1"
 
-apply {
-    from(Scripts.dartBuildTasks(project))
-    from(Scripts.pubPublishTasks(project))
-}
+    // https://github.com/apiguardian-team/apiguardian
+    private const val apiGuardianVersion = "1.1.1"
+    // https://github.com/junit-pioneer/junit-pioneer
+    private const val pioneerVersion     = "1.3.8"
 
-val spineBaseVersion: String by extra
-
-dependencies {
-    protobuf("io.spine:spine-base:$spineBaseVersion")
-    protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Protobuf.libs.forEach { protobuf(it) }
-}
-
-tasks["testDart"].enabled = false
-
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
-            }
-            task.builtins {
-                remove("java")
-            }
-        }
-    }
+    const val legacy = "junit:junit:${legacyVersion}"
+    val api = listOf(
+        "org.apiguardian:apiguardian-api:${apiGuardianVersion}",
+        "org.junit.jupiter:junit-jupiter-api:${version}",
+        "org.junit.jupiter:junit-jupiter-params:${version}"
+    )
+    const val runner  = "org.junit.jupiter:junit-jupiter-engine:${version}"
+    @Suppress("unused")
+    const val pioneer = "org.junit-pioneer:junit-pioneer:${pioneerVersion}"
+    const val platformCommons = "org.junit.platform:junit-platform-commons:${platformVersion}"
+    const val platformLauncher = "org.junit.platform:junit-platform-launcher:${platformVersion}"
+    @Suppress("unused")
+    const val params = "org.junit.jupiter:junit-jupiter-params:${version}"
 }

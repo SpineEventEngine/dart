@@ -31,7 +31,7 @@ import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.remove
 import com.google.protobuf.gradle.testProtobuf
-import io.spine.gradle.internal.Deps
+import io.spine.internal.gradle.Scripts
 import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
@@ -41,9 +41,8 @@ plugins {
 }
 
 apply {
-    from(Deps.scripts.dartBuildTasks(project))
+    from(Scripts.dartBuildTasks(project))
 }
-
 
 dependencies {
     testProtobuf(project(":test-app"))
