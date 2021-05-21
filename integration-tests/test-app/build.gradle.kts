@@ -1,5 +1,3 @@
-import io.spine.internal.gradle.Scripts
-
 /*
  * Copyright 2021, TeamDev. All rights reserved.
  *
@@ -25,6 +23,8 @@ import io.spine.internal.gradle.Scripts
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+import io.spine.internal.gradle.Scripts
 
 buildscript {
 
@@ -77,13 +77,18 @@ sourceSets {
     }
 }
 
+val spineCoreVersion: String by extra
 val spineWebVersion: String by extra
 
 dependencies {
+    implementation("io.spine:spine-server:$spineCoreVersion")
     implementation("io.spine.gcloud:spine-firebase-web:$spineWebVersion")
 }
 
-configurations.all { resolutionStrategy { force("com.google.code.gson:gson:2.7") } }
+configurations.all { resolutionStrategy {
+    force("com.google.code.gson:gson:2.7")
+    force("io.spine:spine-server:$spineCoreVersion")
+}}
 
 gretty {
     contextPath = "/"

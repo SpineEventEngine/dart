@@ -28,7 +28,6 @@ package io.spine.web.test.given;
 
 import io.spine.core.Subscribe;
 import io.spine.server.projection.Projection;
-import io.spine.server.entity.storage.Column;
 
 import static io.spine.web.test.given.Status.COMPLETED;
 import static io.spine.web.test.given.Status.IN_PROGRESS;

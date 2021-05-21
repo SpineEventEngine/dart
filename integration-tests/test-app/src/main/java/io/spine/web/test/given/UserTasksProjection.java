@@ -28,7 +28,6 @@ package io.spine.web.test.given;
 
 import io.spine.core.Subscribe;
 import io.spine.core.UserId;
-import io.spine.server.entity.storage.Column;
 import io.spine.server.projection.Projection;
 
 import java.util.List;
