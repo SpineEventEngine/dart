@@ -46,7 +46,7 @@ GeneratedMessage unpack(Any any) {
     if (builder == null) {
         throw UnknownTypeError(typeUrl: typeUrl);
     }
-    var emptyInstance = builder.createEmptyInstance();
+    var emptyInstance = builder.createEmptyInstance!.call();
     return any.unpackInto(emptyInstance);
 }
 
@@ -109,7 +109,7 @@ Any packObject(Object value) {
     } else if (value is bool) {
         return pack(BoolValue()..value = value);
     } else if (value is List && (value.isEmpty || value[0] is int)) {
-        return pack(BytesValue()..value = value);
+        return pack(BytesValue()..value = value as List<int>);
     } else {
         throw ArgumentError('Instance of type ${value.runtimeType} cannot be '
                             'packed into a `google.protobuf.Any`.');

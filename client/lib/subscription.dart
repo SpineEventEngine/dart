@@ -141,7 +141,7 @@ class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> 
 
     /// A stream of typed event messages.
     Stream<T> get eventMessages => events
-        .map((event) => unpack(event.message));
+        .map((event) => unpack(event.message) as T);
 }
 
 Future<String> _nodePath(Future<FirebaseSubscription> subscription) =>
@@ -150,7 +150,6 @@ Future<String> _nodePath(Future<FirebaseSubscription> subscription) =>
 
 Stream<String> _nodePathStream(Future<String> futureValue) =>
     futureValue.asStream().asBroadcastStream();
-
 
 Stream<T> _checkBroadcast<T>(Stream<T> stream) {
     if (!stream.isBroadcast) {

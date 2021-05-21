@@ -89,11 +89,11 @@ class Clients {
         ..freeze();
 
     final UserId _guestId;
-    final TenantId _tenant;
+    final TenantId? _tenant;
     final HttpClient _httpClient;
-    final ZoneOffset _zoneOffset;
-    final ZoneId _zoneId;
-    final FirebaseClient _firebase;
+    final ZoneOffset? _zoneOffset;
+    final ZoneId? _zoneId;
+    final FirebaseClient? _firebase;
     final Endpoints _endpoints;
     final QueryResponseProcessor _queryProcessor;
     final Set<Client> _activeClients = Set();
@@ -124,13 +124,13 @@ class Clients {
     ///    doc for an example of how to access a type registry and pass it to this constructor.
     ///
     Clients(String baseUrl,
-           {UserId guestId,
-            TenantId tenantId,
-            ZoneOffset zoneOffset,
-            ZoneId zoneId,
+           {UserId? guestId = null,
+            TenantId? tenantId = null,
+            ZoneOffset? zoneOffset = null,
+            ZoneId? zoneId = null,
             QueryMode queryMode = QueryMode.FIREBASE,
-            FirebaseClient firebase,
-            Endpoints endpoints,
+            FirebaseClient? firebase = null,
+            Endpoints? endpoints = null,
             Duration subscriptionKeepUpPeriod = const Duration(minutes: 2),
             List<dynamic> typeRegistries = const []}) :
             _httpClient = HttpClient(baseUrl),
@@ -150,17 +150,17 @@ class Clients {
     }
 
     static void _checkNonNullOrDefault(GeneratedMessage argument, String name) {
-        if (argument == null || isDefault(argument)) {
+        if (isDefault(argument)) {
             throw ArgumentError.value(argument,
                 name,
-                '$name should not be null or default.');
+                '$name should have a non-default value.');
         }
     }
 
-    static QueryResponseProcessor _chooseProcessor(QueryMode queryMode, FirebaseClient firebase) {
+    static QueryResponseProcessor _chooseProcessor(QueryMode queryMode, FirebaseClient? firebase) {
         ArgumentError.checkNotNull(queryMode, 'queryMode');
         return queryMode == QueryMode.FIREBASE
-               ? FirebaseResponseProcessor(firebase)
+               ? FirebaseResponseProcessor(firebase!)
                : DirectResponseProcessor();
     }
 
@@ -212,7 +212,7 @@ class Client {
 
     final HttpClient _httpClient;
     final ActorRequestFactory _requests;
-    final FirebaseClient _firebase;
+    final FirebaseClient? _firebase;
     final Endpoints _endpoints;
     final QueryResponseProcessor _queryProcessor;
     final Set<Subscription> _activeSubscriptions = Set();
@@ -256,7 +256,7 @@ class Client {
         _activeSubscriptions.clear();
     }
 
-    Future<void> _postCommand(Command command, CommandErrorCallback onError) {
+    Future<void> _postCommand(Command command, CommandErrorCallback? onError) {
         var response = _httpClient.postMessage(_endpoints.command, command);
         return response.then((response) {
             var ack = Ack();
@@ -291,7 +291,7 @@ class Client {
         var fbSubscription = _httpClient
             .postMessage(_endpoints.subscription.create, topic)
             .then(_parseFirebaseSubscription);
-        return newSubscription(fbSubscription, _firebase);
+        return newSubscription(fbSubscription, _firebase!);
     }
 
     FirebaseSubscription _parseFirebaseSubscription(http.Response response) {
@@ -452,7 +452,7 @@ class CommandRequest<M extends GeneratedMessage> {
     /// If the server rejects the command with an error and the [onError] callback is set,
     /// the callback will be triggered with the error. Otherwise, the error is silently ignored.
     ///
-    Future<void> post({CommandErrorCallback onError}) {
+    Future<void> post({CommandErrorCallback? onError}) {
         if (_subscriptions.isEmpty) {
             throw StateError('Use `observeEvents(..)` or `observeEventsWithContexts(..)` to observe'
                 ' command results or call `postAndForget()` instead of `post()` if you observe'
@@ -473,7 +473,7 @@ class CommandRequest<M extends GeneratedMessage> {
     /// If the server rejects the command with an error and the [onError] callback is set,
     /// the callback will be triggered with the error. Otherwise, the error is silently ignored.
     ///
-    Future<void> postAndForget({CommandErrorCallback onError}) {
+    Future<void> postAndForget({CommandErrorCallback? onError}) {
         if (_subscriptions.isNotEmpty) {
             throw StateError('Use `post()` to add event subscriptions.');
         }
@@ -501,8 +501,8 @@ class QueryRequest<M extends GeneratedMessage> {
     final Set<Object> _ids = Set();
     final Set<CompositeFilter> _filters = Set();
     final Set<String> _fields = Set();
-    OrderBy _orderBy;
-    int _limit;
+    OrderBy? _orderBy;
+    int? _limit;
 
     QueryRequest._(this._client, this._type);
 
@@ -629,7 +629,7 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
     ///
     StateSubscription<M> post() {
         var topic = _client._requests.topic().withFilters(_type, ids: _ids, filters: _filters);
-        var builderInfo = theKnownTypes.findBuilderInfo(theKnownTypes.typeUrlFrom(_type));
+        var builderInfo = theKnownTypes.findBuilderInfo(theKnownTypes.typeUrlFrom(_type))!;
         return _client._subscribeToStateUpdates(topic, builderInfo);
     }
 }
@@ -682,12 +682,12 @@ class Endpoints {
 
     final String query;
     final String command;
-    SubscriptionEndpoints _subscription;
+    late SubscriptionEndpoints _subscription;
 
     Endpoints({
         this.query = 'query',
         this.command = 'command',
-        SubscriptionEndpoints subscription
+        SubscriptionEndpoints? subscription
     }) {
         ArgumentError.checkNotNull(query, 'query');
         ArgumentError.checkNotNull(command, 'command');

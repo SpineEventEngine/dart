@@ -50,7 +50,7 @@ class HttpClient {
     ///
     Future<http.Response> postMessage(String path, GeneratedMessage message) {
         var bytes = message.writeToBuffer();
-        var url = Url.from(_baseUrl, path).stringUrl;
+        var url = Url.from(_baseUrl, path).asUri;
         var response = http.post(url, body: _base64.encode(bytes), headers: _protobufContentType);
         return response;
     }

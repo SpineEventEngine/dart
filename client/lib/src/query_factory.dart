@@ -43,9 +43,9 @@ class QueryFactory {
     Query build(Type type,
                 {Iterable<Object> ids = const [],
                  Iterable<CompositeFilter> filters = const [],
-                 FieldMask fieldMask,
-                 OrderBy orderBy,
-                 int limit}) {
+                 FieldMask? fieldMask = null,
+                 OrderBy? orderBy = null,
+                 int? limit = null}) {
         var query = Query();
         var format = ResponseFormat();
         if (orderBy != null && !isDefault(orderBy)) {

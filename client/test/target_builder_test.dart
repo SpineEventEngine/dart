@@ -56,7 +56,7 @@ void main() {
         });
 
         test('not allow generic IDs', () {
-            var ids = [StringBuffer().writeln('this is not allowed')];
+            var ids = [StringBuffer()];
             expect(() => target(Empty, ids: ids), throwsA(isA<ArgumentError>()));
         });
     });

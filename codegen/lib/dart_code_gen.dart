@@ -56,7 +56,7 @@ String generate(Properties properties) {
               ..add(knownTypes.generateClass())
               ..add(knownTypes.generateAccessor())
     );
-    var emitter = DartEmitter(Allocator.simplePrefixing());
+    var emitter = DartEmitter(allocator: Allocator.simplePrefixing(), useNullSafetySyntax: true);
     var formatter = DartFormatter();
     return formatter.format(code.accept(emitter).toString());
 }

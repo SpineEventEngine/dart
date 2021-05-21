@@ -24,32 +24,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:http/http.dart' as http;
+import 'package:code_builder/code_builder.dart';
+import 'package:dart_code_gen/spine/options.pb.dart';
+import 'package:dart_code_gen/src/constraint_violation.dart';
+import 'package:dart_code_gen/src/field_validator_factory.dart';
+import 'package:dart_code_gen/src/type.dart';
+import 'package:dart_code_gen/src/validator_factory.dart';
 
-/// A link which points to a network resource.
+import 'field_validator_factory.dart';
+import 'validator_factory.dart';
+
+const String _validateLib = 'package:spine_client/validate.dart';
+
+/// A [FieldValidatorFactory] for fields which do not need validation.
 ///
-class Url {
+class NoOpValidatorFactory extends SingularFieldValidatorFactory {
 
-    /// String representation of this URL.
-    final String stringUrl;
-
-    Url(this.stringUrl);
-
-    /// Concatenates a URL from the given [host] and [path].
-    static Url from(String host, String path) {
-        if (host.endsWith('/')) {
-            host = host.substring(0, host.length - 1);
-        }
-        if (path.startsWith('/')) {
-            path = path.substring(1);
-        }
-        return Url('$host/$path');
-    }
-
-    Uri get asUri => Uri.parse(stringUrl);
+    NoOpValidatorFactory(ValidatorFactory validatorFactory, FieldDeclaration field)
+        : super(validatorFactory, field);
 
     @override
-    String toString() {
-        return stringUrl;
-    }
+    Iterable<Rule> rules() => [];
 }

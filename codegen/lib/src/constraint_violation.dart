@@ -74,26 +74,28 @@ createViolationFactory(String standardPackage) {
             ..type = listOfStrings
             ..name = fieldPath
         );
-        var anyType = refer('Any', protoAnyImport(standardPackage));
         var actualValueParam = Parameter((b) => b
             ..named = true
-            ..type = anyType
+            ..type = refer('Any?', protoAnyImport(standardPackage))
             ..name = actualValueArg
+            ..defaultTo = literalNull.code
         );
         var listOfViolations = TypeReference((b) => b
             ..symbol = 'List'
             ..types.add(violationTypeRef(standardPackage))
         );
+        var constList = Code('const []');
         var childConstraintsParam = Parameter((b) => b
             ..named = true
             ..type = listOfViolations
             ..name = childConstraintsArg
+            ..defaultTo = constList
         );
         var formatParamsParam = Parameter((b) => b
             ..named = true
             ..name = paramsArg
             ..type = listOfStrings
-            ..defaultTo = Code('const []')
+            ..defaultTo = constList
         );
         b.name = _violation;
         b.requiredParameters
@@ -106,6 +108,7 @@ createViolationFactory(String standardPackage) {
             ..add(formatParamsParam);
         var path = 'path';
         var type = violationTypeRef(standardPackage);
+        var anyType = refer('Any', protoAnyImport(standardPackage));
         b..returns = type
          ..body = Block.of(<Expression>[
              actualValueRef.assign(actualValueRef.notEqualTo(literalNull).conditional(

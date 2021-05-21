@@ -56,7 +56,7 @@ class RequiredFieldValidatorFactory {
 
     Code generate() {
         if (_combinations.length == 0) {
-            return null;
+            return Code("");
         }
         var violationInit = violationRef.call([literalString('Required fields must be set.'),
                                                literalString(_validator.fullTypeName),
