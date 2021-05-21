@@ -24,8 +24,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:http/http.dart' as http;
-
 /// A link which points to a network resource.
 ///
 class Url {
@@ -46,6 +44,7 @@ class Url {
         return Url('$host/$path');
     }
 
+    /// `Uri` representation of this URL.
     Uri get asUri => Uri.parse(stringUrl);
 
     @override
