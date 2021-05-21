@@ -35,8 +35,8 @@ import java.util.List;
 /**
  * A projection representing a user and a list of {@link TaskId tasks} assigned to him.
  *
- * <p>Assigned tasks count and indication of several tasks assigned are exposed as
- * {@linkplain Column columns} allowing ordering and filtering when user tasks are queried.
+ * <p>Assigned tasks count and indication of several tasks assigned are exposed as columns allowing
+ * ordering and filtering when user tasks are queried.
  */
 public class UserTasksProjection
         extends Projection<UserId, UserTasks, UserTasks.Builder> {

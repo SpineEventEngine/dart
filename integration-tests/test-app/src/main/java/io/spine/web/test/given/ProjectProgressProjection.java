@@ -38,7 +38,7 @@ import static io.spine.web.test.given.Status.NOT_STARTED;
  *
  * <p>Calculates the amount of the completed and uncompleted tasks. Upon completion of all tasks,
  * switches the project progress status to the {@code COMPLETED}. Current status is exposed as
- * {@linkplain Column column} allowing filtering of completed and uncompleted progresses.
+ * a column allowing filtering of completed and uncompleted progresses.
  */
 public class ProjectProgressProjection
         extends Projection<ProjectId, ProjectProgress, ProjectProgress.Builder> {
