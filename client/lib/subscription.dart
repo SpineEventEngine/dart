@@ -50,7 +50,10 @@ class Subscription<T extends GeneratedMessage> {
     Subscription._(this.subscription, Stream<T> itemAdded)
         : _itemAdded = _checkBroadcast(itemAdded),
           _closed = false {
-        subscription.catchError((e) => unsubscribe());
+        subscription.catchError((e) {
+            unsubscribe();
+            return pb.Subscription.getDefault();
+        });
     }
 
     /// Shows if this subscription is still active or already closed.
