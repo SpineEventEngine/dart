@@ -47,9 +47,10 @@ import 'types.dart' as testTypes;
 void main() {
 
     group('Client should', () {
-        Clients clients;
-        FirebaseClient firebaseClient;
-        UserId actor;
+
+        late Clients clients;
+        late FirebaseClient firebaseClient;
+        late UserId actor;
 
         setUp(() {
             var database = FirebaseApp().database;
