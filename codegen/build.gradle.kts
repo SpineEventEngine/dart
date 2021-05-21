@@ -30,17 +30,16 @@ import com.google.protobuf.gradle.id
 import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.remove
-import io.spine.internal.gradle.Scripts
-import io.spine.internal.dependency.Protobuf
+import io.spine.gradle.internal.Deps
 
 plugins {
     dart
-    id("io.spine.mc-dart")
+    id("io.spine.tools.proto-dart-plugin")
 }
 
 apply {
-    from(Scripts.dartBuildTasks(project))
-    from(Scripts.pubPublishTasks(project))
+    from(Deps.scripts.dartBuildTasks(project))
+    from(Deps.scripts.pubPublishTasks(project))
 }
 
 val spineBaseVersion: String by extra
@@ -48,8 +47,7 @@ val spineBaseVersion: String by extra
 dependencies {
     protobuf("io.spine:spine-base:$spineBaseVersion")
     protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Protobuf.libs.forEach { protobuf(it) }
-}
+    Deps.build.protobuf.forEach { protobuf(it) }}
 
 tasks["testDart"].enabled = false
 

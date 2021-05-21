@@ -31,17 +31,16 @@ import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.remove
 import com.google.protobuf.gradle.testProtobuf
-import io.spine.internal.gradle.Scripts
+import io.spine.gradle.internal.Deps
 import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
     codegen
     dart
-    id("io.spine.mc-dart")
-}
+    id("io.spine.tools.proto-dart-plugin")}
 
 apply {
-    from(Scripts.dartBuildTasks(project))
+    from(Deps.scripts.dartBuildTasks(project))
 }
 
 dependencies {

@@ -31,7 +31,7 @@ buildscript {
 
     // As long as `buildscript` section is always evaluated first,
     // we need to apply explicitly here.
-    apply(from = "$rootDir/buildSrc/src/main/groovy/dependencies.gradle")
+    apply(from = "$rootDir/config/gradle/dependencies.gradle")
     apply(from = "$rootDir/version.gradle.kts")
 
     @Suppress("RemoveRedundantQualifierName") // Cannot use imports here.
@@ -51,7 +51,7 @@ buildscript {
 
     dependencies {
         classpath(deps.build.gradlePlugins.protobuf)
-        classpath("io.spine.tools:spine-mc-dart:$spineBaseVersion")
+        classpath("io.spine.tools:spine-proto-dart-plugin:$spineBaseVersion")
     }
 
     resolution.forceConfiguration(configurations)
@@ -72,7 +72,7 @@ allprojects {
 
 subprojects {
     apply {
-        plugin("io.spine.mc-dart")
+        plugin("io.spine.tools.proto-dart-plugin")
         plugin("com.google.protobuf")
         plugin("maven-publish")
     }

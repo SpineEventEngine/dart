@@ -24,22 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import io.spine.internal.gradle.Scripts
-
 buildscript {
 
     io.spine.gradle.internal.DependencyResolution.defaultRepositories(repositories)
 
-    repositories {
-        repositories.maven {
-            url = uri(io.spine.gradle.internal.Repos.spineSnapshots)
-        }
-    }
-
     val spineBaseVersion: String by extra
 
     dependencies {
-        classpath("io.spine.tools:spine-mc-java:$spineBaseVersion")
+        classpath("io.spine.tools:spine-model-compiler:$spineBaseVersion")
     }
 }
 
@@ -50,8 +42,8 @@ plugins {
 }
 
 apply {
-    plugin("io.spine.mc-java")
-    from(Scripts.modelCompiler(project))
+    plugin("io.spine.tools.spine-model-compiler")
+    from("$rootDir/config/gradle/model-compiler.gradle")
 }
 
 val sourcesRootDir = "$projectDir/src"

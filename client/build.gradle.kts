@@ -32,7 +32,7 @@ import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.remove
 import com.google.protobuf.gradle.testProtobuf
-import io.spine.internal.gradle.Scripts
+import io.spine.gradle.internal.Deps
 
 plugins {
     java
@@ -41,10 +41,10 @@ plugins {
 }
 
 apply {
-    from(Scripts.dartBuildTasks(project))
-    from(Scripts.pubPublishTasks(project))
-    from(Scripts.javadocOptions(project))
-    from(Scripts.updateGitHubPages(project))
+    from(Deps.scripts.dartBuildTasks(project))
+    from(Deps.scripts.pubPublishTasks(project))
+    from(Deps.scripts.javadocOptions(project))
+    from(Deps.scripts.updateGitHubPages(project))
 }
 
 val spineBaseVersion: String by extra
