@@ -37,13 +37,11 @@ import org.apache.tools.ant.taskdefs.condition.Os
 plugins {
     codegen
     dart
-    id("io.spine.tools.proto-dart-plugin")
-}
+    id("io.spine.tools.proto-dart-plugin")}
 
 apply {
     from(Deps.scripts.dartBuildTasks(project))
 }
-
 
 dependencies {
     testProtobuf(project(":test-app"))

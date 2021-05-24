@@ -39,7 +39,7 @@ void main() {
 
             const String NON_EXISTING_BACKEND = 'http://doesntexist.spine.io/';
 
-            Clients clients;
+            late Clients clients;
 
             setUp(() {
                 clients = Clients(NON_EXISTING_BACKEND,

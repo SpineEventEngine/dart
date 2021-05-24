@@ -47,8 +47,7 @@ val spineBaseVersion: String by extra
 dependencies {
     protobuf("io.spine:spine-base:$spineBaseVersion")
     protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Deps.build.protobuf.forEach { protobuf(it) }
-}
+    Deps.build.protobuf.forEach { protobuf(it) }}
 
 tasks["testDart"].enabled = false
 

@@ -37,3 +37,7 @@
 
  The required language level is bumped to `2.7.0` or above (previous was `2.5.0` or above). Now
  the language features used in the companion CLI tool match the expected level.
+
+## 1.7.3
+ This release introduces null-safe API, according to the new Dart null safety feature.
+ The Dart language version is promoted to `2.13`.

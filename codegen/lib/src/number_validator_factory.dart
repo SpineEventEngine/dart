@@ -42,7 +42,7 @@ const _defaultMaxFormat = 'The number must be less than %s%s.';
 ///
 /// Supports options `(min)`, `(max)`, and `(range)`.
 ///
-class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactory {
+abstract class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactory {
     
     final String _wrapperType;
 
@@ -53,7 +53,7 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
 
     N _parse(String value) => _doParse(value.trim());
 
-    N _doParse(String value) => null;
+    N _doParse(String value);
     
     @override
     Iterable<Rule> rules() {
@@ -121,10 +121,10 @@ class NumberValidatorFactory<N extends num> extends SingularFieldValidatorFactor
             throw ArgumentError('Malformed range: `$rangeNotation`. '
                                 'See doc of (range) for the proper format.');
         }
-        var startOpen = match.group(1) == '(';
-        var start = _parse(match.group(2));
-        var end = _parse(match.group(3));
-        var endOpen = match.group(4) == ')';
+        var startOpen = match.group(1)! == '(';
+        var start = _parse(match.group(2)!);
+        var end = _parse(match.group(3)!);
+        var endOpen = match.group(4)! == ')';
 
         var minRule = _constructMinRule(start, startOpen, _defaultMinFormat);
         var maxRule = _constructMaxRule(end, endOpen, _defaultMaxFormat);

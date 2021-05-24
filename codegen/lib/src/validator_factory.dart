@@ -145,12 +145,8 @@ class ValidatorFactory {
     ///
     Code _createFieldValidator(FieldDeclaration field) {
         var factory = FieldValidatorFactory.forField(field, this);
-        if (factory != null) {
-            var fieldValue = accessField(field);
-            return factory.createFieldValidator(fieldValue);
-        } else {
-            return null;
-        }
+        var fieldValue = accessField(field);
+        return factory.createFieldValidator(fieldValue);
     }
 
     Expression accessField(FieldDeclaration field) => _typedMessage.property(field.escapedDartName);

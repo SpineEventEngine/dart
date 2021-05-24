@@ -57,7 +57,7 @@ class KnownTypes {
     ///
     /// Returns `null` if the type is unknown.
     ///
-    BuilderInfo findBuilderInfo(String typeUrl) {
+    BuilderInfo? findBuilderInfo(String typeUrl) {
         return _typeUrlToBuilderInfo[typeUrl];
     }
 
@@ -84,7 +84,7 @@ class KnownTypes {
     /// Obtains a validator function for the given message.
     ValidationError Function(GeneratedMessage) validatorFor(GeneratedMessage message) {
         var typeUrl = typeUrlOf(message);
-        return _validators[typeUrl];
+        return _validators[typeUrl]!;
     }
 
     /// Obtains a registry for JSON parsing.

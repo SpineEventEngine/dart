@@ -83,7 +83,7 @@ class MessageType {
     /// For example, `type.spine.io/spine.net.Uri.Protocol`
     ///
     String get typeUrl {
-        var prefix = file.options.getExtension(Options.typeUrlPrefix) as String ?? '';
+        var prefix = file.options.getExtension(Options.typeUrlPrefix) as String? ?? '';
         prefix = prefix.isNotEmpty ? prefix : _standardTypeUrlPrefix;
         return "$prefix/$fullName";
     }

@@ -33,13 +33,14 @@ import 'package:dart_code_gen/src/type.dart';
 import 'constraint_violation.dart';
 import 'enum_validator_factory.dart';
 import 'message_validator_factory.dart';
+import 'noop_validator_factory.dart';
 import 'number_validator_factory.dart';
 import 'string_validator_factory.dart';
 import 'validator_factory.dart';
 
 /// Factory of validation code for a given message field.
 ///
-class FieldValidatorFactory {
+abstract class FieldValidatorFactory {
 
     /// The [ValidatorFactory] for the declaring message type.
     final ValidatorFactory validatorFactory;
@@ -69,7 +70,7 @@ class FieldValidatorFactory {
     /// If any constraint violations are discovered, they are registered with
     /// the [validatorFactory].
     ///
-    Code createFieldValidator(Expression fieldValue) => null;
+    Code createFieldValidator(Expression fieldValue);
 
     /// Checks if the validated field is required.
     ///
@@ -84,7 +85,9 @@ class FieldValidatorFactory {
     bool supportsRequired() => true;
 
     /// Creates a new validation rule with the given parameters.
-    Rule newRule(LazyCondition condition, LazyViolation violation, {LazyPreparation preparation}) {
+    Rule newRule(LazyCondition condition,
+                 LazyViolation violation,
+                 {LazyPreparation? preparation = null}) {
         return Rule._(condition, violation, validatorFactory.report, preparation: preparation);
     }
 
@@ -98,7 +101,7 @@ class FieldValidatorFactory {
     ///
     /// Is the field is `(required)`, it has to be set.
     ///
-    LazyCondition notSetCondition() => null;
+    LazyCondition notSetCondition() => (_) => literalBool(false);
 
     /// Generates an expression which constructs a `ConstraintViolation` for a missing required
     /// field.
@@ -115,7 +118,7 @@ class FieldValidatorFactory {
 
 /// A [FieldValidatorFactory] for non-`repeated` fields.
 ///
-class SingularFieldValidatorFactory extends FieldValidatorFactory {
+abstract class SingularFieldValidatorFactory extends FieldValidatorFactory {
 
     SingularFieldValidatorFactory(ValidatorFactory validatorFactory, FieldDeclaration field)
         : super(validatorFactory, field);
@@ -151,7 +154,7 @@ class SingularFieldValidatorFactory extends FieldValidatorFactory {
             case FieldDescriptorProto_Type.TYPE_MESSAGE:
                 return MessageValidatorFactory(factory, field);
         }
-        return null;
+        return NoOpValidatorFactory(factory, field);
     }
 
     /// Generates validator code for the specified field.
@@ -167,11 +170,11 @@ class SingularFieldValidatorFactory extends FieldValidatorFactory {
             .map((r) => r._eval(fieldValue));
         return statements.isNotEmpty
                ? Block.of(statements)
-               : null;
+               : Code("");
     }
 
     /// Obtains validation rules to apply to the field.
-    Iterable<Rule> rules() => null;
+    Iterable<Rule> rules();
 }
 
 /// A [FieldValidatorFactory] for `repeated` and `map` fields.
@@ -215,7 +218,7 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
     @override
     LazyCondition notSetCondition() => (v) => v.property('isEmpty');
 
-    Code _validateDistinct(Reference valuesRef) {
+    Code? _validateDistinct(Reference valuesRef) {
         if (field.findOption(Options.distinct).orElse(false)) {
             var length = 'length';
             LazyCondition condition = (v) =>
@@ -232,7 +235,7 @@ class RepeatedFieldValidatorFactory extends FieldValidatorFactory {
         }
     }
 
-    Expression _validateEachElement(Reference valuesRef) {
+    Expression? _validateEachElement(Reference valuesRef) {
         var element = 'element';
         var elementRef = refer(element);
         var elementValidation = _singular.createFieldValidator(elementRef);
@@ -265,7 +268,7 @@ class Rule {
     final LazyCondition _condition;
     final LazyViolation _violation;
     final ViolationConsumer _violationConsumer;
-    final LazyPreparation _preparation;
+    final LazyPreparation? _preparation;
 
     /// Creates a new rule.
     ///
@@ -281,7 +284,7 @@ class Rule {
     Rule._(this._condition,
            this._violation,
            this._violationConsumer,
-           {LazyPreparation preparation = null})
+           {LazyPreparation? preparation = null})
         : _preparation = preparation;
 
     /// Produces a ternary operator which creates a new violation if the string is empty.
@@ -302,7 +305,7 @@ class Rule {
         ).statement;
         if (_preparation != null) {
             return Block.of([
-                _preparation.call(fieldValue),
+                _preparation!.call(fieldValue),
                 ternaryOperator
             ]);
         } else {

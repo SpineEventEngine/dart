@@ -42,7 +42,7 @@ void parseInto(GeneratedMessage message, String json) {
 
 /// Parses the given JSON string into a new instance of the message described by the [builder].
 T parseIntoNewInstance<T extends GeneratedMessage>(BuilderInfo builder, String json) {
-    var msg = builder.createEmptyInstance();
+    var msg = builder.createEmptyInstance!.call();
     parseInto(msg, json);
-    return msg;
+    return msg as T;
 }

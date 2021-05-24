@@ -40,10 +40,10 @@ class UnknownTypeError extends Error {
     /// Exactly one parameter should be passed to this constructor, a [typeUrl] or a [runtimeType].
     /// If none is passed, an `ArgumentError` is thrown.
     ///
-    UnknownTypeError({String typeUrl, Type runtimeType}) :
+    UnknownTypeError({String? typeUrl, Type? runtimeType}) :
         _message = _composeMessage(typeUrl, runtimeType);
 
-    static String _composeMessage(String typeUrl, Type runtimeType) {
+    static String _composeMessage(String? typeUrl, Type? runtimeType) {
         String type;
         if (typeUrl != null) {
             type = typeUrl;

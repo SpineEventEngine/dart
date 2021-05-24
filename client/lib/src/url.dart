@@ -44,6 +44,9 @@ class Url {
         return Url('$host/$path');
     }
 
+    /// `Uri` representation of this URL.
+    Uri get asUri => Uri.parse(stringUrl);
+
     @override
     String toString() {
         return stringUrl;

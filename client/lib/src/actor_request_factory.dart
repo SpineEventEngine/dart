@@ -37,9 +37,9 @@ import 'package:spine_client/time.dart' as time;
 class ActorRequestFactory {
 
     final UserId actor;
-    final TenantId tenant;
-    final ZoneOffset zoneOffset;
-    final ZoneId zoneId;
+    final TenantId? tenant;
+    final ZoneOffset? zoneOffset;
+    final ZoneId? zoneId;
 
     /// Creates a new [ActorRequestFactory].
     ///
@@ -49,7 +49,10 @@ class ActorRequestFactory {
     ///
     /// In multitenant systems, it's required for all the actor requests to have a [tenant] ID.
     ///
-    ActorRequestFactory(this.actor, [this.tenant, this.zoneOffset, this.zoneId]);
+    ActorRequestFactory(this.actor,
+                       [this.tenant = null,
+                        this.zoneOffset = null,
+                        this.zoneId = null]);
 
     /// Creates a factory of queries to the server.
     QueryFactory query() {

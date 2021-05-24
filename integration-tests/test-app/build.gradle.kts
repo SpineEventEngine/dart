@@ -37,7 +37,7 @@ buildscript {
 
 plugins {
     java
-    id("org.gretty") version ("3.0.3")
+    id("org.gretty") version ("3.0.4")
     id("com.github.psxpaul.execfork") version ("0.1.13")
 }
 
@@ -83,7 +83,7 @@ gretty {
     debugPort = 5005
     isDebugSuspend = true
     jvmArgs = listOf("-Dio.spine.tests=true", "-Xverify:none")
-    servletContainer = "jetty9"
+    servletContainer = "jetty9.4"
     managedClassReload = false
     fastReload = false
 }
