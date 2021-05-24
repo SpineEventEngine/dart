@@ -7,14 +7,18 @@
   <meta name="description" content="API docs for the checkValid function from the validate library, for the Dart programming language.">
   <title>checkValid function - validate library - Dart API</title>
 
+
   
-  <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500,400i,400,300|Source+Sans+Pro:400,300,700" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="../static-assets/github.css">
   <link rel="stylesheet" href="../static-assets/styles.css">
   <link rel="icon" href="../static-assets/favicon.png">
 
+  
 </head>
+
 
 <body data-base-href="../"
       data-using-base-href="false">
@@ -36,63 +40,76 @@
 
 <main>
 
-  <div id="dartdoc-sidebar-left" class="col-xs-6 col-sm-3 col-md-2 sidebar sidebar-offcanvas-left">
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
     <header id="header-search-sidebar" class="hidden-l">
-      <form class="search-sidebar" role="search">
-        <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
-      </form>
-    </header>
-    
-    <ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
-      <li><a href="../index.html">spine_client</a></li>
-      <li><a href="../validate/validate-library.html">validate</a></li>
-      <li class="self-crumb">checkValid function</li>
-    </ol>
-    
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+  <li><a href="../index.html">spine_client</a></li>
+  <li><a href="../validate/validate-library.html">validate</a></li>
+  <li class="self-crumb">checkValid function</li>
+</ol>
+
+
     <h5>validate library</h5>
     <ol>
-    
-    
-    
-    
-    
-      <li class="section-title"><a href="../validate/validate-library.html#functions">Functions</a></li>
-      <li><a href="../validate/checkValid.html">checkValid</a></li>
-      <li><a href="../validate/isDefault.html">isDefault</a></li>
-      <li><a href="../validate/validate.html">validate</a></li>
-    
-    
-    
-      <li class="section-title"><a href="../validate/validate-library.html#exceptions">Exceptions</a></li>
-      <li><a href="../validate/InvalidMessageError-class.html">InvalidMessageError</a></li>
-    </ol>
+
+
+
+
+
+  <li class="section-title"><a href="../validate/validate-library.html#functions">Functions</a></li>
+  <li><a href="../validate/checkValid.html">checkValid</a></li>
+  <li><a href="../validate/isDefault.html">isDefault</a></li>
+  <li><a href="../validate/validate.html">validate</a></li>
+
+
+
+  <li class="section-title"><a href="../validate/validate-library.html#exceptions">Exceptions</a></li>
+  <li><a href="../validate/InvalidMessageError-class.html">InvalidMessageError</a></li>
+</ol>
+
   </div><!--/.sidebar-offcanvas-left-->
 
-  <div id="dartdoc-main-content" class="col-xs-12 col-sm-9 col-md-8 main-content">
-      <div><h1><span class="kind-function">checkValid</span> function  </h1></div>
+  <div id="dartdoc-main-content" class="main-content">
+      <div>
+<h1><span class="kind-function">checkValid</span> function 
+    <a href="https://dart.dev/null-safety" class="feature feature-null-safety" title="Supports the null safety language feature.">Null safety</a>
+ 
+</h1></div>
 
     <section class="multi-line-signature">
-        <span class="returntype">void</span>
-                <span class="name ">checkValid</span>
-(<wbr><ol class="parameter-list"><li><span class="parameter" id="checkValid-param-message"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/1.1.0/protobuf/GeneratedMessage-class.html">GeneratedMessage</a></span> <span class="parameter-name">message</span></span></li>
+        
+
+<span class="returntype">void</span>
+<span class="name ">checkValid</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="checkValid-param-message"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/2.0.0/protobuf/GeneratedMessage-class.html">GeneratedMessage</a></span> <span class="parameter-name">message</span></span></li>
 </ol>)
-    </section>
-    <section class="desc markdown">
-      <p>Validates the given message according to the constraints defined in Protobuf and throws
-an <a href="../validate/InvalidMessageError-class.html">InvalidMessageError</a> if the <code>message</code> is invalid.</p>
+
     </section>
     
-    <section class="summary source-code" id="source">
-      <h2><span>Implementation</span></h2>
-      <pre class="language-dart"><code class="language-dart">void checkValid(GeneratedMessage message) {
+<section class="desc markdown">
+  <p>Validates the given message according to the constraints defined in Protobuf and throws
+an <a href="../validate/InvalidMessageError-class.html">InvalidMessageError</a> if the <code>message</code> is invalid.</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">void checkValid(GeneratedMessage message) {
     var error = validate(message);
     error.ifPresent((e) =&gt; throw InvalidMessageError._(e));
 }</code></pre>
-    </section>
+</section>
+
 
   </div> <!-- /.main-content -->
 
-  <div id="dartdoc-sidebar-right" class="col-xs-6 col-sm-6 col-md-2 sidebar sidebar-offcanvas-right">
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
   </div><!--/.sidebar-offcanvas-->
 
 </main>
@@ -100,18 +117,19 @@ an <a href="../validate/InvalidMessageError-class.html">InvalidMessageError</a> 
 <footer>
   <span class="no-break">
     spine_client
-      1.7.2
+      1.7.3
   </span>
 
+  
 </footer>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-<script src="../static-assets/typeahead.bundle.min.js"></script>
+
 <script src="../static-assets/highlight.pack.js"></script>
-<script src="../static-assets/URI.js"></script>
 <script src="../static-assets/script.js"></script>
+
 
 
 </body>
 
 </html>
+
