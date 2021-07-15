@@ -38,7 +38,6 @@ import 'package:spine_client/spine/client/subscription.pb.dart' as pbSubscriptio
 import 'package:spine_client/spine/core/ack.pb.dart';
 import 'package:spine_client/spine/core/command.pb.dart';
 import 'package:spine_client/spine/core/diagnostics.pb.dart';
-import 'package:spine_client/spine/core/event.pb.dart';
 import 'package:spine_client/spine/core/tenant_id.pb.dart';
 import 'package:spine_client/spine/core/user_id.pb.dart';
 import 'package:spine_client/spine/time/time.pb.dart';
@@ -403,28 +402,7 @@ class CommandRequest<M extends GeneratedMessage> {
     /// Events down the line, i.e. events produced as the result of other messages which where
     /// produced as the result of this command, do not match this subscription.
     ///
-    /// Returns a broadcast stream of event messages.
-    ///
-    /// See `CommandRequest.observeEventsWithContexts(..)` to receive metadata, as well as the event
-    /// messages.
-    ///
-    ///
-    Stream<E> observeEvents<E extends GeneratedMessage>() =>
-        _observeEvents<E>().eventMessages;
-
-    /// Creates an event subscription for events produced as a direct result of this command.
-    ///
-    /// Events down the line, i.e. events produced as the result of other messages which where
-    /// produced as the result of this command, do not match this subscription.
-    ///
-    /// Returns a broadcast stream of events with their metadata.
-    ///
-    /// See `CommandRequest.observeEvents(..)` to unpacked event messages.
-    ///
-    Stream<Event> observeEventsWithContexts<E extends GeneratedMessage>() =>
-        _observeEvents<E>().events;
-
-    EventSubscription<E> _observeEvents<E extends GeneratedMessage>() {
+    EventSubscription<E> observeEvents<E extends GeneratedMessage>() {
         var subscription = _client.subscribeToEvents<E>()
             .where(all([eq('context.past_message', _commandAsOrigin())]))
             .post();

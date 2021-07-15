@@ -98,6 +98,26 @@ void main() {
             expect(matchingById, hasLength(1));
         });
 
+        test('send commands and subscribe to related events', () async {
+            var taskId = TaskId()
+                ..value = newUuid();
+            var cmd = CreateTask()
+                ..id = taskId
+                ..name = 'Task name 42'
+                ..description = 'Firebase event subscription test';
+            var client = clients.onBehalfOf(actor);
+            var request = client.command(cmd);
+            var subscription = request.observeEvents<TaskCreated>();
+            request.post();
+            var event = await subscription.eventMessages.first;
+            await _sleep();
+            expect(event.id, equals(taskId));
+
+            expect(subscription.closed, equals(false));
+            subscription.unsubscribe();
+            expect(subscription.closed, equals(true));
+        });
+
         test('query server directly', () async {
             clients = Clients(BACKEND,
                               queryMode: QueryMode.DIRECT,
@@ -149,7 +169,7 @@ void main() {
             var taskCreatedEvents = createTaskRequest.observeEvents<TaskCreated>();
             createTaskRequest.post();
 
-            var newTaskEvent = await taskCreatedEvents.first;
+            var newTaskEvent = await taskCreatedEvents.eventMessages.first;
             expect(newTaskEvent.id, equals(taskId));
             var newTask = await itemAdded.first;
             expect(newTask.name, equals(createTaskCmd.name));
