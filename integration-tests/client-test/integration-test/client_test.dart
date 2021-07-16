@@ -108,15 +108,18 @@ void main() {
             var client = clients.onBehalfOf(actor);
             var request = client.command(cmd);
             var futureSubscription = request.observeEvents<TaskCreated>();
+            var taskCreated = futureSubscription
+                .then((s) => s.eventMessages.first);
             await request.post();
 
-            // Subscription must be complete when `post` is complete.
-            var subscription = await futureSubscription;
-            var event = await subscription.eventMessages.first;
+            var event = await taskCreated;
             expect(event.id, equals(taskId));
 
-            expect(subscription.closed, equals(false));
-            subscription.unsubscribe();
+            futureSubscription.then((s) {
+                expect(s.closed, equals(false));
+                s.unsubscribe();
+            });
+            var subscription = await futureSubscription;
             expect(subscription.closed, equals(true));
         });
 
