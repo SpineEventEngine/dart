@@ -403,6 +403,10 @@ class CommandRequest<M extends GeneratedMessage> {
     /// Events down the line, i.e. events produced as the result of other messages which where
     /// produced as the result of this command, do not match this subscription.
     ///
+    /// When the resulting future completes, the subscription is guaranteed to be created.
+    /// Also, when the future created in `post(..)` completes, the all subscriptions created within
+    /// the same `CommandRequest` are guaranteed to have completed.
+    ///
     Future<EventSubscription<E>> observeEvents<E extends GeneratedMessage>() {
         var subscription = _client.subscribeToEvents<E>()
             .where(all([eq('context.past_message', _commandAsOrigin())]))
@@ -424,6 +428,9 @@ class CommandRequest<M extends GeneratedMessage> {
     ///
     /// Fails if there are no event subscriptions to monitor the command execution. If this is
     /// the desired behaviour, use `CommandRequest.postAndForget(..)`.
+    ///
+    /// When the command is sent, the event subscriptions created within this request
+    /// are guaranteed to be active.
     ///
     /// Returns a future which completes when the request is sent. If there was a network problem,
     /// the future, completes with an error.
@@ -606,6 +613,9 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
 
     /// Asynchronously sends this request to the server.
     ///
+    /// The subscription is guaranteed to have been created on server when the resulting future
+    /// completes.
+    ///
     Future<StateSubscription<M>> post() {
         var topic = _client._requests.topic().withFilters(_type, ids: _ids, filters: _filters);
         var builderInfo = theKnownTypes.findBuilderInfo(theKnownTypes.typeUrlFrom(_type))!;
@@ -637,6 +647,9 @@ class EventSubscriptionRequest<M extends GeneratedMessage> {
     }
 
     /// Asynchronously sends this request to the server.
+    ///
+    /// The subscription is guaranteed to have been created on server when the resulting future
+    /// completes.
     ///
     Future<EventSubscription<M>> post() {
         var topic = _client._requests.topic().withFilters(_type, filters: _filers);
