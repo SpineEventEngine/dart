@@ -62,19 +62,17 @@ void main() {
             });
 
             test('when subscribing to updates', () async {
-                var result = clients.asGuest()
-                                    .subscribeTo<Project>()
-                                    .post();
-                var stream = result.itemAdded;
-                expect(() async => await stream.first, throwsA(isNotNull));
+                var subscription = clients.asGuest()
+                                          .subscribeTo<Project>()
+                                          .post();
+                expect(() async => await subscription, throwsA(isNotNull));
             });
 
             test('when subscribing to event updates', () async {
-                var result = clients.asGuest()
-                    .subscribeToEvents<ProjectCreated>()
-                    .post();
-                var stream = result.eventMessages;
-                expect(() async => await stream.first, throwsA(isNotNull));
+                var subscription = clients.asGuest()
+                                          .subscribeToEvents<ProjectCreated>()
+                                          .post();
+                expect(() async => await subscription, throwsA(isNotNull));
             });
         });
     });

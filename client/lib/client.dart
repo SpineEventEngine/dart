@@ -250,7 +250,7 @@ class Client {
     void cancelAllSubscriptions() {
         for (Subscription subscription in _activeSubscriptions) {
             subscription.unsubscribe();
-            subscription.subscription.then(_cancel);
+            _cancel(subscription.subscription);
         }
         _activeSubscriptions.clear();
     }
@@ -266,19 +266,19 @@ class Client {
         });
     }
 
-    EventSubscription<E>
+    Future<EventSubscription<E>>
     _subscribeToEvents<E extends GeneratedMessage>(pbSubscription.Topic topic) {
         return _subscribe(topic, (s, d) => EventSubscription.of(s, d));
     }
 
-    StateSubscription<S>
+    Future<StateSubscription<S>>
     _subscribeToStateUpdates<S extends GeneratedMessage>(pbSubscription.Topic topic,
                                                          BuilderInfo builderInfo) {
         return _subscribe(topic, (s, d) => StateSubscription.of(s, builderInfo, d));
     }
 
-    S _subscribe<S extends Subscription>(pbSubscription.Topic topic,
-                                         _CreateSubscription<S> newSubscription) {
+    Future<S> _subscribe<S extends Subscription>(pbSubscription.Topic topic,
+                                                 _CreateSubscription<S> newSubscription) {
         if (_firebase == null) {
             throw StateError('Cannot create a subscription. No Firebase client is provided.');
         }
@@ -287,10 +287,11 @@ class Client {
         if (builder == null) {
             throw ArgumentError.value(topic, 'topic', 'Target type `$targetTypeUrl` is unknown.');
         }
-        var fbSubscription = _httpClient
+        var subscription = _httpClient
             .postMessage(_endpoints.subscription.create, topic)
-            .then(_parseFirebaseSubscription);
-        return newSubscription(fbSubscription, _firebase!);
+            .then(_parseFirebaseSubscription)
+            .then((value) => newSubscription(value, _firebase!));
+        return subscription;
     }
 
     FirebaseSubscription _parseFirebaseSubscription(http.Response response) {
@@ -311,10 +312,10 @@ class Client {
     void _refreshSubscription(Subscription subscription) {
         var subscriptionMessage = subscription.subscription;
         if (subscription.closed) {
-            subscriptionMessage.then(_cancel);
+            _cancel(subscriptionMessage);
             _activeSubscriptions.remove(subscription);
         } else {
-            subscriptionMessage.then(_keepUp);
+            _keepUp(subscriptionMessage);
         }
     }
 
@@ -330,7 +331,7 @@ class Client {
 /// A function which accepts a future of `FirebaseSubscription` and a firebase client and creates
 /// an instance of [Subscription].
 typedef _CreateSubscription<S extends Subscription> =
-    S Function(Future<FirebaseSubscription>, FirebaseClient);
+    S Function(FirebaseSubscription, FirebaseClient);
 
 /// Creates a composite filter which groups one or more field filters with the `ALL` operator.
 ///
@@ -392,7 +393,7 @@ class CommandRequest<M extends GeneratedMessage> {
 
     final Client _client;
     final Command _command;
-    final List<EventSubscription> _subscriptions = [];
+    final List<Future<EventSubscription>> _futureSubscriptions = [];
 
     CommandRequest._(this._client, M command) :
             _command = _client._requests.command().create(command);
@@ -402,11 +403,11 @@ class CommandRequest<M extends GeneratedMessage> {
     /// Events down the line, i.e. events produced as the result of other messages which where
     /// produced as the result of this command, do not match this subscription.
     ///
-    EventSubscription<E> observeEvents<E extends GeneratedMessage>() {
+    Future<EventSubscription<E>> observeEvents<E extends GeneratedMessage>() {
         var subscription = _client.subscribeToEvents<E>()
             .where(all([eq('context.past_message', _commandAsOrigin())]))
             .post();
-        _subscriptions.add(subscription);
+        _futureSubscriptions.add(subscription);
         return subscription;
     }
 
@@ -431,12 +432,12 @@ class CommandRequest<M extends GeneratedMessage> {
     /// the callback will be triggered with the error. Otherwise, the error is silently ignored.
     ///
     Future<void> post({CommandErrorCallback? onError}) {
-        if (_subscriptions.isEmpty) {
+        if (_futureSubscriptions.isEmpty) {
             throw StateError('Use `observeEvents(..)` or `observeEventsWithContexts(..)` to observe'
                 ' command results or call `postAndForget()` instead of `post()` if you observe'
                 ' command results elsewhere.');
         }
-        return Future.wait(_subscriptions.map((s) => s.subscription))
+        return Future.wait(_futureSubscriptions)
                      .then((_) => _client._postCommand(_command, onError));
     }
 
@@ -452,7 +453,7 @@ class CommandRequest<M extends GeneratedMessage> {
     /// the callback will be triggered with the error. Otherwise, the error is silently ignored.
     ///
     Future<void> postAndForget({CommandErrorCallback? onError}) {
-        if (_subscriptions.isNotEmpty) {
+        if (_futureSubscriptions.isNotEmpty) {
             throw StateError('Use `post()` to add event subscriptions.');
         }
         return _client._postCommand(_command, onError);
@@ -605,7 +606,7 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
 
     /// Asynchronously sends this request to the server.
     ///
-    StateSubscription<M> post() {
+    Future<StateSubscription<M>> post() {
         var topic = _client._requests.topic().withFilters(_type, ids: _ids, filters: _filters);
         var builderInfo = theKnownTypes.findBuilderInfo(theKnownTypes.typeUrlFrom(_type))!;
         return _client._subscribeToStateUpdates(topic, builderInfo);
@@ -637,7 +638,7 @@ class EventSubscriptionRequest<M extends GeneratedMessage> {
 
     /// Asynchronously sends this request to the server.
     ///
-    EventSubscription<M> post() {
+    Future<EventSubscription<M>> post() {
         var topic = _client._requests.topic().withFilters(_type, filters: _filers);
         return _client._subscribeToEvents(topic);
     }
