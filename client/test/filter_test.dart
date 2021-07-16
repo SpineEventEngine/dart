@@ -40,48 +40,48 @@ void main() {
     group('Client should create', () {
 
         test('`equals` filters', () {
-            var filter = eq(fieldPath, 42);
+            var filter = eq(fieldPath, 42).filter;
             expect(filter.operator, equals(Filter_Operator.EQUAL));
             expect(filter.fieldPath.fieldName, containsAllInOrder([firstElement, secondElement]));
             expect(unpack(filter.value), isA<Int32Value>());
         });
 
         test('`greater than` filters', () {
-            var filter = gt(fieldPath, 2.71);
+            var filter = gt(fieldPath, 2.71).filter;
             expect(filter.operator, equals(Filter_Operator.GREATER_THAN));
             expect(filter.fieldPath.fieldName, containsAllInOrder([firstElement, secondElement]));
             expect(unpack(filter.value), isA<DoubleValue>());
         });
 
         test('`less than` filters', () {
-            var filter = lt(fieldPath, 3.14);
+            var filter = lt(fieldPath, 3.14).filter;
             expect(filter.operator, equals(Filter_Operator.LESS_THAN));
             expect(filter.fieldPath.fieldName, containsAllInOrder([firstElement, secondElement]));
             expect(unpack(filter.value), isA<DoubleValue>());
         });
 
         test('`greater or equals` filters', () {
-            var filter = ge(fieldPath, now());
+            var filter = ge(fieldPath, now()).filter;
             expect(filter.operator, equals(Filter_Operator.GREATER_OR_EQUAL));
             expect(filter.fieldPath.fieldName, containsAllInOrder([firstElement, secondElement]));
             expect(unpack(filter.value), isA<Timestamp>());
         });
 
         test('`less or equals` filters', () {
-            var filter = le(fieldPath, now());
+            var filter = le(fieldPath, now()).filter;
             expect(filter.operator, equals(Filter_Operator.LESS_OR_EQUAL));
             expect(filter.fieldPath.fieldName, containsAllInOrder([firstElement, secondElement]));
             expect(unpack(filter.value), isA<Timestamp>());
         });
 
         test('`all` filters', () {
-            var filter = all([ge(fieldPath, 0), le(fieldPath, 1)]);
+            var filter = all([ge(fieldPath, 0), le(fieldPath, 1)]).filter;
             expect(filter.operator, equals(CompositeFilter_CompositeOperator.ALL));
             expect(filter.filter.length, equals(2));
         });
 
         test('`either` filters', () {
-            var filter = either([ge(fieldPath, 100), le(fieldPath, -1), eq(fieldPath, 42)]);
+            var filter = either([ge(fieldPath, 100), le(fieldPath, -1), eq(fieldPath, 42)]).filter;
             expect(filter.operator, equals(CompositeFilter_CompositeOperator.EITHER));
             expect(filter.filter.length, equals(3));
         });

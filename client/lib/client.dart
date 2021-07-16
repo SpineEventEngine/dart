@@ -333,59 +333,101 @@ class Client {
 typedef _CreateSubscription<S extends Subscription> =
     S Function(FirebaseSubscription, FirebaseClient);
 
+/// A simple or a composite field filter.
+///
+abstract class FilterOrComposite {
+
+    /// Obtains the Protobuf `CompositeFilter` representing this filter.
+    CompositeFilter _toProto();
+}
+
+/// A composite field filter.
+///
+class Composite implements FilterOrComposite {
+
+    final CompositeFilter filter;
+
+    Composite._(this.filter);
+
+    @override
+    CompositeFilter _toProto() {
+        return filter;
+    }
+}
+
+/// A simple field filter.
+///
+/// A single simple filter is represented as a `CompositeFilter` by wrapping it into the composite
+/// filter with the `AND` operator.
+///
+class SimpleFilter implements FilterOrComposite {
+
+    final Filter filter;
+
+    SimpleFilter._(this.filter);
+
+    @override
+    CompositeFilter _toProto() {
+        return CompositeFilter()
+            ..filter.add(filter)
+            ..operator = CompositeFilter_CompositeOperator.ALL
+            ..freeze();
+    }
+}
+
 /// Creates a composite filter which groups one or more field filters with the `ALL` operator.
 ///
 /// All the field filters should pass in order for the composite filter to pass.
 ///
-CompositeFilter all(Iterable<Filter> filters) {
+Composite all(Iterable<SimpleFilter> filters) {
     ArgumentError.checkNotNull(filters);
-    return CompositeFilter()
+    return Composite._(CompositeFilter()
         ..operator = CompositeFilter_CompositeOperator.ALL
-        ..filter.addAll(filters)
-        ..freeze();
+        ..filter.addAll(filters.map((f) => f.filter))
+        ..freeze());
 }
 
 /// Creates a composite filter which groups one or more field filters with the `EITHER` operator.
 ///
 /// At least one field filter should pass in order for the composite filter to pass.
 ///
-CompositeFilter either(Iterable<Filter> filters) {
+Composite either(Iterable<SimpleFilter> filters) {
     ArgumentError.checkNotNull(filters);
-    return CompositeFilter()
+    return Composite._(CompositeFilter()
         ..operator = CompositeFilter_CompositeOperator.EITHER
-        ..filter.addAll(filters)
-        ..freeze();
+        ..filter.addAll(filters.map((f) => f.filter))
+        ..freeze());
 }
 
 /// Creates a field filter with the `=` operator.
-Filter eq(String fieldPath, Object value) =>
+SimpleFilter eq(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.EQUAL, value);
 
 /// Creates a field filter with the `<=` operator.
-Filter le(String fieldPath, Object value) =>
+SimpleFilter le(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.LESS_OR_EQUAL, value);
 
 /// Creates a field filter with the `>=` operator.
-Filter ge(String fieldPath, Object value) =>
+SimpleFilter ge(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.GREATER_OR_EQUAL, value);
 
 /// Creates a field filter with the `<` operator.
-Filter lt(String fieldPath, Object value) =>
+SimpleFilter lt(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.LESS_THAN, value);
 
 /// Creates a field filter with the `>` operator.
-Filter gt(String fieldPath, Object value) =>
+SimpleFilter gt(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.GREATER_THAN, value);
 
-Filter _filter(String fieldPath, Filter_Operator operator, Object value) {
+SimpleFilter _filter(String fieldPath, Filter_Operator operator, Object value) {
     ArgumentError.checkNotNull(fieldPath);
     ArgumentError.checkNotNull(value);
     var pathElements = fieldPath.split('.');
-    return Filter()
+    return SimpleFilter._(Filter()
         ..fieldPath = (FieldPath()..fieldName.addAll(pathElements))
         ..operator = operator
         ..value = packObject(value)
-        ..freeze();
+        ..freeze());
 }
 
 /// A request to the server to post a command.
@@ -409,7 +451,7 @@ class CommandRequest<M extends GeneratedMessage> {
     ///
     Future<EventSubscription<E>> observeEvents<E extends GeneratedMessage>() {
         var subscription = _client.subscribeToEvents<E>()
-            .where(all([eq('context.past_message', _commandAsOrigin())]))
+            .where(eq('context.past_message', _commandAsOrigin()))
             .post();
         _futureSubscriptions.add(subscription);
         return subscription;
@@ -510,9 +552,9 @@ class QueryRequest<M extends GeneratedMessage> {
     /// an entity state should pass all of the composite filters to be included in the query
     /// results.
     ///
-    QueryRequest<M> where(CompositeFilter filter) {
+    QueryRequest<M> where(FilterOrComposite filter) {
         ArgumentError.checkNotNull(filter, 'filter');
-        _filters.add(filter);
+        _filters.add(filter._toProto());
         return this;
     }
 
@@ -593,9 +635,9 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
     /// If called multiple times, the composite filters are composed with the `ALL` operator, i.e.
     /// an entity state should pass all of the composite filters to match the subscription.
     ///
-    StateSubscriptionRequest<M> where(CompositeFilter filter) {
+    StateSubscriptionRequest<M> where(FilterOrComposite filter) {
         ArgumentError.checkNotNull(filter, 'filter');
-        _filters.add(filter);
+        _filters.add(filter._toProto());
         return this;
     }
 
@@ -640,9 +682,9 @@ class EventSubscriptionRequest<M extends GeneratedMessage> {
     /// If called multiple times, the composite filters are composed with the `ALL` operator, i.e.
     /// an event should pass all of the composite filters to match the subscription.
     ///
-    EventSubscriptionRequest<M> where(CompositeFilter filter) {
+    EventSubscriptionRequest<M> where(FilterOrComposite filter) {
         ArgumentError.checkNotNull(filter, 'filter');
-        _filers.add(filter);
+        _filers.add(filter._toProto());
         return this;
     }
 
