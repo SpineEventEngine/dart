@@ -84,9 +84,9 @@ void main() {
                 ..description = 'Firebase query test';
             var client = clients.onBehalfOf(actor);
             var request = client.command(cmd);
-            var stateSubscription = client.subscribeTo<Task>()
-                                          .whereIdIn([taskId])
-                                          .post();
+            var stateSubscription = await client.subscribeTo<Task>()
+                                                .whereIdIn([taskId])
+                                                .post();
             request.postAndForget();
             await stateSubscription.itemAdded.first;
             await _sleep();
@@ -107,14 +107,19 @@ void main() {
                 ..description = 'Firebase event subscription test';
             var client = clients.onBehalfOf(actor);
             var request = client.command(cmd);
-            var subscription = request.observeEvents<TaskCreated>();
-            request.post();
-            var event = await subscription.eventMessages.first;
-            await _sleep();
+            var futureSubscription = request.observeEvents<TaskCreated>();
+            var taskCreated = futureSubscription
+                .then((s) => s.eventMessages.first);
+            await request.post();
+
+            var event = await taskCreated;
             expect(event.id, equals(taskId));
 
-            expect(subscription.closed, equals(false));
-            subscription.unsubscribe();
+            futureSubscription.then((s) {
+                expect(s.closed, equals(false));
+                s.unsubscribe();
+            });
+            var subscription = await futureSubscription;
             expect(subscription.closed, equals(true));
         });
 
@@ -133,9 +138,9 @@ void main() {
                 ..description = 'direct query test';
 
             var client = clients.onBehalfOf(actor);
-            var newTasks = client.subscribeTo<Task>()
-                                 .whereIdIn([taskId])
-                                 .post();
+            var newTasks = await client.subscribeTo<Task>()
+                                       .whereIdIn([taskId])
+                                       .post();
             client.command(cmd)
                   .postAndForget();
             // Make sure command is processed...
@@ -155,9 +160,7 @@ void main() {
 
         test('subscribe to entity changes', () async {
             var client = clients.onBehalfOf(actor);
-            StateSubscription<Task> entitySubscription =
-                    client.subscribeTo<Task>()
-                          .post();
+            StateSubscription<Task> entitySubscription = await client.subscribeTo<Task>().post();
             Stream<Task> itemAdded = entitySubscription.itemAdded;
             var taskId = TaskId()
                 ..value = newUuid();
@@ -169,7 +172,7 @@ void main() {
             var taskCreatedEvents = createTaskRequest.observeEvents<TaskCreated>();
             createTaskRequest.post();
 
-            var newTaskEvent = await taskCreatedEvents.eventMessages.first;
+            var newTaskEvent = await taskCreatedEvents.then((s) => s.eventMessages.first);
             expect(newTaskEvent.id, equals(taskId));
             var newTask = await itemAdded.first;
             expect(newTask.name, equals(createTaskCmd.name));
@@ -187,9 +190,9 @@ void main() {
         });
 
         test('query entities by column values', () async {
-            var newTasks = clients.asGuest()
-                                  .subscribeTo<UserTasks>()
-                                  .post();
+            var newTasks = await clients.asGuest()
+                                        .subscribeTo<UserTasks>()
+                                        .post();
             var client = clients.onBehalfOf(actor);
             var olderTaskId = TaskId()..value = newUuid();
             client.command(CreateTask()
@@ -219,9 +222,9 @@ void main() {
         });
 
         test('query entities with order and limit', () async {
-            var newProjections = clients.asGuest()
-                .subscribeTo<UserTasks>()
-                .post();
+            var newProjections = await clients.asGuest()
+                                              .subscribeTo<UserTasks>()
+                                              .post();
             var client = clients.onBehalfOf(actor);
             client.command(CreateTask()
                 ..id = (TaskId()..value = newUuid())
@@ -255,9 +258,9 @@ void main() {
         });
 
         test('query entities by enum column values', () async {
-            var projectProgress = clients.asGuest()
-                .subscribeTo<ProjectProgress>()
-                .post();
+            var projectProgress = await clients.asGuest()
+                                               .subscribeTo<ProjectProgress>()
+                                               .post();
             var client = clients.onBehalfOf(actor);
             var completedProject = ProjectId()..value = newUuid();
             client.command(CreateProject()
