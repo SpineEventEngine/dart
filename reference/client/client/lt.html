@@ -61,9 +61,12 @@
   <li><a href="../client/Client-class.html">Client</a></li>
   <li><a href="../client/Clients-class.html">Clients</a></li>
   <li><a href="../client/CommandRequest-class.html">CommandRequest</a></li>
+  <li><a href="../client/Composite-class.html">Composite</a></li>
   <li><a href="../client/Endpoints-class.html">Endpoints</a></li>
   <li><a href="../client/EventSubscriptionRequest-class.html">EventSubscriptionRequest</a></li>
+  <li><a href="../client/FilterOrComposite-class.html">FilterOrComposite</a></li>
   <li><a href="../client/QueryRequest-class.html">QueryRequest</a></li>
+  <li><a href="../client/SimpleFilter-class.html">SimpleFilter</a></li>
   <li><a href="../client/StateSubscriptionRequest-class.html">StateSubscriptionRequest</a></li>
   <li><a href="../client/SubscriptionEndpoints-class.html">SubscriptionEndpoints</a></li>
 
@@ -100,7 +103,7 @@
     <section class="multi-line-signature">
         
 
-<span class="returntype"><a href="../spine_client_filters.pb/Filter-class.html">Filter</a></span>
+<span class="returntype"><a href="../client/SimpleFilter-class.html">SimpleFilter</a></span>
 <span class="name ">lt</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="lt-param-fieldPath"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/String-class.html">String</a></span> <span class="parameter-name">fieldPath</span>, </span></li>
 <li><span class="parameter" id="lt-param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span></li>
 </ol>)
@@ -115,7 +118,7 @@
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">Filter lt(String fieldPath, Object value) =&gt;
+  <pre class="language-dart"><code class="language-dart">SimpleFilter lt(String fieldPath, Object value) =&gt;
     _filter(fieldPath, Filter_Operator.LESS_THAN, value);</code></pre>
 </section>
 
@@ -130,7 +133,7 @@
 <footer>
   <span class="no-break">
     spine_client
-      1.7.4
+      1.7.5
   </span>
 
   

@@ -106,6 +106,8 @@
   <p>Asynchronously sends this request to the server.</p>
 <p>Fails if there are no event subscriptions to monitor the command execution. If this is
 the desired behaviour, use <code>CommandRequest.postAndForget(..)</code>.</p>
+<p>When the command is sent, the event subscriptions created within this request
+are guaranteed to be active.</p>
 <p>Returns a future which completes when the request is sent. If there was a network problem,
 the future, completes with an error.</p>
 <p>If the server rejects the command with an error and the <code>onError</code> callback is set,
@@ -117,12 +119,12 @@ the callback will be triggered with the error. Otherwise, the error is silently 
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; post({CommandErrorCallback? onError}) {
-    if (_subscriptions.isEmpty) {
+    if (_futureSubscriptions.isEmpty) {
         throw StateError(&#39;Use `observeEvents(..)` or `observeEventsWithContexts(..)` to observe&#39;
             &#39; command results or call `postAndForget()` instead of `post()` if you observe&#39;
             &#39; command results elsewhere.&#39;);
     }
-    return Future.wait(_subscriptions.map((s) =&gt; s.subscription))
+    return Future.wait(_futureSubscriptions)
                  .then((_) =&gt; _client._postCommand(_command, onError));
 }</code></pre>
 </section>
@@ -138,7 +140,7 @@ the callback will be triggered with the error. Otherwise, the error is silently 
 <footer>
   <span class="no-break">
     spine_client
-      1.7.4
+      1.7.5
   </span>
 
   

@@ -61,9 +61,12 @@
   <li><a href="../client/Client-class.html">Client</a></li>
   <li><a href="../client/Clients-class.html">Clients</a></li>
   <li><a href="../client/CommandRequest-class.html">CommandRequest</a></li>
+  <li><a href="../client/Composite-class.html">Composite</a></li>
   <li><a href="../client/Endpoints-class.html">Endpoints</a></li>
   <li><a href="../client/EventSubscriptionRequest-class.html">EventSubscriptionRequest</a></li>
+  <li><a href="../client/FilterOrComposite-class.html">FilterOrComposite</a></li>
   <li><a href="../client/QueryRequest-class.html">QueryRequest</a></li>
+  <li><a href="../client/SimpleFilter-class.html">SimpleFilter</a></li>
   <li><a href="../client/StateSubscriptionRequest-class.html">StateSubscriptionRequest</a></li>
   <li><a href="../client/SubscriptionEndpoints-class.html">SubscriptionEndpoints</a></li>
 
@@ -100,8 +103,8 @@
     <section class="multi-line-signature">
         
 
-<span class="returntype"><a href="../spine_client_filters.pb/CompositeFilter-class.html">CompositeFilter</a></span>
-<span class="name ">either</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="either-param-filters"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../spine_client_filters.pb/Filter-class.html">Filter</a></span>&gt;</span></span> <span class="parameter-name">filters</span></span></li>
+<span class="returntype"><a href="../client/Composite-class.html">Composite</a></span>
+<span class="name ">either</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="either-param-filters"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../client/SimpleFilter-class.html">SimpleFilter</a></span>&gt;</span></span> <span class="parameter-name">filters</span></span></li>
 </ol>)
 
     </section>
@@ -115,12 +118,12 @@
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">CompositeFilter either(Iterable&lt;Filter&gt; filters) {
+  <pre class="language-dart"><code class="language-dart">Composite either(Iterable&lt;SimpleFilter&gt; filters) {
     ArgumentError.checkNotNull(filters);
-    return CompositeFilter()
+    return Composite._(CompositeFilter()
         ..operator = CompositeFilter_CompositeOperator.EITHER
-        ..filter.addAll(filters)
-        ..freeze();
+        ..filter.addAll(filters.map((f) =&gt; f.filter))
+        ..freeze());
 }</code></pre>
 </section>
 
@@ -135,7 +138,7 @@
 <footer>
   <span class="no-break">
     spine_client
-      1.7.4
+      1.7.5
   </span>
 
   

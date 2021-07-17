@@ -98,7 +98,7 @@
       
 
 <span class="returntype"><a href="../../client/QueryRequest-class.html">QueryRequest</a><span class="signature">&lt;<wbr><span class="type-parameter">M</span>&gt;</span></span>
-<span class="name ">where</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="where-param-filter"><span class="type-annotation"><a href="../../spine_client_filters.pb/CompositeFilter-class.html">CompositeFilter</a></span> <span class="parameter-name">filter</span></span></li>
+<span class="name ">where</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="where-param-filter"><span class="type-annotation"><a href="../../client/FilterOrComposite-class.html">FilterOrComposite</a></span> <span class="parameter-name">filter</span></span></li>
 </ol>)
 
       
@@ -117,9 +117,9 @@ results.</p>
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">QueryRequest&lt;M&gt; where(CompositeFilter filter) {
+  <pre class="language-dart"><code class="language-dart">QueryRequest&lt;M&gt; where(FilterOrComposite filter) {
     ArgumentError.checkNotNull(filter, &#39;filter&#39;);
-    _filters.add(filter);
+    _filters.add(filter._toProto());
     return this;
 }</code></pre>
 </section>
@@ -135,7 +135,7 @@ results.</p>
 <footer>
   <span class="no-break">
     spine_client
-      1.7.4
+      1.7.5
   </span>
 
   

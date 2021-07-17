@@ -97,7 +97,7 @@
 </h1></div>
 
     <section class="multi-line-signature">
-      <span class="name ">StateSubscription&lt;<wbr><span class="type-parameter">T extends GeneratedMessage</span>&gt;.of</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="of-param-firebaseSubscription"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../spine_web_firebase_subscription_firebase_subscription.pb/FirebaseSubscription-class.html">FirebaseSubscription</a></span>&gt;</span></span> <span class="parameter-name">firebaseSubscription</span>, </span></li>
+      <span class="name ">StateSubscription&lt;<wbr><span class="type-parameter">T extends GeneratedMessage</span>&gt;.of</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="of-param-firebaseSubscription"><span class="type-annotation"><a href="../../spine_web_firebase_subscription_firebase_subscription.pb/FirebaseSubscription-class.html">FirebaseSubscription</a></span> <span class="parameter-name">firebaseSubscription</span>, </span></li>
 <li><span class="parameter" id="of-param-builderInfoForType"><span class="type-annotation"><a href="https://pub.dev/documentation/protobuf/2.0.0/protobuf/BuilderInfo-class.html">BuilderInfo</a></span> <span class="parameter-name">builderInfoForType</span>, </span></li>
 <li><span class="parameter" id="of-param-database"><span class="type-annotation"><a href="../../firebase_client/FirebaseClient-class.html">FirebaseClient</a></span> <span class="parameter-name">database</span></span></li>
 </ol>)
@@ -112,19 +112,18 @@
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">factory StateSubscription.of(Future&lt;FirebaseSubscription&gt; firebaseSubscription,
+  <pre class="language-dart"><code class="language-dart">factory StateSubscription.of(FirebaseSubscription firebaseSubscription,
                              BuilderInfo builderInfoForType,
                              FirebaseClient database) {
-    var subscription = firebaseSubscription.then((value) =&gt; value.subscription);
-    var nodePath = _nodePath(firebaseSubscription);
-    var itemAdded = _nodePathStream(nodePath)
-        .asyncExpand((element) =&gt; database.childAdded(element))
+    var subscription = firebaseSubscription.subscription;
+    var nodePath = firebaseSubscription.nodePath.value;
+    var itemAdded = database
+        .childAdded(nodePath)
         .map((json) =&gt; parseIntoNewInstance&lt;T&gt;(builderInfoForType, json));
-    var itemChanged = _nodePathStream(nodePath)
-        .asyncExpand((element) =&gt; database.childChanged(element))
+    var itemChanged = database
+        .childChanged(nodePath)
         .map((json) =&gt; parseIntoNewInstance&lt;T&gt;(builderInfoForType, json));
-    var itemRemoved = _nodePathStream(nodePath)
-        .asyncExpand((element) =&gt; database.childRemoved(element))
+    var itemRemoved = database.childRemoved(nodePath)
         .map((json) =&gt; parseIntoNewInstance&lt;T&gt;(builderInfoForType, json));
     return StateSubscription._(subscription, itemAdded, itemChanged, itemRemoved);
 }</code></pre>
@@ -141,7 +140,7 @@
 <footer>
   <span class="no-break">
     spine_client
-      1.7.4
+      1.7.5
   </span>
 
   

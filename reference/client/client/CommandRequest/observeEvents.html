@@ -94,7 +94,7 @@
     <section class="multi-line-signature">
       
 
-<span class="returntype"><a href="../../subscription/EventSubscription-class.html">EventSubscription</a><span class="signature">&lt;<wbr><span class="type-parameter">E</span>&gt;</span></span>
+<span class="returntype"><a href="https://api.dart.dev/stable/2.13.4/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../subscription/EventSubscription-class.html">EventSubscription</a><span class="signature">&lt;<wbr><span class="type-parameter">E</span>&gt;</span></span>&gt;</span></span>
 <span class="name ">observeEvents</span>&lt;<wbr><span class="type-parameter">E extends GeneratedMessage</span>&gt;(<wbr>)
 
       
@@ -105,17 +105,20 @@
   <p>Creates an event subscription for events produced as a direct result of this command.</p>
 <p>Events down the line, i.e. events produced as the result of other messages which where
 produced as the result of this command, do not match this subscription.</p>
+<p>When the resulting future completes, the subscription is guaranteed to be created.
+Also, when the future created in <code>post(..)</code> completes, the all subscriptions created within
+the same <code>CommandRequest</code> are guaranteed to have completed.</p>
 </section>
 
 
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">EventSubscription&lt;E&gt; observeEvents&lt;E extends GeneratedMessage&gt;() {
+  <pre class="language-dart"><code class="language-dart">Future&lt;EventSubscription&lt;E&gt;&gt; observeEvents&lt;E extends GeneratedMessage&gt;() {
     var subscription = _client.subscribeToEvents&lt;E&gt;()
-        .where(all([eq(&#39;context.past_message&#39;, _commandAsOrigin())]))
+        .where(eq(&#39;context.past_message&#39;, _commandAsOrigin()))
         .post();
-    _subscriptions.add(subscription);
+    _futureSubscriptions.add(subscription);
     return subscription;
 }</code></pre>
 </section>
@@ -131,7 +134,7 @@ produced as the result of this command, do not match this subscription.</p>
 <footer>
   <span class="no-break">
     spine_client
-      1.7.4
+      1.7.5
   </span>
 
   

@@ -94,7 +94,7 @@
     <section class="multi-line-signature">
       
 
-<span class="returntype"><a href="../../subscription/StateSubscription-class.html">StateSubscription</a><span class="signature">&lt;<wbr><span class="type-parameter">M</span>&gt;</span></span>
+<span class="returntype"><a href="https://api.dart.dev/stable/2.13.4/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../subscription/StateSubscription-class.html">StateSubscription</a><span class="signature">&lt;<wbr><span class="type-parameter">M</span>&gt;</span></span>&gt;</span></span>
 <span class="name ">post</span>(<wbr>)
 
       
@@ -103,13 +103,15 @@
     
 <section class="desc markdown">
   <p>Asynchronously sends this request to the server.</p>
+<p>The subscription is guaranteed to have been created on server when the resulting future
+completes.</p>
 </section>
 
 
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">StateSubscription&lt;M&gt; post() {
+  <pre class="language-dart"><code class="language-dart">Future&lt;StateSubscription&lt;M&gt;&gt; post() {
     var topic = _client._requests.topic().withFilters(_type, ids: _ids, filters: _filters);
     var builderInfo = theKnownTypes.findBuilderInfo(theKnownTypes.typeUrlFrom(_type))!;
     return _client._subscribeToStateUpdates(topic, builderInfo);
@@ -127,7 +129,7 @@
 <footer>
   <span class="no-break">
     spine_client
-      1.7.4
+      1.7.5
   </span>
 
   

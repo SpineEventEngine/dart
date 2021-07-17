@@ -739,6 +739,14 @@ and managed subscriptions on behalf of a certain user.
   A request to the server to post a command. 
 </dd>
 
+        <dt id="Composite">
+  <span class="name "><a href="../client/Composite-class.html">Composite</a></span> 
+
+</dt>
+<dd>
+  A composite field filter. 
+</dd>
+
         <dt id="DayOfWeek">
   <span class="name "><a href="../spine_time_time.pbenum/DayOfWeek-class.html">DayOfWeek</a></span> 
 
@@ -769,6 +777,14 @@ and managed subscriptions on behalf of a certain user.
 </dt>
 <dd>
   A request to subscribe to events. 
+</dd>
+
+        <dt id="FilterOrComposite">
+  <span class="name "><a href="../client/FilterOrComposite-class.html">FilterOrComposite</a></span> 
+
+</dt>
+<dd>
+  A simple or a composite field filter. 
 </dd>
 
         <dt id="FirebaseClient">
@@ -833,6 +849,14 @@ and managed subscriptions on behalf of a certain user.
 </dt>
 <dd>
   A request to query the server for data. 
+</dd>
+
+        <dt id="SimpleFilter">
+  <span class="name "><a href="../client/SimpleFilter-class.html">SimpleFilter</a></span> 
+
+</dt>
+<dd>
+  A simple field filter. <a href="../client/SimpleFilter-class.html">[...]</a>
 </dd>
 
         <dt id="StateSubscription">
@@ -927,8 +951,8 @@ and managed subscriptions on behalf of a certain user.
 
       <dl class="callables">
         <dt id="all" class="callable">
-  <span class="name"><a href="../client/all.html">all</a></span><span class="signature">(<wbr><span class="parameter" id="all-param-filters"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../spine_client_filters.pb/Filter-class.html">Filter</a></span>&gt;</span></span> <span class="parameter-name">filters</span></span>)
-    <span class="returntype parameter">&#8594; <a href="../spine_client_filters.pb/CompositeFilter-class.html">CompositeFilter</a></span>
+  <span class="name"><a href="../client/all.html">all</a></span><span class="signature">(<wbr><span class="parameter" id="all-param-filters"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../client/SimpleFilter-class.html">SimpleFilter</a></span>&gt;</span></span> <span class="parameter-name">filters</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../client/Composite-class.html">Composite</a></span>
   </span>
   
 
@@ -940,8 +964,8 @@ and managed subscriptions on behalf of a certain user.
 </dd>
 
         <dt id="either" class="callable">
-  <span class="name"><a href="../client/either.html">either</a></span><span class="signature">(<wbr><span class="parameter" id="either-param-filters"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../spine_client_filters.pb/Filter-class.html">Filter</a></span>&gt;</span></span> <span class="parameter-name">filters</span></span>)
-    <span class="returntype parameter">&#8594; <a href="../spine_client_filters.pb/CompositeFilter-class.html">CompositeFilter</a></span>
+  <span class="name"><a href="../client/either.html">either</a></span><span class="signature">(<wbr><span class="parameter" id="either-param-filters"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../client/SimpleFilter-class.html">SimpleFilter</a></span>&gt;</span></span> <span class="parameter-name">filters</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../client/Composite-class.html">Composite</a></span>
   </span>
   
 
@@ -954,7 +978,7 @@ and managed subscriptions on behalf of a certain user.
 
         <dt id="eq" class="callable">
   <span class="name"><a href="../client/eq.html">eq</a></span><span class="signature">(<wbr><span class="parameter" id="eq-param-fieldPath"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/String-class.html">String</a></span> <span class="parameter-name">fieldPath</span>, </span><span class="parameter" id="eq-param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)
-    <span class="returntype parameter">&#8594; <a href="../spine_client_filters.pb/Filter-class.html">Filter</a></span>
+    <span class="returntype parameter">&#8594; <a href="../client/SimpleFilter-class.html">SimpleFilter</a></span>
   </span>
   
 
@@ -967,7 +991,7 @@ and managed subscriptions on behalf of a certain user.
 
         <dt id="ge" class="callable">
   <span class="name"><a href="../client/ge.html">ge</a></span><span class="signature">(<wbr><span class="parameter" id="ge-param-fieldPath"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/String-class.html">String</a></span> <span class="parameter-name">fieldPath</span>, </span><span class="parameter" id="ge-param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)
-    <span class="returntype parameter">&#8594; <a href="../spine_client_filters.pb/Filter-class.html">Filter</a></span>
+    <span class="returntype parameter">&#8594; <a href="../client/SimpleFilter-class.html">SimpleFilter</a></span>
   </span>
   
 
@@ -980,7 +1004,7 @@ and managed subscriptions on behalf of a certain user.
 
         <dt id="gt" class="callable">
   <span class="name"><a href="../client/gt.html">gt</a></span><span class="signature">(<wbr><span class="parameter" id="gt-param-fieldPath"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/String-class.html">String</a></span> <span class="parameter-name">fieldPath</span>, </span><span class="parameter" id="gt-param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)
-    <span class="returntype parameter">&#8594; <a href="../spine_client_filters.pb/Filter-class.html">Filter</a></span>
+    <span class="returntype parameter">&#8594; <a href="../client/SimpleFilter-class.html">SimpleFilter</a></span>
   </span>
   
 
@@ -993,7 +1017,7 @@ and managed subscriptions on behalf of a certain user.
 
         <dt id="le" class="callable">
   <span class="name"><a href="../client/le.html">le</a></span><span class="signature">(<wbr><span class="parameter" id="le-param-fieldPath"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/String-class.html">String</a></span> <span class="parameter-name">fieldPath</span>, </span><span class="parameter" id="le-param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)
-    <span class="returntype parameter">&#8594; <a href="../spine_client_filters.pb/Filter-class.html">Filter</a></span>
+    <span class="returntype parameter">&#8594; <a href="../client/SimpleFilter-class.html">SimpleFilter</a></span>
   </span>
   
 
@@ -1006,7 +1030,7 @@ and managed subscriptions on behalf of a certain user.
 
         <dt id="lt" class="callable">
   <span class="name"><a href="../client/lt.html">lt</a></span><span class="signature">(<wbr><span class="parameter" id="lt-param-fieldPath"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/String-class.html">String</a></span> <span class="parameter-name">fieldPath</span>, </span><span class="parameter" id="lt-param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.13.4/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)
-    <span class="returntype parameter">&#8594; <a href="../spine_client_filters.pb/Filter-class.html">Filter</a></span>
+    <span class="returntype parameter">&#8594; <a href="../client/SimpleFilter-class.html">SimpleFilter</a></span>
   </span>
   
 
@@ -1075,10 +1099,12 @@ and managed subscriptions on behalf of a certain user.
   <li><a href="../client/Client-class.html">Client</a></li>
   <li><a href="../client/Clients-class.html">Clients</a></li>
   <li><a href="../client/CommandRequest-class.html">CommandRequest</a></li>
+  <li><a href="../client/Composite-class.html">Composite</a></li>
   <li><a href="../spine_time_time.pbenum/DayOfWeek-class.html">DayOfWeek</a></li>
   <li><a href="../client/Endpoints-class.html">Endpoints</a></li>
   <li><a href="../subscription/EventSubscription-class.html">EventSubscription</a></li>
   <li><a href="../client/EventSubscriptionRequest-class.html">EventSubscriptionRequest</a></li>
+  <li><a href="../client/FilterOrComposite-class.html">FilterOrComposite</a></li>
   <li><a href="../firebase_client/FirebaseClient-class.html">FirebaseClient</a></li>
   <li><a href="../spine_time_time.pb/LocalDate-class.html">LocalDate</a></li>
   <li><a href="../spine_time_time.pb/LocalDateTime-class.html">LocalDateTime</a></li>
@@ -1087,6 +1113,7 @@ and managed subscriptions on behalf of a certain user.
   <li><a href="../spine_time_time.pb/OffsetDateTime-class.html">OffsetDateTime</a></li>
   <li><a href="../spine_time_time.pb/OffsetTime-class.html">OffsetTime</a></li>
   <li><a href="../client/QueryRequest-class.html">QueryRequest</a></li>
+  <li><a href="../client/SimpleFilter-class.html">SimpleFilter</a></li>
   <li><a href="../subscription/StateSubscription-class.html">StateSubscription</a></li>
   <li><a href="../client/StateSubscriptionRequest-class.html">StateSubscriptionRequest</a></li>
   <li><a href="../subscription/Subscription-class.html">Subscription</a></li>
@@ -1127,7 +1154,7 @@ and managed subscriptions on behalf of a certain user.
 <footer>
   <span class="no-break">
     spine_client
-      1.7.4
+      1.7.5
   </span>
 
   

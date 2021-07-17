@@ -117,7 +117,7 @@ the callback will be triggered with the error. Otherwise, the error is silently 
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; postAndForget({CommandErrorCallback? onError}) {
-    if (_subscriptions.isNotEmpty) {
+    if (_futureSubscriptions.isNotEmpty) {
         throw StateError(&#39;Use `post()` to add event subscriptions.&#39;);
     }
     return _client._postCommand(_command, onError);
@@ -135,7 +135,7 @@ the callback will be triggered with the error. Otherwise, the error is silently 
 <footer>
   <span class="no-break">
     spine_client
-      1.7.4
+      1.7.5
   </span>
 
   
