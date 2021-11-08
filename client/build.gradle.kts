@@ -33,6 +33,8 @@ import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.remove
 import com.google.protobuf.gradle.testProtobuf
 import io.spine.gradle.internal.Deps
+import io.spine.internal.gradle.dart.task.registerDartBuildTasks
+import io.spine.internal.gradle.dart.task.registerDartPublishTasks
 
 plugins {
     java
@@ -41,8 +43,8 @@ plugins {
 }
 
 apply {
-    from(Deps.scripts.dartBuildTasks(project))
-    from(Deps.scripts.pubPublishTasks(project))
+//    from(Deps.scripts.dartBuildTasks(project))
+//    from(Deps.scripts.pubPublishTasks(project))
     from(Deps.scripts.javadocOptions(project))
     from(Deps.scripts.updateGitHubPages(project))
 }
@@ -58,6 +60,11 @@ dependencies {
 
     testProtobuf("io.spine:spine-base:$spineBaseVersion")
     testProtobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
+}
+
+tasks {
+    registerDartBuildTasks()
+    registerDartPublishTasks()
 }
 
 tasks.assemble {
