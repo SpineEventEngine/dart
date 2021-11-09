@@ -48,14 +48,17 @@ fun Project.dart(configuration: DartExtension.() -> Unit) {
 /**
  * Encapsulates Dart configuration.
  */
-open class DartExtension(project: Project) : DartEnvironment {
-    override val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
-    override val packageIndex = "${project.projectDir}/.packages"
-    override val pubSpec = "${project.projectDir}/pubspec.yaml"
-    override val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
+open class DartExtension(project: Project) {
+
+    private val defaultEnv = object : DartEnvironment {
+        override val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
+        override val packageIndex = "${project.projectDir}/.packages"
+        override val pubSpec = "${project.projectDir}/pubspec.yaml"
+        override val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
+    }
 
     @Suppress("LeakingThis")
-    private val tasks = DartTasks(this, project.tasks)
+    private val tasks = DartTasks(defaultEnv, project.tasks)
 
     fun tasks(configuration: DartTasks.() -> Unit) = configuration.invoke(tasks)
 }
