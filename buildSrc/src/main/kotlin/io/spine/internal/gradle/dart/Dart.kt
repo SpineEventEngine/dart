@@ -46,7 +46,7 @@ fun Project.dart(configuration: DartExtension.() -> Unit) {
 }
 
 /**
- * Encapsulates Dart configuration.
+ * Encapsulates Dart related configuration.
  */
 open class DartExtension(project: Project) {
 
@@ -68,14 +68,29 @@ open class DartExtension(project: Project) {
  */
 interface DartEnvironment {
 
+    /**
+     * Path to a directory for local publications of a `Pub` package for this project.
+     */
     val publicationDirectory: String
+
+    /**
+     * Path to a `Pub` package manager executable.
+     */
     val pubExecutable: String
+
+    /**
+     * Path to `pubspec.yaml` file.
+     */
     val pubSpec: String
+
+    /**
+     * Path to `.packages` file.
+     */
     val packageIndex: String
 }
 
 /**
- * Context for assembling Dart related tasks.
+ * Context for assembling Dart related tasks with access to the current [DartEnvironment].
  */
 class DartTasks(dartEnv: DartEnvironment, tasks: TaskContainer)
     : DartEnvironment by dartEnv, TaskContainer by tasks
