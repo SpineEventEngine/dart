@@ -35,6 +35,15 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByType
 
+/**
+ * Registers tasks for publishing Dart projects.
+ *
+ * List of tasks to be created:
+ *
+ *  1. `stagePubPublication` - prepares the Dart package for Pub publication;
+ *  2. `publishToPub` - publishes the prepared publication to Pub;
+ *  3. `activateLocally` - activates this package locally.
+ */
 fun Project.registerPublishTasks() {
 
     extensions.getByType<DartTasks>().run {
@@ -73,7 +82,7 @@ private fun DartTasks.stagePubPublication(): Task =
 
 private fun DartTasks.publishToPub(): Task =
     create<Exec>("publishToPub") {
-        description = "Published this package to Pub."
+        description = "Publishes the prepared publication to Pub."
         group = dartPublishTask
 
         workingDir(publicationDirectory)

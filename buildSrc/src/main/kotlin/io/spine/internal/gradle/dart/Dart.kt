@@ -35,21 +35,21 @@ import org.gradle.kotlin.dsl.findByType
 /**
  * Provides a scope for Dart related configuration.
  *
- * Sets up [DartTasks] as a project extension.
+ * Registers [DartTasks] project extension.
  */
 fun Project.dart(configure: () -> Unit) {
 
     if (extensions.findByType<DartTasks>() == null) {
-        extensions.create<DartTasks>("dartEnvironment", project)
+        extensions.create<DartTasks>("dartTasks", project)
     }
 
     configure.invoke()
 }
 
 /**
- * A Gradle Extension for assembling Dart related tasks.
+ * Context for assembling Dart related tasks.
  *
- * The class information that is required for Dart projects' building and publishing.
+ * The context provides information about the current Dart environment.
  */
 internal open class DartTasks(val project: Project) : TaskContainer by project.tasks {
 

@@ -34,6 +34,15 @@ import org.gradle.api.tasks.Exec
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByType
 
+/**
+ * Registers tasks for building Dart projects.
+ *
+ * List of tasks to be created:
+ *
+ *  1. `resolveDependencies` - fetches the dependencies declared via `pubspec.yaml`;
+ *  2. `cleanPackageIndex` - deletes the resolved `.packages` files of this Dart module;
+ *  3. `testDart` - runs Dart tests declared in the `./test` directory.
+ */
 fun Project.registerBuildTasks() {
 
     extensions.getByType<DartTasks>().run {
@@ -54,14 +63,6 @@ fun Project.registerBuildTasks() {
     }
 }
 
-private fun DartTasks.cleanPackageIndex(): Task =
-    create<Delete>("cleanPackageIndex") {
-        description = "Deletes the `.packages` file on this Dart module."
-        group = dartBuildTask
-
-        setDelete(packageIndex)
-    }
-
 private fun DartTasks.resolveDependencies(): Task =
     create<Exec>("resolveDependencies") {
         description = "Fetches the dependencies declared via `pubspec.yaml`."
@@ -71,6 +72,14 @@ private fun DartTasks.resolveDependencies(): Task =
         outputs.file(packageIndex)
 
         commandLine(pubExecutable, "get")
+    }
+
+private fun DartTasks.cleanPackageIndex(): Task =
+    create<Delete>("cleanPackageIndex") {
+        description = "Deletes the resolved `.packages` files of this Dart module."
+        group = dartBuildTask
+
+        setDelete(packageIndex)
     }
 
 private fun DartTasks.testDart(): Task =
