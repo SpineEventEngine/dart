@@ -30,15 +30,28 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.findByType
 
+/**
+ * Provides a scope for Dart related configuration.
+ *
+ * Sets up [DartTasks] as a project extension.
+ */
 fun Project.dart(configure: () -> Unit) {
-    extensions.create<DartEnvironment>("dartEnvironment", project)
+
+    if (extensions.findByType<DartTasks>() == null) {
+        extensions.create<DartTasks>("dartEnvironment", project)
+    }
+
     configure.invoke()
 }
 
-internal open class DartEnvironment(
-    val project: Project
-) : TaskContainer by project.tasks {
+/**
+ * A Gradle Extension for assembling Dart related tasks.
+ *
+ * The class information that is required for Dart projects' building and publishing.
+ */
+internal open class DartTasks(val project: Project) : TaskContainer by project.tasks {
 
     val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
     val packageIndex = "${project.projectDir}/.packages"

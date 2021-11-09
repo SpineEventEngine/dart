@@ -26,7 +26,7 @@
 
 package io.spine.internal.gradle.dart.task
 
-import io.spine.internal.gradle.dart.DartEnvironment
+import io.spine.internal.gradle.dart.DartTasks
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
@@ -37,7 +37,7 @@ import org.gradle.kotlin.dsl.getByType
 
 fun Project.registerPublishTasks() {
 
-    extensions.getByType<DartEnvironment>().run {
+    extensions.getByType<DartTasks>().run {
 
         val stagePubPublication = stagePubPublication().apply {
             dependsOn(getByName("assemble"))
@@ -54,7 +54,7 @@ fun Project.registerPublishTasks() {
     }
 }
 
-private fun DartEnvironment.stagePubPublication(): Task =
+private fun DartTasks.stagePubPublication(): Task =
     create<Copy>("stagePubPublication") {
         description = "Prepares the Dart package for Pub publication."
         group = dartPublishTask
@@ -71,7 +71,7 @@ private fun DartEnvironment.stagePubPublication(): Task =
         }
     }
 
-private fun DartEnvironment.publishToPub(): Task =
+private fun DartTasks.publishToPub(): Task =
     create<Exec>("publishToPub") {
         description = "Published this package to Pub."
         group = dartPublishTask
@@ -83,7 +83,7 @@ private fun DartEnvironment.publishToPub(): Task =
         standardInput = sayYes
     }
 
-private fun DartEnvironment.activateLocally(): Task =
+private fun DartTasks.activateLocally(): Task =
     create<Exec>("activateLocally") {
         description = "Activates this package locally."
         group = dartPublishTask

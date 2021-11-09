@@ -26,7 +26,7 @@
 
 package io.spine.internal.gradle.dart.task
 
-import io.spine.internal.gradle.dart.DartEnvironment
+import io.spine.internal.gradle.dart.DartTasks
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.Delete
@@ -36,7 +36,7 @@ import org.gradle.kotlin.dsl.getByType
 
 fun Project.registerBuildTasks() {
 
-    extensions.getByType<DartEnvironment>().run {
+    extensions.getByType<DartTasks>().run {
 
         val resolveDependencies = resolveDependencies().also {
             getByName("assemble").dependsOn(it)
@@ -54,7 +54,7 @@ fun Project.registerBuildTasks() {
     }
 }
 
-private fun DartEnvironment.cleanPackageIndex(): Task =
+private fun DartTasks.cleanPackageIndex(): Task =
     create<Delete>("cleanPackageIndex") {
         description = "Deletes the `.packages` file on this Dart module."
         group = dartBuildTask
@@ -62,7 +62,7 @@ private fun DartEnvironment.cleanPackageIndex(): Task =
         setDelete(packageIndex)
     }
 
-private fun DartEnvironment.resolveDependencies(): Task =
+private fun DartTasks.resolveDependencies(): Task =
     create<Exec>("resolveDependencies") {
         description = "Fetches the dependencies declared via `pubspec.yaml`."
         group = dartBuildTask
@@ -73,7 +73,7 @@ private fun DartEnvironment.resolveDependencies(): Task =
         commandLine(pubExecutable, "get")
     }
 
-private fun DartEnvironment.testDart(): Task =
+private fun DartTasks.testDart(): Task =
     create<Exec>("testDart") {
         description = "Runs Dart tests declared in the `./test` directory. " +
                 "See `https://pub.dev/packages/test#running-tests`."
