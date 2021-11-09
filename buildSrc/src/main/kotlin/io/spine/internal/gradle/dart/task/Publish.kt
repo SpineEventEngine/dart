@@ -43,6 +43,16 @@ import org.gradle.kotlin.dsl.getByType
  *  1. `stagePubPublication` - prepares the Dart package for Pub publication;
  *  2. `publishToPub` - publishes the prepared publication to Pub;
  *  3. `activateLocally` - activates this package locally.
+ *
+ * Usage example:
+ *
+ * ```
+ * dart {
+ *     tasks {
+ *         registerPublishTasks()
+ *     }
+ * }
+ * ```
  */
 fun Project.registerPublishTasks() {
 
