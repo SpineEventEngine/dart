@@ -26,7 +26,6 @@
 
 package io.spine.internal.gradle.dart
 
-import java.io.File
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskContainer
@@ -37,11 +36,15 @@ fun Project.dart(configure: () -> Unit) {
     configure.invoke()
 }
 
-internal open class DartEnvironment(project: Project) : TaskContainer by project.tasks {
-    internal val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
-    internal val packageIndex = File("${project.projectDir}/.packages")
-    internal val pubSpec = File("${project.projectDir}/pubspec.yaml")
+internal open class DartEnvironment(
+    val project: Project
+) : TaskContainer by project.tasks {
 
-    internal val dartBuildTask = "Dart/Build"
-    internal val dartPublishTask = "Dart/Publish"
+    val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
+    val packageIndex = "${project.projectDir}/.packages"
+    val pubSpec = "${project.projectDir}/pubspec.yaml"
+    val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
+
+    val dartBuildTask = "Dart/Build"
+    val dartPublishTask = "Dart/Publish"
 }

@@ -26,66 +26,76 @@
 
 package io.spine.internal.gradle.dart.task
 
-import org.apache.tools.ant.taskdefs.condition.Os
+import io.spine.internal.gradle.dart.DartEnvironment
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Exec
+import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.register
-
-private val extension = if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""
-private val PUB_EXECUTABLE = "pub$extension"
+import org.gradle.kotlin.dsl.getByType
 
 fun Project.registerPublishTasks() {
-    val PUBLICATION_DIR = "$buildDir/pub/publication/$project.name"
 
-    val stagePubPublication = tasks.register<Copy>("stagePubPublication") {
-        description = "Prepares the Dart package for Pub publication."
+    extensions.getByType<DartEnvironment>().run {
 
-        from(
-            fileTree(projectDir) {
-                include("**/*.dart", "pubspec.yaml", "**/*.md")
-                exclude("proto/", "generated/", "build/", "**/.*")
-            },
-            "$rootDir/LICENSE"
-        )
-        into(PUBLICATION_DIR)
-
-        doLast {
-            logger.debug("Prepared Pub publication in directory `$PUBLICATION_DIR`.")
+        val stagePubPublication = stagePubPublication().apply {
+            dependsOn(getByName("assemble"))
         }
 
-        dependsOn("assemble")
+        publishToPub().apply {
+            dependsOn(stagePubPublication)
+            tasks["publish"].dependsOn(this)
+        }
+
+        activateLocally().apply {
+            dependsOn(stagePubPublication)
+        }
+    }
+}
+
+private fun DartEnvironment.stagePubPublication(): Task =
+    create<Copy>("stagePubPublication") {
+        description = "Prepares the Dart package for Pub publication."
+        group = dartPublishTask
+
+        from(project.projectDir) {
+            include("**/*.dart", "pubspec.yaml", "**/*.md")
+            exclude("proto/", "generated/", "build/", "**/.*")
+        }
+        from("${project.rootDir}/LICENSE")
+        into(publicationDirectory)
+
+        doLast {
+            logger.debug("Prepared Pub publication in directory `$publicationDirectory`.")
+        }
     }
 
-    val publishToPub = tasks.register<Exec>("publishToPub") {
+private fun DartEnvironment.publishToPub(): Task =
+    create<Exec>("publishToPub") {
         description = "Published this package to Pub."
+        group = dartPublishTask
 
-        workingDir(PUBLICATION_DIR)
-        commandLine(PUB_EXECUTABLE, "publish", "--trace")
+        workingDir(publicationDirectory)
+        commandLine(pubExecutable, "publish", "--trace")
 
         val sayYes = "y".byteInputStream()
         standardInput = sayYes
-
-        dependsOn(stagePubPublication)
     }
 
-    tasks.register<Exec>("activateLocally") {
+private fun DartEnvironment.activateLocally(): Task =
+    create<Exec>("activateLocally") {
         description = "Activates this package locally."
+        group = dartPublishTask
 
-        workingDir(PUBLICATION_DIR)
+        workingDir(publicationDirectory)
         commandLine(
-            PUB_EXECUTABLE,
+            pubExecutable,
             "global",
             "activate",
             "--source",
             "path",
-            PUBLICATION_DIR,
+            publicationDirectory,
             "--trace"
         )
-
-        dependsOn(stagePubPublication)
     }
-
-    tasks["publish"].dependsOn(publishToPub)
-}
