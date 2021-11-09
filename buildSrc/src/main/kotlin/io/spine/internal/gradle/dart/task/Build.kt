@@ -26,52 +26,52 @@
 
 package io.spine.internal.gradle.dart.task
 
-import java.io.File
-import org.apache.tools.ant.taskdefs.condition.Os
-import org.gradle.api.Project
+import io.spine.internal.gradle.dart.DartEnvironment
+import org.gradle.api.Task
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.Exec
-import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.create
 
-private const val GROUP = "Dart"
-private val EXTENSION = if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""
-private val PUB_EXECUTABLE = "pub$EXTENSION"
+fun DartEnvironment.registerBuildTasks() {
+    val resolveDependencies = resolveDependencies().also {
+        getByName("assemble").dependsOn(it)
+    }
 
-fun Project.registerDartBuildTasks() {
-    val packageIndex = File("$projectDir/.packages")
+    cleanPackageIndex().also {
+        resolveDependencies.mustRunAfter(it)
+        getByName("clean").dependsOn(it)
+    }
 
-    tasks.apply {
-        val cleanPackageIndex = register<Delete>("cleanPackageIndex") {
-            group = GROUP
-            description = "Deletes the `.packages` file on this Dart module."
-
-            setDelete(packageIndex)
-
-            getByName("clean").dependsOn(this)
-        }
-
-        val resolveDependencies = register<Exec>("resolveDependencies") {
-            group = GROUP
-            description = "Fetches the dependencies declared via `pubspec.yaml`."
-
-            inputs.file(File("$projectDir/pubspec.yaml"))
-            outputs.file(packageIndex)
-
-            commandLine(PUB_EXECUTABLE, "get")
-
-            mustRunAfter(cleanPackageIndex)
-            getByName("assemble").dependsOn(this)
-        }
-
-        register<Exec>("testDart") {
-            group = GROUP
-            description = "Runs Dart tests declared in the `./test` directory. " +
-                    "See `https://pub.dev/packages/test#running-tests`."
-
-            commandLine(PUB_EXECUTABLE, "run", "test")
-
-            dependsOn(resolveDependencies)
-            getByName("check").dependsOn(this)
-        }
+    testDart().apply {
+        dependsOn(resolveDependencies)
+        getByName("check").dependsOn(this)
     }
 }
+
+private fun DartEnvironment.cleanPackageIndex(): Task =
+    create<Delete>("cleanPackageIndex") {
+        description = "Deletes the `.packages` file on this Dart module."
+        group = dartBuildTask
+
+        setDelete(packageIndex)
+    }
+
+private fun DartEnvironment.resolveDependencies(): Task =
+    create<Exec>("resolveDependencies") {
+        description = "Fetches the dependencies declared via `pubspec.yaml`."
+        group = dartBuildTask
+
+        inputs.file(pubSpec)
+        outputs.file(packageIndex)
+
+        commandLine(pubExecutable, "get")
+    }
+
+private fun DartEnvironment.testDart(): Task =
+    create<Exec>("testDart") {
+        description = "Runs Dart tests declared in the `./test` directory. " +
+                "See `https://pub.dev/packages/test#running-tests`."
+        group = dartBuildTask
+
+        commandLine(pubExecutable, "run", "test")
+    }

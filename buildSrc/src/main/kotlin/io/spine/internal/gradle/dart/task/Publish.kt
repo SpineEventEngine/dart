@@ -36,7 +36,7 @@ import org.gradle.kotlin.dsl.register
 private val extension = if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""
 private val PUB_EXECUTABLE = "pub$extension"
 
-fun Project.registerDartPublishTasks() {
+fun Project.registerPublishTasks() {
     val PUBLICATION_DIR = "$buildDir/pub/publication/$project.name"
 
     val stagePubPublication = tasks.register<Copy>("stagePubPublication") {
