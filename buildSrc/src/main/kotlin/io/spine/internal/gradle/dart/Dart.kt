@@ -33,31 +33,50 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
 
 /**
- * Provides a scope for Dart related configuration.
+ * Defines the scope for Dart related configuration.
  *
- * Registers [DartTasks] project extension.
+ * Configuration is performed through [DartExtension].
  */
-fun Project.dart(configure: () -> Unit) {
-
-    if (extensions.findByType<DartTasks>() == null) {
-        extensions.create<DartTasks>("dartTasks", project)
+fun Project.dart(configuration: DartExtension.() -> Unit) {
+    extensions.run {
+        configuration.invoke(
+            findByType() ?: create("dartExtension", project)
+        )
     }
+}
 
-    configure.invoke()
+/**
+ * Encapsulates Dart configuration.
+ */
+open class DartExtension(project: Project) : DartEnvironment {
+    override val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
+    override val packageIndex = "${project.projectDir}/.packages"
+    override val pubSpec = "${project.projectDir}/pubspec.yaml"
+    override val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
+
+    @Suppress("LeakingThis")
+    private val tasks = DartTasks(this, project.tasks)
+
+    fun tasks(configuration: DartTasks.() -> Unit) = configuration.invoke(tasks)
+}
+
+/**
+ * Information about Dart environment.
+ */
+interface DartEnvironment {
+
+    val publicationDirectory: String
+    val pubExecutable: String
+    val pubSpec: String
+    val packageIndex: String
 }
 
 /**
  * Context for assembling Dart related tasks.
- *
- * The context provides information about the current Dart environment.
  */
-internal open class DartTasks(val project: Project) : TaskContainer by project.tasks {
-
-    val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
-    val packageIndex = "${project.projectDir}/.packages"
-    val pubSpec = "${project.projectDir}/pubspec.yaml"
-    val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
-
+class DartTasks(dartEnv: DartEnvironment, tasks: TaskContainer)
+    : DartEnvironment by dartEnv, TaskContainer by tasks
+{
     val dartBuildTask = "Dart/Build"
     val dartPublishTask = "Dart/Publish"
 }

@@ -27,12 +27,10 @@
 package io.spine.internal.gradle.dart.task
 
 import io.spine.internal.gradle.dart.DartTasks
-import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.Exec
 import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.getByType
 
 /**
  * Registers tasks for building Dart projects.
@@ -53,23 +51,20 @@ import org.gradle.kotlin.dsl.getByType
  * }
  * ```
  */
-fun Project.registerBuildTasks() {
+fun DartTasks.registerBuildTasks() {
 
-    extensions.getByType<DartTasks>().run {
+    val resolveDependencies = resolveDependencies().also {
+        getByName("assemble").dependsOn(it)
+    }
 
-        val resolveDependencies = resolveDependencies().also {
-            getByName("assemble").dependsOn(it)
-        }
+    cleanPackageIndex().also {
+        resolveDependencies.mustRunAfter(it)
+        getByName("clean").dependsOn(it)
+    }
 
-        cleanPackageIndex().also {
-            resolveDependencies.mustRunAfter(it)
-            getByName("clean").dependsOn(it)
-        }
-
-        testDart().apply {
-            dependsOn(resolveDependencies)
-            getByName("check").dependsOn(this)
-        }
+    testDart().apply {
+        dependsOn(resolveDependencies)
+        getByName("check").dependsOn(this)
     }
 }
 

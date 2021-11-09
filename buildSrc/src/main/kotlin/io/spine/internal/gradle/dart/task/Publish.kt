@@ -27,13 +27,10 @@
 package io.spine.internal.gradle.dart.task
 
 import io.spine.internal.gradle.dart.DartTasks
-import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Exec
 import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.getByType
 
 /**
  * Registers tasks for publishing Dart projects.
@@ -54,22 +51,19 @@ import org.gradle.kotlin.dsl.getByType
  * }
  * ```
  */
-fun Project.registerPublishTasks() {
+fun DartTasks.registerPublishTasks() {
 
-    extensions.getByType<DartTasks>().run {
+    val stagePubPublication = stagePubPublication().apply {
+        dependsOn(getByName("assemble"))
+    }
 
-        val stagePubPublication = stagePubPublication().apply {
-            dependsOn(getByName("assemble"))
-        }
+    publishToPub().apply {
+        dependsOn(stagePubPublication)
+        getByName("publish").dependsOn(this)
+    }
 
-        publishToPub().apply {
-            dependsOn(stagePubPublication)
-            tasks["publish"].dependsOn(this)
-        }
-
-        activateLocally().apply {
-            dependsOn(stagePubPublication)
-        }
+    activateLocally().apply {
+        dependsOn(stagePubPublication)
     }
 }
 
