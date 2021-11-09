@@ -27,24 +27,30 @@
 package io.spine.internal.gradle.dart.task
 
 import io.spine.internal.gradle.dart.DartEnvironment
+import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.Exec
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.getByType
 
-fun DartEnvironment.registerBuildTasks() {
-    val resolveDependencies = resolveDependencies().also {
-        getByName("assemble").dependsOn(it)
-    }
+fun Project.registerBuildTasks() {
 
-    cleanPackageIndex().also {
-        resolveDependencies.mustRunAfter(it)
-        getByName("clean").dependsOn(it)
-    }
+    extensions.getByType<DartEnvironment>().run {
 
-    testDart().apply {
-        dependsOn(resolveDependencies)
-        getByName("check").dependsOn(this)
+        val resolveDependencies = resolveDependencies().also {
+            getByName("assemble").dependsOn(it)
+        }
+
+        cleanPackageIndex().also {
+            resolveDependencies.mustRunAfter(it)
+            getByName("clean").dependsOn(it)
+        }
+
+        testDart().apply {
+            dependsOn(resolveDependencies)
+            getByName("check").dependsOn(this)
+        }
     }
 }
 

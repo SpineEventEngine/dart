@@ -30,14 +30,18 @@ import java.io.File
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 import org.gradle.api.tasks.TaskContainer
+import org.gradle.kotlin.dsl.create
 
-@Suppress("unused", "UNUSED_PARAMETER")
 fun Project.dart(configure: () -> Unit) {
+    extensions.create<DartEnvironment>("dartEnvironment", project)
+    configure.invoke()
 }
 
-class DartEnvironment(project: Project) : TaskContainer by project.tasks {
+internal open class DartEnvironment(project: Project) : TaskContainer by project.tasks {
     internal val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
     internal val packageIndex = File("${project.projectDir}/.packages")
     internal val pubSpec = File("${project.projectDir}/pubspec.yaml")
+
     internal val dartBuildTask = "Dart/Build"
+    internal val dartPublishTask = "Dart/Publish"
 }
