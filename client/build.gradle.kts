@@ -34,8 +34,8 @@ import com.google.protobuf.gradle.remove
 import com.google.protobuf.gradle.testProtobuf
 import io.spine.gradle.internal.Deps
 import io.spine.internal.gradle.dart.dart
-import io.spine.internal.gradle.dart.task.registerBuildTasks
-import io.spine.internal.gradle.dart.task.registerPublishTasks
+import io.spine.internal.gradle.dart.task.build
+import io.spine.internal.gradle.dart.task.publish
 
 plugins {
     java
@@ -62,24 +62,17 @@ dependencies {
 }
 
 dart {
-
     environment {
         publicationDirectory = "${project.buildDir}/customPubPublication"
         pubExecutable = "/usr/local/opt/dart/libexec/bin/${defaultEnvironment.pubExecutable}"
     }
 
     tasks {
-
-        registerBuildTasks()
-        registerPublishTasks()
-
-//        register {
-//            build()
-//            publish()
-//        }
-
+        register {
+            build()
+            publish()
+        }
     }
-
 }
 
 tasks.assemble {

@@ -26,7 +26,6 @@
 
 package io.spine.internal.gradle.dart.task
 
-import io.spine.internal.gradle.dart.DartTasks
 import org.gradle.api.Task
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.Exec
@@ -55,7 +54,7 @@ import org.gradle.kotlin.dsl.create
  * }
  * ```
  */
-fun DartTasks.registerBuildTasks() {
+fun DartTasks.build() {
 
     val resolveDependencies = resolveDependencies().also {
         getByName("assemble").dependsOn(it)

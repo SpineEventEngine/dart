@@ -26,9 +26,9 @@
 
 package io.spine.internal.gradle.dart
 
+import io.spine.internal.gradle.dart.task.DartTasks
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
-import org.gradle.api.tasks.TaskContainer
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
 
@@ -66,10 +66,10 @@ open class DartExtension(project: Project) {
     private val tasks = DartTasks(environment, project.tasks)
 
     /**
-     * Configures custom values for [DartEnvironment].
+     * Overriding default values of [DartEnvironment].
      *
      * Please note, environment should be configured firstly to have the effect on the parts
-     * of the extension that use it.
+     * of the extension that depend on it.
      */
     fun environment(configuration: ConfigurableDartEnvironment.() -> Unit) =
         configuration.invoke(environment)
@@ -79,14 +79,4 @@ open class DartExtension(project: Project) {
      */
     fun tasks(configuration: DartTasks.() -> Unit) =
         configuration.invoke(tasks)
-}
-
-/**
- * Context for assembling Dart-related tasks with access to the current [DartEnvironment].
- */
-class DartTasks(dartEnv: DartEnvironment, tasks: TaskContainer)
-    : DartEnvironment by dartEnv, TaskContainer by tasks
-{
-    internal val dartBuildTask = "Dart/Build"
-    internal val dartPublishTask = "Dart/Publish"
 }

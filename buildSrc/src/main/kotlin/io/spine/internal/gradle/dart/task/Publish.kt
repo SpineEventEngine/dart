@@ -26,7 +26,6 @@
 
 package io.spine.internal.gradle.dart.task
 
-import io.spine.internal.gradle.dart.DartTasks
 import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Exec
@@ -55,7 +54,7 @@ import org.gradle.kotlin.dsl.create
  * }
  * ```
  */
-fun DartTasks.registerPublishTasks() {
+fun DartTasks.publish() {
 
     val stagePubPublication = stagePubPublication().apply {
         dependsOn(getByName("assemble"))
