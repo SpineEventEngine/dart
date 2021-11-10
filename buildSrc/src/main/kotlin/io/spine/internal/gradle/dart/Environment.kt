@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 /*
  * Copyright 2021, TeamDev. All rights reserved.
  *
@@ -26,46 +24,48 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+package io.spine.internal.gradle.dart
+
 /**
- * This script uses three declarations of the constant [licenseReportVersion] because
- * currently there is no way to define a constant _before_ a build script of `buildSrc`.
- * We cannot use imports or do something else before the `buildscript` or `plugin` clauses.
+ * Information about Dart environment.
  *
- * Therefore, when a version of [io.spine.internal.dependency.LicenseReport] changes, it should be
- * changed in the Kotlin object _and_ in this file below thrice. 
+ * Describes used Dart-specific tools and their input and/or output files.
  */
-buildscript {
-    repositories {
-        gradlePluginPortal()
-    }
-    val licenseReportVersion = "1.16"
-    dependencies {
-        classpath("com.github.jk1:gradle-license-report:${licenseReportVersion}")
-    }
+interface DartEnvironment {
+
+    /**
+     * Path to a directory for local publications of a `Pub` package for this project.
+     */
+    val publicationDirectory: String
+
+    /**
+     * Path to a `Pub` package manager executable.
+     */
+    val pubExecutable: String
+
+    /**
+     * Path to `pubspec.yaml` file.
+     */
+    val pubSpec: String
+
+    /**
+     * Path to `.packages` file.
+     */
+    val packageIndex: String
+
+    /**
+     * Path to `package_config.json` file.
+     */
+    val packageConfig: String
 }
 
-plugins {
-    java
-    groovy
-    `kotlin-dsl`
-    val licenseReportVersion = "1.16"
-    id("com.github.jk1.dependency-license-report").version(licenseReportVersion)
-}
-
-kotlinDslPluginOptions {
-    experimentalWarning.set(false)
-}
-
-repositories {
-    mavenLocal()
-    gradlePluginPortal()
-    mavenCentral()
-}
-
-val jacksonVersion = "2.11.0"
-val licenseReportVersion = "1.16"
-
-dependencies {
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
-    api("com.github.jk1:gradle-license-report:${licenseReportVersion}")
+/**
+ * Configurable [DartEnvironment].
+ */
+class ConfigurableDartEnvironment(initialEnv: DartEnvironment) : DartEnvironment {
+    override var publicationDirectory = initialEnv.publicationDirectory
+    override var pubExecutable = initialEnv.pubExecutable
+    override var pubSpec = initialEnv.pubSpec
+    override var packageIndex = initialEnv.packageIndex
+    override var packageConfig = initialEnv.packageConfig
 }

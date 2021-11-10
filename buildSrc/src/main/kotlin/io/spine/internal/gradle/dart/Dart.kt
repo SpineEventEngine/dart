@@ -33,9 +33,9 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
 
 /**
- * Defines the scope for Dart-related configuration.
+ * Provides a scope for all Dart-related configuration.
  *
- * Configuration is performed through [DartExtension].
+ * Configures [DartExtension].
  */
 fun Project.dart(configuration: DartExtension.() -> Unit) {
     extensions.run {
@@ -50,48 +50,35 @@ fun Project.dart(configuration: DartExtension.() -> Unit) {
  */
 open class DartExtension(project: Project) {
 
-    private val defaultEnv = object : DartEnvironment {
+    /**
+     * Default values for [DartEnvironment] based on Dart conventions.
+     */
+    val defaultEnvironment = object : DartEnvironment {
+
+        override val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
         override val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
+        override val pubSpec = "${project.projectDir}/pubspec.yaml"
         override val packageIndex = "${project.projectDir}/.packages"
         override val packageConfig = "${project.projectDir}/.dart_tool/package_config.json"
-        override val pubSpec = "${project.projectDir}/pubspec.yaml"
-        override val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
     }
 
-    private val tasks = DartTasks(defaultEnv, project.tasks)
-
-    fun tasks(configuration: DartTasks.() -> Unit) = configuration.invoke(tasks)
-}
-
-/**
- * Information about Dart environment.
- */
-interface DartEnvironment {
+    private val environment = ConfigurableDartEnvironment(defaultEnvironment)
+    private val tasks = DartTasks(environment, project.tasks)
 
     /**
-     * Path to a directory for local publications of a `Pub` package for this project.
+     * Configures custom values for [DartEnvironment].
+     *
+     * Please note, environment should be configured firstly to have the effect on the parts
+     * of the extension that use it.
      */
-    val publicationDirectory: String
+    fun environment(configuration: ConfigurableDartEnvironment.() -> Unit) =
+        configuration.invoke(environment)
 
     /**
-     * Path to a `Pub` package manager executable.
+     * Configures [dart tasks][DartTasks] container.
      */
-    val pubExecutable: String
-
-    /**
-     * Path to `pubspec.yaml` file.
-     */
-    val pubSpec: String
-
-    /**
-     * Path to `.packages` file.
-     */
-    val packageIndex: String
-
-    /**
-     * Path to `package_config.json` file.
-     */
-    val packageConfig: String
+    fun tasks(configuration: DartTasks.() -> Unit) =
+        configuration.invoke(tasks)
 }
 
 /**
