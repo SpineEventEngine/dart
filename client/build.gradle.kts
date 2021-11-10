@@ -62,37 +62,30 @@ dependencies {
 }
 
 dart {
+
+//    publication {
+//        publicationDirectory = "..."
+//        pubExecutable = "..."
+//        pubSpec = "..."
+//    }
+
+
+//    environment {
+//        publicationDirectory = "..."
+//        pubExecutable = "..."
+//        pubSpec = "..."
+//    }
+
     tasks {
+
         registerBuildTasks()
         registerPublishTasks()
 
-//        it is read as "two task are going to be registered".
-//
 //        register {
 //            build()
 //            publish()
 //        }
-//
-//
-//        it is read as "two groups of task are going to be registered".
-//        and it is our objective.
-//
-//        register {
-//            buildTasks()
-//            publishTasks()
-//        }
-//
-//        registerGroup {
-//            build()
-//            publish()
-//        }
-//
-//        register {
-//            group {
-//                build()
-//                publish()
-//            }
-//        }
+
     }
 }
 

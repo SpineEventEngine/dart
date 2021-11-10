@@ -46,6 +46,8 @@ import org.gradle.kotlin.dsl.create
  * ```
  * import io.spine.internal.gradle.dart.dart
  *
+ * // ...
+ *
  * dart {
  *     tasks {
  *         registerPublishTasks()

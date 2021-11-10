@@ -53,6 +53,7 @@ open class DartExtension(project: Project) {
     private val defaultEnv = object : DartEnvironment {
         override val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
         override val packageIndex = "${project.projectDir}/.packages"
+        override val packageConfig = "${project.projectDir}/.dart_tool/package_config.json"
         override val pubSpec = "${project.projectDir}/pubspec.yaml"
         override val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
     }
@@ -86,6 +87,11 @@ interface DartEnvironment {
      * Path to `.packages` file.
      */
     val packageIndex: String
+
+    /**
+     * Path to `package_config.json` file.
+     */
+    val packageConfig: String
 }
 
 /**

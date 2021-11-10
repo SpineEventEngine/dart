@@ -46,6 +46,8 @@ import org.gradle.kotlin.dsl.create
  * ```
  * import io.spine.internal.gradle.dart.dart
  *
+ * // ...
+ *
  * dart {
  *     tasks {
  *         registerBuildTasks()
@@ -83,10 +85,11 @@ private fun DartTasks.resolveDependencies(): Task =
 
 private fun DartTasks.cleanPackageIndex(): Task =
     create<Delete>("cleanPackageIndex") {
-        description = "Deletes the resolved `.packages` file on this Dart module."
+        description = "Deletes the resolved `.packages` and `package_config.json` files " +
+                "on this Dart module."
         group = dartBuildTask
 
-        setDelete(packageIndex)
+        delete(packageIndex, packageConfig)
     }
 
 private fun DartTasks.testDart(): Task =
