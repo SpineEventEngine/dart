@@ -33,7 +33,7 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
 
 /**
- * Defines the scope for Dart related configuration.
+ * Defines the scope for Dart-related configuration.
  *
  * Configuration is performed through [DartExtension].
  */
@@ -46,7 +46,7 @@ fun Project.dart(configuration: DartExtension.() -> Unit) {
 }
 
 /**
- * Encapsulates Dart related configuration.
+ * Gradle's extension for Dart-related configuration.
  */
 open class DartExtension(project: Project) {
 
@@ -57,7 +57,6 @@ open class DartExtension(project: Project) {
         override val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
     }
 
-    @Suppress("LeakingThis")
     private val tasks = DartTasks(defaultEnv, project.tasks)
 
     fun tasks(configuration: DartTasks.() -> Unit) = configuration.invoke(tasks)
@@ -90,11 +89,11 @@ interface DartEnvironment {
 }
 
 /**
- * Context for assembling Dart related tasks with access to the current [DartEnvironment].
+ * Context for assembling Dart-related tasks with access to the current [DartEnvironment].
  */
 class DartTasks(dartEnv: DartEnvironment, tasks: TaskContainer)
     : DartEnvironment by dartEnv, TaskContainer by tasks
 {
-    val dartBuildTask = "Dart/Build"
-    val dartPublishTask = "Dart/Publish"
+    internal val dartBuildTask = "Dart/Build"
+    internal val dartPublishTask = "Dart/Publish"
 }

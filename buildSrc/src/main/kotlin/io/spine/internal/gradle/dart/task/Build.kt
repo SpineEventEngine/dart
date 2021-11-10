@@ -44,6 +44,8 @@ import org.gradle.kotlin.dsl.create
  * Usage example:
  *
  * ```
+ * import io.spine.internal.gradle.dart.dart
+ *
  * dart {
  *     tasks {
  *         registerBuildTasks()

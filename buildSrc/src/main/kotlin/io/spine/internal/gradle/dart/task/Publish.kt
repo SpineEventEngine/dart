@@ -44,6 +44,8 @@ import org.gradle.kotlin.dsl.create
  * Usage example:
  *
  * ```
+ * import io.spine.internal.gradle.dart.dart
+ *
  * dart {
  *     tasks {
  *         registerPublishTasks()
@@ -80,7 +82,7 @@ private fun DartTasks.stagePubPublication(): Task =
         into(publicationDirectory)
 
         doLast {
-            logger.debug("Prepared Pub publication in directory `$publicationDirectory`.")
+            logger.debug("Pub publication is prepared in directory `$publicationDirectory`.")
         }
     }
 
@@ -96,6 +98,15 @@ private fun DartTasks.publishToPub(): Task =
         standardInput = sayYes
     }
 
+/**
+ * Makes this package available in the command line as an executable.
+ *
+ * The `dart run` command supports running a Dart program — located in a file, in the current
+ * package, or in one of the dependencies of the current package - from the command line.
+ * To run a program from an arbitrary location, the package should be "activated".
+ *
+ * See [dart pub global | Dart](https://dart.dev/tools/pub/cmd/pub-global)
+ */
 private fun DartTasks.activateLocally(): Task =
     create<Exec>("activateLocally") {
         description = "Activates this package locally."
