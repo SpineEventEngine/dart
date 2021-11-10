@@ -66,17 +66,17 @@ open class DartExtension(project: Project) {
     private val tasks = DartTasks(environment, project.tasks)
 
     /**
-     * Overriding default values of [DartEnvironment].
+     * Overrides default values of [DartEnvironment].
      *
-     * Please note, environment should be configured firstly to have the effect on the parts
+     * Please note, environment should be set up firstly to have the effect on the parts
      * of the extension that depend on it.
      */
-    fun environment(configuration: ConfigurableDartEnvironment.() -> Unit) =
-        configuration.invoke(environment)
+    fun environment(overridings: ConfigurableDartEnvironment.() -> Unit) =
+        environment.run(overridings)
 
     /**
-     * Configures [dart tasks][DartTasks] container.
+     * Configures [dart tasks][DartTasks].
      */
     fun tasks(configuration: DartTasks.() -> Unit) =
-        configuration.invoke(tasks)
+        tasks.run(configuration)
 }

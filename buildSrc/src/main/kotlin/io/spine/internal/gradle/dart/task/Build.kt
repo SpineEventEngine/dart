@@ -49,12 +49,14 @@ import org.gradle.kotlin.dsl.create
  *
  * dart {
  *     tasks {
- *         registerBuildTasks()
+ *         register {
+ *             build()
+ *         }
  *     }
  * }
  * ```
  */
-fun DartTasks.build() {
+fun DartTaskRegistering.build() {
 
     val resolveDependencies = resolveDependencies().also {
         getByName("assemble").dependsOn(it)
@@ -71,7 +73,7 @@ fun DartTasks.build() {
     }
 }
 
-private fun DartTasks.resolveDependencies(): Task =
+private fun DartTaskRegistering.resolveDependencies(): Task =
     create<Exec>("resolveDependencies") {
         description = "Fetches the dependencies declared via `pubspec.yaml`."
         group = dartBuildTask
@@ -82,7 +84,7 @@ private fun DartTasks.resolveDependencies(): Task =
         commandLine(pubExecutable, "get")
     }
 
-private fun DartTasks.cleanPackageIndex(): Task =
+private fun DartTaskRegistering.cleanPackageIndex(): Task =
     create<Delete>("cleanPackageIndex") {
         description = "Deletes the resolved `.packages` and `package_config.json` files " +
                 "on this Dart module."
@@ -91,7 +93,7 @@ private fun DartTasks.cleanPackageIndex(): Task =
         delete(packageIndex, packageConfig)
     }
 
-private fun DartTasks.testDart(): Task =
+private fun DartTaskRegistering.testDart(): Task =
     create<Exec>("testDart") {
         description = "Runs Dart tests declared in the `./test` directory. " +
                 "See `https://pub.dev/packages/test#running-tests`."

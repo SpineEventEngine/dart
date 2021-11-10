@@ -49,12 +49,14 @@ import org.gradle.kotlin.dsl.create
  *
  * dart {
  *     tasks {
- *         registerPublishTasks()
+ *         register {
+ *             publish()
+ *         }
  *     }
  * }
  * ```
  */
-fun DartTasks.publish() {
+fun DartTaskRegistering.publish() {
 
     val stagePubPublication = stagePubPublication().apply {
         dependsOn(getByName("assemble"))
@@ -70,7 +72,7 @@ fun DartTasks.publish() {
     }
 }
 
-private fun DartTasks.stagePubPublication(): Task =
+private fun DartTaskRegistering.stagePubPublication(): Task =
     create<Copy>("stagePubPublication") {
         description = "Prepares the Dart package for Pub publication."
         group = dartPublishTask
@@ -94,7 +96,7 @@ private fun DartTasks.stagePubPublication(): Task =
         }
     }
 
-private fun DartTasks.publishToPub(): Task =
+private fun DartTaskRegistering.publishToPub(): Task =
     create<Exec>("publishToPub") {
         description = "Publishes the prepared publication to Pub."
         group = dartPublishTask
@@ -115,7 +117,7 @@ private fun DartTasks.publishToPub(): Task =
  *
  * See [dart pub global | Dart](https://dart.dev/tools/pub/cmd/pub-global)
  */
-private fun DartTasks.activateLocally(): Task =
+private fun DartTaskRegistering.activateLocally(): Task =
     create<Exec>("activateLocally") {
         description = "Activates this package locally."
         group = dartPublishTask
