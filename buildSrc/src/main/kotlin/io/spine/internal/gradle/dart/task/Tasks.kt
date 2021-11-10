@@ -42,7 +42,7 @@ import org.gradle.api.tasks.TaskContainer
  *
  * // ...
  *
- * // instead of using top level context:
+ * // instead of using top-level context:
  *
  * dart {
  *     tasks {
