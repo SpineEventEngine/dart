@@ -75,6 +75,13 @@ private fun DartTasks.stagePubPublication(): Task =
         description = "Prepares the Dart package for Pub publication."
         group = dartPublishTask
 
+        // Besides .dart files itself, `pub` package manager conventions require presence:
+
+        // 1. README.md and CHANGELOG.md to build a page at `pub.dev/packages/<your_package>;
+        // 2. The pubspec to fill out details about your package on the right side
+        //    of your package’s page;
+        // 3. LICENSE file.
+
         from(project.projectDir) {
             include("**/*.dart", "pubspec.yaml", "**/*.md")
             exclude("proto/", "generated/", "build/", "**/.*")
