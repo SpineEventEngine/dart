@@ -33,8 +33,6 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
 
 /**
- * Provides a scope for all Dart-related configuration.
- *
  * Configures [DartExtension].
  */
 fun Project.dart(configuration: DartExtension.() -> Unit) {
@@ -46,12 +44,46 @@ fun Project.dart(configuration: DartExtension.() -> Unit) {
 }
 
 /**
- * Gradle's extension for Dart-related configuration.
+ * Scope for performing Dart-related configuration.
+ *
+ * Here is the listing of available aspects to configure:
+ *
+ *  1. Environment - [ConfigurableDartEnvironment];
+ *  2. Tasks - [DartTasks].
+ *
+ * ### Environment
+ *
+ * The scope is shipped with the [default values][DartExtension.defaultEnvironment]
+ * for [DartEnvironment] based on Dart conventions. Those values can be overwritten
+ * through the [DartExtension.environment].
+ *
+ * An example of overwriting the default Dart environment value:
+ *
+ * ```
+ * dart {
+ *     environment {
+ *         publicationDirectory = "${defaultEnvironment.publicationDirectory}_DRY_RUN"
+ *     }
+ * }
+ * ```
+ *
+ * ### Tasks
+ *
+ * The scope provides its own [task container][DartTasks] within which all Dart-related tasks
+ * should be registered and configured.
+ *
+ * ```
+ * dart {
+ *     tasks {
+ *         ...
+ *     }
+ * }
+ * ```
  */
 open class DartExtension(project: Project) {
 
     /**
-     * Default values for [DartEnvironment] based on Dart conventions.
+     * Environment values based on Dart conventions.
      */
     val defaultEnvironment = object : DartEnvironment {
 
@@ -66,7 +98,7 @@ open class DartExtension(project: Project) {
     private val tasks = DartTasks(environment, project.tasks)
 
     /**
-     * Overrides default values of [DartEnvironment].
+     * Overrides default values of [DartExtension.defaultEnvironment].
      *
      * Please note, environment should be set up firstly to have the effect on the parts
      * of the extension that depend on it.
@@ -77,6 +109,5 @@ open class DartExtension(project: Project) {
     /**
      * Configures [dart tasks][DartTasks].
      */
-    fun tasks(configuration: DartTasks.() -> Unit) =
-        tasks.run(configuration)
+    fun tasks(configuration: DartTasks.() -> Unit) = tasks.run(configuration)
 }

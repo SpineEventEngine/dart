@@ -30,74 +30,76 @@ import io.spine.internal.gradle.dart.DartEnvironment
 import org.gradle.api.tasks.TaskContainer
 
 /**
- * Context for setting up Dart-related tasks.
+ * Scope for setting up Dart-related tasks.
  *
- * The context provides access to the current [DartEnvironment].
+ * Within this scope new tasks can be registered and already present tasks configured.
  *
- * Also, it is still possible to register and configure tasks on the top of this context,
- * it is highly recommended using the corresponding sub-contexts for that:
+ * An example of a present task configuration:
  *
  * ```
- * import io.spine.internal.gradle.dart.dart
+ * fun DartTaskConfiguring.dartCompile() { ... }
  *
- * // ...
- *
- * // instead of using top-level context:
- *
- * dart {
- *     tasks {
- *         withType<CompileDart> {
- *             version = "1.0"
- *         }
- *        registerNewTask()
- *     }
+ * tasks {
+ *     configure {
+ *         dartCompile()
+ *      }
  * }
+ * ```
  *
- * // use the associated sub-contexts:
+ * An example of a new task registration:
  *
- * dart {
- *     tasks {
- *         configure {
- *             withType<CompileDart> {
- *                 version = "1.0"
- *             }
- *         }
- *         register {
- *             newTask()
- *         }
+ * ```
+ * fun DartTaskRegistering.customDartCompile() { ... }
+ *
+ * tasks {
+ *     register {
+ *         customDartCompile()
  *     }
  * }
  * ```
+ *
+ * @see DartTaskConfiguring
+ * @see DartTaskRegistering
  */
-open class DartTasks(dartEnv: DartEnvironment, private val tasks: TaskContainer)
-    : DartEnvironment by dartEnv, TaskContainer by tasks
+open class DartTasks(dartEnv: DartEnvironment, tasks: TaskContainer)
+    : DartTasksContext(dartEnv, tasks)
 {
     private val registering = DartTaskRegistering(dartEnv, tasks)
     private val configuring = DartTaskConfiguring(dartEnv, tasks)
 
-    // Task groups.
-    internal val dartBuildTask = "Dart/Build"
-    internal val dartPublishTask = "Dart/Publish"
-
     /**
      * Registers new tasks.
      */
-    fun register(registrations: DartTaskRegistering.() -> Unit) = registering.run(registrations)
+    fun register(registrations: DartTaskRegistering.() -> Unit) =
+        registering.run(registrations)
 
     /**
      * Configures already registered tasks.
      */
-    fun configure(configurations: DartTaskConfiguring.() -> Unit) = configuring.run(configurations)
+    fun configure(configurations: DartTaskConfiguring.() -> Unit) =
+        configuring.run(configurations)
 }
 
 /**
- * Context for registering Dart-related tasks.
+ * Context for setting up Dart-related tasks.
+ *
+ * Exposes the current [DartEnvironment] and defines the default task groups.
  */
-class DartTaskRegistering(dartEnv: DartEnvironment, tasks: TaskContainer)
-    : DartTasks(dartEnv, tasks)
+open class DartTasksContext(dartEnv: DartEnvironment, tasks: TaskContainer)
+    : DartEnvironment by dartEnv, TaskContainer by tasks
+{
+    internal val dartBuildTask = "Dart/Build"
+    internal val dartPublishTask = "Dart/Publish"
+}
 
 /**
- * Context for configuring Dart-related tasks.
+ * Scope for registering new tasks inside [DartTasksContext].
+ */
+class DartTaskRegistering(dartEnv: DartEnvironment, tasks: TaskContainer)
+    : DartTasksContext(dartEnv, tasks)
+
+/**
+ * Scope for configuring present tasks inside [DartTasksContext].
  */
 class DartTaskConfiguring(dartEnv: DartEnvironment, tasks: TaskContainer)
-    : DartTasks(dartEnv, tasks)
+    : DartTasksContext(dartEnv, tasks)
