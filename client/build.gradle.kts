@@ -64,7 +64,6 @@ dependencies {
 dart {
     environment {
         publicationDirectory = "${project.buildDir}/customPubPublication"
-        pubExecutable = "/usr/local/opt/dart/libexec/bin/${defaultEnvironment.pubExecutable}"
     }
 
     tasks {
