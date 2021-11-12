@@ -30,6 +30,18 @@ import io.spine.internal.gradle.dart.DartEnvironment
 import org.gradle.api.tasks.TaskContainer
 
 /**
+ * Context for setting up Dart-related tasks.
+ *
+ * Exposes the current [DartEnvironment] and defines the default task groups.
+ */
+open class DartTaskContext(dartEnv: DartEnvironment, tasks: TaskContainer)
+    : DartEnvironment by dartEnv, TaskContainer by tasks
+{
+    internal val dartBuildTask = "Dart/Build"
+    internal val dartPublishTask = "Dart/Publish"
+}
+
+/**
  * Scope for setting up Dart-related tasks.
  *
  * Within this scope new tasks can be registered and already present tasks configured.
@@ -62,7 +74,7 @@ import org.gradle.api.tasks.TaskContainer
  * @see DartTaskRegistering
  */
 open class DartTasks(dartEnv: DartEnvironment, tasks: TaskContainer)
-    : DartTasksContext(dartEnv, tasks)
+    : DartTaskContext(dartEnv, tasks)
 {
     private val registering = DartTaskRegistering(dartEnv, tasks)
     private val configuring = DartTaskConfiguring(dartEnv, tasks)
@@ -81,25 +93,13 @@ open class DartTasks(dartEnv: DartEnvironment, tasks: TaskContainer)
 }
 
 /**
- * Context for setting up Dart-related tasks.
- *
- * Exposes the current [DartEnvironment] and defines the default task groups.
- */
-open class DartTasksContext(dartEnv: DartEnvironment, tasks: TaskContainer)
-    : DartEnvironment by dartEnv, TaskContainer by tasks
-{
-    internal val dartBuildTask = "Dart/Build"
-    internal val dartPublishTask = "Dart/Publish"
-}
-
-/**
- * Scope for registering new tasks inside [DartTasksContext].
+ * Scope for registering new tasks inside [DartTaskContext].
  */
 class DartTaskRegistering(dartEnv: DartEnvironment, tasks: TaskContainer)
-    : DartTasksContext(dartEnv, tasks)
+    : DartTaskContext(dartEnv, tasks)
 
 /**
- * Scope for configuring present tasks inside [DartTasksContext].
+ * Scope for configuring present tasks inside [DartTaskContext].
  */
 class DartTaskConfiguring(dartEnv: DartEnvironment, tasks: TaskContainer)
-    : DartTasksContext(dartEnv, tasks)
+    : DartTaskContext(dartEnv, tasks)
