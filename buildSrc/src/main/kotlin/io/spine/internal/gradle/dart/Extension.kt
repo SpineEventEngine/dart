@@ -82,9 +82,6 @@ fun Project.dart(configuration: DartExtension.() -> Unit) {
  */
 open class DartExtension(project: Project) {
 
-    /**
-     * Based on Dart conventions.
-     */
     private val defaultEnvironment = object : DartEnvironment {
 
         override val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
