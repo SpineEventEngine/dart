@@ -48,7 +48,7 @@ fun Project.dart(configuration: DartExtension.() -> Unit) {
  *
  * Here is the listing of available aspects to configure:
  *
- *  1. Environment - [ConfigurableDartEnvironment];
+ *  1. Environment - [MutableDartEnvironment];
  *  2. Tasks - [DartTasks].
  *
  * ### Environment
@@ -83,9 +83,9 @@ fun Project.dart(configuration: DartExtension.() -> Unit) {
 open class DartExtension(project: Project) {
 
     /**
-     * Environment values based on Dart conventions.
+     * Based on Dart conventions.
      */
-    val defaultEnvironment = object : DartEnvironment {
+    private val defaultEnvironment = object : DartEnvironment {
 
         override val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
         override val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
@@ -94,17 +94,16 @@ open class DartExtension(project: Project) {
         override val packageConfig = "${project.projectDir}/.dart_tool/package_config.json"
     }
 
-    private val environment = ConfigurableDartEnvironment(defaultEnvironment)
+    private val environment = MutableDartEnvironment(defaultEnvironment)
     private val tasks = DartTasks(environment, project.tasks)
 
     /**
-     * Overrides default values of [DartExtension.defaultEnvironment].
+     * Overrides default values of [DartEnvironment].
      *
      * Please note, environment should be set up firstly to have the effect on the parts
      * of the extension that depend on it.
      */
-    fun environment(overridings: ConfigurableDartEnvironment.() -> Unit) =
-        environment.run(overridings)
+    fun environment(overridings: MutableDartEnvironment.() -> Unit) = environment.run(overridings)
 
     /**
      * Configures [dart tasks][DartTasks].

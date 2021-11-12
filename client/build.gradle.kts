@@ -63,9 +63,8 @@ dependencies {
 
 dart {
     environment {
-        publicationDirectory = "${project.buildDir}/customPubPublication"
+        publicationDirectory += "_DRY_RUN"
     }
-
     tasks {
         register {
             build()

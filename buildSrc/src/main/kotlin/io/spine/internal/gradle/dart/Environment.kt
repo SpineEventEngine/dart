@@ -62,7 +62,7 @@ interface DartEnvironment {
 /**
  * Configurable [DartEnvironment].
  */
-class ConfigurableDartEnvironment(initialEnv: DartEnvironment) : DartEnvironment {
+class MutableDartEnvironment(initialEnv: DartEnvironment) : DartEnvironment {
 
     override var publicationDirectory = initialEnv.publicationDirectory
     override var pubExecutable = initialEnv.pubExecutable
