@@ -39,7 +39,7 @@ interface DartEnvironment {
     val publicationDirectory: String
 
     /**
-     * Path to a `Pub` package manager executable.
+     * Command to run `Pub` package manager.
      */
     val pubExecutable: String
 
@@ -62,7 +62,7 @@ interface DartEnvironment {
 /**
  * Configurable [DartEnvironment].
  */
-class MutableDartEnvironment(initialEnv: DartEnvironment) : DartEnvironment {
+class ConfigurableDartEnvironment(initialEnv: DartEnvironment) : DartEnvironment {
 
     override var publicationDirectory = initialEnv.publicationDirectory
     override var pubExecutable = initialEnv.pubExecutable

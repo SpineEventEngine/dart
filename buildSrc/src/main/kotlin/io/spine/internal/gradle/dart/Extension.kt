@@ -48,7 +48,7 @@ fun Project.dart(configuration: DartExtension.() -> Unit) {
  *
  * Here is the listing of available aspects to configure:
  *
- *  1. Environment - [MutableDartEnvironment];
+ *  1. Environment - [ConfigurableDartEnvironment];
  *  2. Tasks - [DartTasks].
  *
  * ### Environment
@@ -91,7 +91,7 @@ open class DartExtension(project: Project) {
         override val packageConfig = "${project.projectDir}/.dart_tool/package_config.json"
     }
 
-    private val environment = MutableDartEnvironment(defaultEnvironment)
+    private val environment = ConfigurableDartEnvironment(defaultEnvironment)
     private val tasks = DartTasks(environment, project.tasks)
 
     /**
@@ -100,7 +100,8 @@ open class DartExtension(project: Project) {
      * Please note, environment should be set up firstly to have the effect on the parts
      * of the extension that depend on it.
      */
-    fun environment(overridings: MutableDartEnvironment.() -> Unit) = environment.run(overridings)
+    fun environment(overridings: ConfigurableDartEnvironment.() -> Unit) =
+        environment.run(overridings)
 
     /**
      * Configures [Dart-related tasks][DartTasks].
