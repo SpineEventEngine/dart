@@ -103,7 +103,7 @@ open class DartExtension(project: Project) {
     fun environment(overridings: MutableDartEnvironment.() -> Unit) = environment.run(overridings)
 
     /**
-     * Configures [dart tasks][DartTasks].
+     * Configures [Dart-related tasks][DartTasks].
      */
-    fun tasks(configuration: DartTasks.() -> Unit) = tasks.run(configuration)
+    fun tasks(configurations: DartTasks.() -> Unit) = tasks.run(configurations)
 }
