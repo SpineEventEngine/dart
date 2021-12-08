@@ -26,59 +26,75 @@
 
 package io.spine.internal.gradle.dart.task
 
-import org.gradle.api.Task
+import io.spine.internal.gradle.base.assemble
+import io.spine.internal.gradle.java.publish.publish
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Exec
-import org.gradle.kotlin.dsl.create
+import org.gradle.api.tasks.TaskContainer
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.named
+import org.gradle.kotlin.dsl.register
 
 /**
  * Registers tasks for publishing Dart projects.
  *
+ * Please note, this task group depends on [build] tasks. Therefore, building tasks should
+ * be applied in the first place.
+ *
  * List of tasks to be created:
  *
- *  1. `stagePubPublication` - prepares the Dart package for Pub publication;
- *  2. `publishToPub` - publishes the prepared publication to Pub;
- *  3. `activateLocally` - activates this package locally.
+ *  1. [TaskContainer.stagePubPublication];
+ *  2. [TaskContainer.activateLocally];
+ *  3. [TaskContainer.publishToPub].
  *
  * Usage example:
  *
  * ```
  * import io.spine.internal.gradle.dart.dart
+ * import io.spine.internal.gradle.dart.task.build
+ * import io.spine.internal.gradle.dart.task.publish
  *
  * // ...
  *
  * dart {
  *     tasks {
- *         register {
- *             publish()
- *         }
+ *         build()
+ *         publish()
  *     }
  * }
  * ```
  */
-fun DartTaskRegistering.publish() {
+fun DartTasks.publish() {
 
-    val stagePubPublication = stagePubPublication().apply {
-        dependsOn(getByName("assemble"))
-    }
+    stagePubPublication()
+    activateLocally()
 
-    publishToPub().apply {
-        dependsOn(stagePubPublication)
-        getByName("publish").dependsOn(this)
-    }
-
-    activateLocally().apply {
-        dependsOn(stagePubPublication)
+    publishToPub().also {
+        publish.configure {
+            dependsOn(it)
+        }
     }
 }
 
-private fun DartTaskRegistering.stagePubPublication(): Task =
-    create<Copy>("stagePubPublication") {
+
+/**
+ * Locates `stagePubPublication` in this [TaskContainer].
+ *
+ * The task prepares the Dart package for Pub publication in the
+ * [publication directory][io.spine.internal.gradle.dart.DartEnvironment.publicationDir].
+ */
+val TaskContainer.stagePubPublication: TaskProvider<Copy>
+    get() = named<Copy>("stagePubPublication")
+
+private fun DartTasks.stagePubPublication(): TaskProvider<Copy> =
+    register<Copy>("stagePubPublication") {
+
         description = "Prepares the Dart package for Pub publication."
         group = dartPublishTask
 
-        // Besides .dart files itself, `pub` package manager conventions require presence:
+        dependsOn(assemble)
 
+        // Besides .dart files itself, `pub` package manager conventions require:
         // 1. README.md and CHANGELOG.md to build a page at `pub.dev/packages/<your_package>;
         // 2. The pubspec to fill out details about your package on the right side
         //    of your package’s page;
@@ -89,24 +105,37 @@ private fun DartTaskRegistering.stagePubPublication(): Task =
             exclude("proto/", "generated/", "build/", "**/.*")
         }
         from("${project.rootDir}/LICENSE")
-        into(publicationDirectory)
+        into(publicationDir)
 
         doLast {
-            logger.debug("Pub publication is prepared in directory `$publicationDirectory`.")
+            logger.debug("Pub publication is prepared in directory `$publicationDir`.")
         }
     }
 
-private fun DartTaskRegistering.publishToPub(): Task =
-    create<Exec>("publishToPub") {
+
+/**
+ * Locates `publishToPub` task in this [TaskContainer].
+ *
+ * The task publishes the prepared publication to Pub using `pub publish`.
+ */
+val TaskContainer.publishToPub: TaskProvider<Exec>
+    get() = named<Exec>("publishToPub")
+
+private fun DartTasks.publishToPub(): TaskProvider<Exec> =
+    register<Exec>("publishToPub") {
+
         description = "Publishes the prepared publication to Pub."
         group = dartPublishTask
 
-        workingDir(publicationDirectory)
-        commandLine(pubExecutable, "publish", "--trace")
+        dependsOn(stagePubPublication)
 
         val sayYes = "y".byteInputStream()
         standardInput = sayYes
+
+        workingDir(publicationDir)
+        pub("publish", "--trace")
     }
+
 
 /**
  * Makes this package available in the command line as an executable.
@@ -117,19 +146,24 @@ private fun DartTaskRegistering.publishToPub(): Task =
  *
  * See [dart pub global | Dart](https://dart.dev/tools/pub/cmd/pub-global)
  */
-private fun DartTaskRegistering.activateLocally(): Task =
-    create<Exec>("activateLocally") {
+val TaskContainer.activateLocally: TaskProvider<Exec>
+    get() = named<Exec>("stagePubPublication")
+
+private fun DartTasks.activateLocally(): TaskProvider<Exec> =
+    register<Exec>("activateLocally") {
+
         description = "Activates this package locally."
         group = dartPublishTask
 
-        workingDir(publicationDirectory)
-        commandLine(
-            pubExecutable,
+        dependsOn(stagePubPublication)
+
+        workingDir(publicationDir)
+        pub(
             "global",
             "activate",
             "--source",
             "path",
-            publicationDirectory,
+            publicationDir,
             "--trace"
         )
     }

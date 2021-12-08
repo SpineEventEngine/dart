@@ -24,49 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package io.spine.internal.gradle.dart
+package io.spine.internal.gradle.dart.plugin
 
-/**
- * Information about Dart environment.
- *
- * Describes used Dart-specific tools and their input and/or output files.
- */
-interface DartEnvironment {
+import io.spine.internal.gradle.dart.DartContext
+import io.spine.internal.gradle.dart.DartEnvironment
+import org.gradle.api.Project
+import org.gradle.api.tasks.TaskContainer
 
-    /**
-     * Path to a directory for local publications of a `Pub` package for this project.
-     */
-    val publicationDirectory: String
-
-    /**
-     * Command to run `Pub` package manager.
-     */
-    val pubExecutable: String
-
-    /**
-     * Path to `pubspec.yaml` file.
-     */
-    val pubSpec: String
-
-    /**
-     * Path to `.packages` file.
-     */
-    val packageIndex: String
-
-    /**
-     * Path to `package_config.json` file.
-     */
-    val packageConfig: String
-}
-
-/**
- * Configurable [DartEnvironment].
- */
-class ConfigurableDartEnvironment(initialEnv: DartEnvironment) : DartEnvironment {
-
-    override var publicationDirectory = initialEnv.publicationDirectory
-    override var pubExecutable = initialEnv.pubExecutable
-    override var pubSpec = initialEnv.pubSpec
-    override var packageIndex = initialEnv.packageIndex
-    override var packageConfig = initialEnv.packageConfig
+class DartPlugins(dartEnv: DartEnvironment, project: Project)
+    : DartContext(dartEnv, project), TaskContainer by project.tasks
+{
+    internal val plugins = project.plugins
+    internal val extensions = project.extensions
+    internal val tasks = project.tasks
 }

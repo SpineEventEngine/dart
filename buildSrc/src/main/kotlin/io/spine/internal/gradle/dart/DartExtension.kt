@@ -27,7 +27,7 @@
 package io.spine.internal.gradle.dart
 
 import io.spine.internal.gradle.dart.task.DartTasks
-import org.apache.tools.ant.taskdefs.condition.Os
+import io.spine.internal.gradle.dart.plugin.DartPlugins
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.findByType
@@ -82,17 +82,16 @@ fun Project.dart(configuration: DartExtension.() -> Unit) {
  */
 open class DartExtension(project: Project) {
 
-    private val defaultEnvironment = object : DartEnvironment {
+    private val environment = ConfigurableDartEnvironment(
+        object : DartEnvironment {
+            override val projectDir = project.projectDir
+            override val buildDir = project.buildDir
+            override val projectName = project.name
+        }
+    )
 
-        override val publicationDirectory = "${project.buildDir}/pub/publication/${project.name}"
-        override val pubExecutable = "pub${if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""}"
-        override val pubSpec = "${project.projectDir}/pubspec.yaml"
-        override val packageIndex = "${project.projectDir}/.packages"
-        override val packageConfig = "${project.projectDir}/.dart_tool/package_config.json"
-    }
-
-    private val environment = ConfigurableDartEnvironment(defaultEnvironment)
-    private val tasks = DartTasks(environment, project.tasks)
+    private val tasks = DartTasks(environment, project)
+    private val plugins = DartPlugins(environment, project)
 
     /**
      * Overrides default values of [DartEnvironment].
@@ -107,4 +106,6 @@ open class DartExtension(project: Project) {
      * Configures [Dart-related tasks][DartTasks].
      */
     fun tasks(configurations: DartTasks.() -> Unit) = tasks.run(configurations)
+
+    fun plugins(configurations: DartPlugins.() -> Unit) = plugins.run(configurations)
 }

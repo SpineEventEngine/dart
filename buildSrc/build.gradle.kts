@@ -63,7 +63,18 @@ repositories {
 val jacksonVersion = "2.11.0"
 val licenseReportVersion = "1.16"
 
+/**
+ * The version of Protobuf Gradle Plugin.
+ *
+ * Please keep in sync. with `io.spine.internal.dependency.Protobuf.GradlePlugin.version`.
+ *
+ * @see <a href="https://github.com/google/protobuf-gradle-plugin/releases">
+ *     Protobuf Gradle Plugins Releases</a>
+ */
+val protobufPluginVersion = "0.8.17"
+
 dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
     api("com.github.jk1:gradle-license-report:${licenseReportVersion}")
+    implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:$protobufPluginVersion")
 }
