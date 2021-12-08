@@ -24,42 +24,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
 import io.spine.gradle.internal.Deps
+import io.spine.internal.gradle.dart.dart
+import io.spine.internal.gradle.dart.task.build
+import io.spine.internal.gradle.dart.task.publish
+import io.spine.internal.gradle.dart.task.testDart
 
 plugins {
     dart
     id("io.spine.tools.proto-dart-plugin")
 }
 
-apply {
-    from(Deps.scripts.dartBuildTasks(project))
-    from(Deps.scripts.pubPublishTasks(project))
-}
-
-val spineBaseVersion: String by extra
-
 dependencies {
+
+    val spineBaseVersion: String by project.extra
+
     protobuf("io.spine:spine-base:$spineBaseVersion")
     protobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
-    Deps.build.protobuf.forEach { protobuf(it) }}
 
-tasks["testDart"].enabled = false
+    Deps.build.protobuf.forEach {
+        protobuf(it)
+    }
+}
 
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
-            }
-            task.builtins {
-                remove("java")
+dart {
+    tasks {
+        build {
+            testDart.configure {
+                enabled = false
             }
         }
+
+        publish()
     }
 }

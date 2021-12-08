@@ -24,66 +24,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
 import com.google.protobuf.gradle.testProtobuf
-import io.spine.gradle.internal.Deps
-import org.apache.tools.ant.taskdefs.condition.Os
+import io.spine.internal.gradle.dart.dart
+import io.spine.internal.gradle.dart.plugin.protobuf
+import io.spine.internal.gradle.dart.task.build
+import io.spine.internal.gradle.dart.task.integrationTest
+import io.spine.internal.gradle.dart.task.testDart
 
 plugins {
     codegen
     dart
-    id("io.spine.tools.proto-dart-plugin")}
-
-apply {
-    from(Deps.scripts.dartBuildTasks(project))
+    id("io.spine.tools.proto-dart-plugin")
 }
 
 dependencies {
     testProtobuf(project(":test-app"))
 }
 
-tasks["testDart"].enabled = false
+dart {
+    tasks {
 
-val integrationTestDir = "./integration-test"
-
-val integrationTest by tasks.creating(Exec::class) {
-    val pub = "pub" + if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""
-
-    // Run tests in Chrome browser because they use a `WebFirebaseClient` which only works in web
-    // environment.
-    commandLine(pub, "run", "test", integrationTestDir, "-p", "chrome")
-
-    dependsOn("resolveDependencies", ":test-app:appBeforeIntegrationTest")
-    finalizedBy(":test-app:appAfterIntegrationTest")
-}
-
-protoDart {
-    testDir.set(project.layout.projectDirectory.dir(integrationTestDir))
-}
-
-tasks.generateDart {
-    descriptor = protoDart.testDescriptorSet
-    target = "$projectDir/integration-test"
-}
-
-tasks.assemble {
-    dependsOn("generateDart")
-}
-
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
+        build {
+            assemble.configure {
+                dependsOn("generateDart")
             }
-            task.builtins {
-                remove("java")
+            testDart.configure {
+                enabled = false
             }
+        }
+
+        generateDart {
+            descriptor = protoDart.testDescriptorSet
+            target = "$projectDir/integration-test"
+        }
+
+        integrationTest()
+    }
+
+    plugins {
+
+        protobuf()
+
+        protoDart {
+            testDir.set(integrationTestDir)
         }
     }
 }

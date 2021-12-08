@@ -24,18 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.google.common.io.Files
-import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
-import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
+import java.nio.file.Files
+import java.nio.file.Path
 import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.remove
 import com.google.protobuf.gradle.testProtobuf
 import io.spine.gradle.internal.Deps
+import io.spine.internal.gradle.base.assemble
 import io.spine.internal.gradle.dart.dart
 import io.spine.internal.gradle.dart.task.build
 import io.spine.internal.gradle.dart.task.publish
+import io.spine.internal.gradle.dart.plugin.protobuf
 
 plugins {
     java
@@ -54,7 +52,7 @@ val spineWebVersion: String by extra
 dependencies {
     protobuf("io.spine.gcloud:spine-firebase-web:$spineWebVersion")
 
-    // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
+    // Until https://github.com/dart-lang/protobuf/issues/295 is
     //  resolved, all types must be compiled in a single batch.
 
     testProtobuf("io.spine:spine-base:$spineBaseVersion")
@@ -62,42 +60,29 @@ dependencies {
 }
 
 dart {
-    environment {
-        publicationDirectory += "_DRY_RUN"
-    }
     tasks {
-        register {
-            build()
-            publish()
+
+        build {
+            assemble {
+                dependsOn("generateDart", "generateTestDart")
+            }
         }
+
+        publish()
+    }
+
+    plugins {
+        protobuf()
     }
 }
 
-tasks.assemble {
-    dependsOn("generateDart", "generateTestDart")
-}
-
-val dartDocDir = Files.createTempDir()
-
-val dartDoc by tasks.creating(Exec::class) {
-    commandLine("dartdoc", "--output", dartDocDir.path, "$projectDir/lib/")
+val dartDocDir: Path = Files.createTempDirectory("dartDocDir")
+val dartDoc by tasks.registering(Exec::class) {
+    commandLine("dartdoc", "--output", dartDocDir, "$projectDir/lib/")
 }
 
 afterEvaluate {
     extra["generatedDocs"] = files(dartDocDir)
     tasks["updateGitHubPages"].dependsOn(dartDoc)
     tasks["publish"].dependsOn("updateGitHubPages")
-}
-
-protobuf {
-    generateProtoTasks {
-        all().forEach { task ->
-            task.plugins {
-                id("dart")
-            }
-            task.builtins {
-                remove("java")
-            }
-        }
-    }
 }
