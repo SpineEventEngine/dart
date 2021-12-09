@@ -43,10 +43,10 @@ import org.gradle.kotlin.dsl.findByType
  *     environment {
  *         // ...
  *     }
- *     tasks {
+ *     plugins {
  *         // ...
  *     }
- *     plugins {
+ *     tasks {
  *         // ...
  *     }
  * }
@@ -68,7 +68,7 @@ import org.gradle.kotlin.dsl.findByType
  *
  * There are two ways to modify the environment:
  *
- *  1. Modify [DartEnvironment]  interface directly. Go with this option when it is a global change
+ *  1. Modify [DartEnvironment] interface directly. Go with this option when it is a global change
  *     that should affect all projects which use this extension.
  *  2. Use [DartExtension.environment] scope — for temporary and custom overridings.
  *
