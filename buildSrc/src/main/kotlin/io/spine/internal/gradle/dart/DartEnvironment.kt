@@ -110,14 +110,13 @@ interface DartEnvironment {
         get() = projectDir.resolve("pubspec.yaml")
 
     /**
-     * Deprecated module dependencies' index that maps resolved package names to location URIs.
+     * Module dependencies' index that maps resolved package names to location URIs.
      *
      * By default, pub creates a [packageConfig] file in the `.dart_tool/` directory for this.
-     * Before the [packageConfig], pub used to create a [packageIndex] file in the root
+     * Before the [packageConfig], pub used to create this [packageIndex] file in the root
      * directory.
      *
-     * As for Dart 2.14,  `pub` still updates the deprecated file for backwards compatibility. This
-     * functionality will not be maintained, and will be removed in future releases.
+     * As for Dart 2.14,  `pub` still updates the deprecated file for backwards compatibility.
      *
      * Default value: "$projectDir/.packages".
      */
