@@ -26,16 +26,58 @@
 
 package io.spine.internal.gradle.dart.task
 
+import io.spine.internal.gradle.TaskName
+import io.spine.internal.gradle.named
+import io.spine.internal.gradle.register
 import org.gradle.api.tasks.Exec
-import org.gradle.kotlin.dsl.register
+import org.gradle.api.tasks.TaskContainer
+import org.gradle.api.tasks.TaskProvider
 
+private val integrationTestName = TaskName.of("integrationTest", Exec::class)
+
+/**
+ * Locates `integrationTest` task in this [TaskContainer].
+ *
+ * The task runs integration tests of the `spine-dart` library against a sample
+ * Spine-based application. The tests are run in Chrome browser because they use `WebFirebaseClient`
+ * which only works in web environment.
+ *
+ * A sample Spine-based application is run from the `test-app` module before integration
+ * tests start and is stopped as the tests complete.
+ */
+val TaskContainer.integrationTest: TaskProvider<Exec>
+    get() = named(integrationTestName)
+
+/**
+ * Registers [TaskContainer.integrationTest] task.
+ *
+ * Please note, this task depends on [build] tasks. Therefore, building tasks should be applied in
+ * the first place.
+ *
+ * Here's an example of how to apply it in `build.gradle.kts`:
+ *
+ * ```
+ * import io.spine.internal.gradle.dart.dart
+ * import io.spine.internal.gradle.task.build
+ * import io.spine.internal.gradle.task.integrationTest
+ *
+ * // ...
+ *
+ * dart {
+ *     tasks {
+ *         build()
+ *         integrationTest()
+ *     }
+ * }
+ * ```
+ */
 fun DartTasks.integrationTest() =
-    register<Exec>("integrationTest") {
+    register(integrationTestName) {
 
-        dependsOn(resolveDependencies, ":test-app:appBeforeIntegrationTest")
-
-        // Run tests in Chrome browser because they use a `WebFirebaseClient`
-        // which only works in web environment.
+        dependsOn(
+            resolveDependencies,
+            ":test-app:appBeforeIntegrationTest"
+        )
 
         pub("run", "test", integrationTestDir, "-p", "chrome")
 

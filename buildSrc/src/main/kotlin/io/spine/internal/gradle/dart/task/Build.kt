@@ -26,23 +26,24 @@
 
 package io.spine.internal.gradle.dart.task
 
+import io.spine.internal.gradle.TaskName
 import io.spine.internal.gradle.base.assemble
-import io.spine.internal.gradle.base.clean
 import io.spine.internal.gradle.base.check
+import io.spine.internal.gradle.base.clean
+import io.spine.internal.gradle.named
+import io.spine.internal.gradle.register
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.named
-import org.gradle.kotlin.dsl.register
 
 /**
  * Registers tasks for building Dart projects.
  *
  * List of tasks to be created:
  *
- *  1. [TaskContainer.cleanPackageIndex];
- *  2. [TaskContainer.resolveDependencies];
+ *  1. [TaskContainer.cleanPackageIndex].
+ *  2. [TaskContainer.resolveDependencies].
  *  3. [TaskContainer.testDart].
  *
  * An example of how to apply it in `build.gradle.kts`:
@@ -62,20 +63,18 @@ import org.gradle.kotlin.dsl.register
  *
  * @param configuration any additional configuration related to the module's building.
  */
-fun DartTasks.build(configuration: DartTasks.() -> Unit) {
+fun DartTasks.build(configuration: DartTasks.() -> Unit = {}) {
 
     cleanPackageIndex().also {
         clean.configure {
             dependsOn(it)
         }
     }
-
     resolveDependencies().also {
         assemble.configure {
             dependsOn(it)
         }
     }
-
     testDart().also {
         check.configure {
             dependsOn(it)
@@ -85,6 +84,7 @@ fun DartTasks.build(configuration: DartTasks.() -> Unit) {
     configuration()
 }
 
+private val resolveDependenciesName = TaskName.of("resolveDependencies", Exec::class)
 
 /**
  * Locates `resolveDependencies` task in this [TaskContainer].
@@ -92,13 +92,13 @@ fun DartTasks.build(configuration: DartTasks.() -> Unit) {
  * The task fetches dependencies declared via `pubspec.yaml` using `pub get` command.
  */
 val TaskContainer.resolveDependencies: TaskProvider<Exec>
-    get() = named<Exec>("resolveDependencies")
+    get() = named(resolveDependenciesName)
 
 private fun DartTasks.resolveDependencies(): TaskProvider<Exec> =
-    register<Exec>("resolveDependencies") {
+    register(resolveDependenciesName) {
 
         description = "Fetches dependencies declared via `pubspec.yaml`."
-        group = dartBuildTask
+        group = DartTasks.Group.build
 
         mustRunAfter(cleanPackageIndex)
 
@@ -108,30 +108,32 @@ private fun DartTasks.resolveDependencies(): TaskProvider<Exec> =
         pub("get")
     }
 
+private val cleanPackageIndexName = TaskName.of("cleanPackageIndex", Delete::class)
 
 /**
  * Locates `cleanPackageIndex` task in this [TaskContainer].
  *
  * The task deletes the resolved `.packages` and `package_config.json` files.
- *
- * A Dart package configuration file is used to resolve Dart package names to Dart files
- * containing the source code for that package.
- *
+
  * The standard package configuration file is `package_config.json`. For backwards compatability
  * `pub` still updates the deprecated `.packages` file. Hence, the task deletes both files.
  */
 val TaskContainer.cleanPackageIndex: TaskProvider<Delete>
-    get() = named<Delete>("cleanPackageIndex")
+    get() = named(cleanPackageIndexName)
 
 private fun DartTasks.cleanPackageIndex(): TaskProvider<Delete> =
-    register<Delete>("cleanPackageIndex") {
+    register(cleanPackageIndexName) {
 
         description = "Deletes the resolved `.packages` and `package_config.json` files."
-        group = dartBuildTask
+        group = DartTasks.Group.build
 
-        delete(packageIndex, packageConfig)
+        delete(
+            packageIndex,
+            packageConfig
+        )
     }
 
+private val testDartName = TaskName.of("testDart", Exec::class)
 
 /**
  * Locates `testDart` task in this [TaskContainer].
@@ -139,13 +141,13 @@ private fun DartTasks.cleanPackageIndex(): TaskProvider<Delete> =
  * The task runs Dart tests declared in the `./test` directory.
  */
 val TaskContainer.testDart: TaskProvider<Exec>
-    get() = named<Exec>("testDart")
+    get() = named(testDartName)
 
 private fun DartTasks.testDart(): TaskProvider<Exec> =
-    register<Exec>("testDart") {
+    register(testDartName) {
 
         description = "Runs Dart tests declared in the `./test` directory."
-        group = dartBuildTask
+        group = DartTasks.Group.build
 
         dependsOn(resolveDependencies)
 

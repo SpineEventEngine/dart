@@ -32,37 +32,84 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.TaskContainer
 
 /**
- * A scope for setting up Dart-related tasks.
+ * A scope for registering and configuring Dart-related tasks.
  *
- * Within this scope new tasks can be registered and already present tasks configured.
+ * The scope provides:
  *
- * An example of a present task configuration:
+ *  1. Access to the current [DartContext].
+ *  2. Project's [TaskContainer].
+ *  3. Default task groups.
+ *
+ * Supposing, one needs to create a new task that would participate in building. Let the task name
+ * be `testDart`. To do that, several steps should be completed:
+ *
+ *  1. Define the task name and type using [TaskName][io.spine.internal.gradle.TaskName].
+ *  2. Create a public typed reference for the task upon [TaskContainer]. It would facilitate
+ *      referencing to the new task, so that external tasks could depend on it. This reference
+ *      should be documented.
+ *  3. Implement an extension upon [DartTasks] to register the task.
+ *  4. Call the resulted extension from `build.gradle.kts`.
+ *
+ * Here's an example of `testDart()` extension:
  *
  * ```
- * fun DartTaskConfiguring.dartCompile() { ... }
+ * import io.spine.internal.gradle.named
+ * import io.spine.internal.gradle.register
+ * import io.spine.internal.gradle.TaskName
+ * import org.gradle.api.Task
+ * import org.gradle.api.tasks.TaskContainer
+ * import org.gradle.api.tasks.Exec
  *
- * tasks {
- *     configure {
- *         dartCompile()
- *      }
- * }
+ * // ...
+ *
+ * private val testDartName = TaskName.of("testDart", Exec::class)
+ *
+ * /**
+ *  * Locates `testDart` task in this [TaskContainer].
+ *  *
+ *  * The task runs Dart tests declared in the `./test` directory.
+ *  */
+ * val TaskContainer.testDart: TaskProvider<Exec>
+ *     get() = named(testDartName)
+ *
+ * fun DartTasks.testDart() =
+ *     register(testDartName) {
+ *
+ *         description = "Runs Dart tests declared in the `./test` directory."
+ *         group = DartTasks.Group.build
+ *
+ *         // ...
+ *     }
  * ```
  *
- * An example of a new task registration:
+ * And here's how to apply it in `build.gradle.kts`:
  *
  * ```
- * fun DartTaskRegistering.customDartCompile() { ... }
+ * import io.spine.internal.gradle.dart.dart
+ * import io.spine.internal.gradle.dart.task.testDart
  *
- * tasks {
- *     register {
- *         customDartCompile()
+ * // ...
+ *
+ * dart {
+ *     tasks {
+ *         testDart()
  *     }
  * }
  * ```
+ *
+ * Declaring typed references upon [TaskContainer] is optional. But it is highly encouraged
+ * to reference other tasks by such extensions instead of hard-typed string values.
  */
 class DartTasks(dartEnv: DartEnvironment, project: Project)
     : DartContext(dartEnv, project), TaskContainer by project.tasks
 {
-    internal val dartBuildTask = "Dart/Build"
-    internal val dartPublishTask = "Dart/Publish"
+    /**
+     * Default task groups for tasks that participate in building a Dart module.
+     *
+     * @see [org.gradle.api.Task.getGroup]
+     */
+    internal object Group {
+        const val build = "Dart/Build"
+        const val publish = "Dart/Publish"
+    }
 }

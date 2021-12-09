@@ -26,14 +26,15 @@
 
 package io.spine.internal.gradle.dart.task
 
+import io.spine.internal.gradle.TaskName
 import io.spine.internal.gradle.base.assemble
 import io.spine.internal.gradle.java.publish.publish
+import io.spine.internal.gradle.named
+import io.spine.internal.gradle.register
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.kotlin.dsl.named
-import org.gradle.kotlin.dsl.register
 
 /**
  * Registers tasks for publishing Dart projects.
@@ -43,8 +44,8 @@ import org.gradle.kotlin.dsl.register
  *
  * List of tasks to be created:
  *
- *  1. [TaskContainer.stagePubPublication];
- *  2. [TaskContainer.activateLocally];
+ *  1. [TaskContainer.stagePubPublication].
+ *  2. [TaskContainer.activateLocally].
  *  3. [TaskContainer.publishToPub].
  *
  * Usage example:
@@ -76,6 +77,7 @@ fun DartTasks.publish() {
     }
 }
 
+private val stagePubPublicationName = TaskName.of("stagePubPublication", Copy::class)
 
 /**
  * Locates `stagePubPublication` in this [TaskContainer].
@@ -84,20 +86,20 @@ fun DartTasks.publish() {
  * [publication directory][io.spine.internal.gradle.dart.DartEnvironment.publicationDir].
  */
 val TaskContainer.stagePubPublication: TaskProvider<Copy>
-    get() = named<Copy>("stagePubPublication")
+    get() = named(stagePubPublicationName)
 
 private fun DartTasks.stagePubPublication(): TaskProvider<Copy> =
-    register<Copy>("stagePubPublication") {
+    register(stagePubPublicationName) {
 
         description = "Prepares the Dart package for Pub publication."
-        group = dartPublishTask
+        group = DartTasks.Group.publish
 
         dependsOn(assemble)
 
-        // Besides .dart files itself, `pub` package manager conventions require:
-        // 1. README.md and CHANGELOG.md to build a page at `pub.dev/packages/<your_package>;
-        // 2. The pubspec to fill out details about your package on the right side
-        //    of your package’s page;
+        // Beside `.dart` sources itself, `pub` package manager conventions require:
+        // 1. README.md and CHANGELOG.md to build a page at `pub.dev/packages/<your_package>;`.
+        // 2. `pubspec` file to fill out details about your package on the right side of your
+        //    package’s page.
         // 3. LICENSE file.
 
         from(project.projectDir) {
@@ -112,20 +114,21 @@ private fun DartTasks.stagePubPublication(): TaskProvider<Copy> =
         }
     }
 
+private val publishToPubName = TaskName.of("publishToPub", Exec::class)
 
 /**
  * Locates `publishToPub` task in this [TaskContainer].
  *
- * The task publishes the prepared publication to Pub using `pub publish`.
+ * The task publishes the prepared publication to Pub using `pub publish` command.
  */
 val TaskContainer.publishToPub: TaskProvider<Exec>
-    get() = named<Exec>("publishToPub")
+    get() = named(publishToPubName)
 
 private fun DartTasks.publishToPub(): TaskProvider<Exec> =
-    register<Exec>("publishToPub") {
+    register(publishToPubName) {
 
         description = "Publishes the prepared publication to Pub."
-        group = dartPublishTask
+        group = DartTasks.Group.publish
 
         dependsOn(stagePubPublication)
 
@@ -133,11 +136,15 @@ private fun DartTasks.publishToPub(): TaskProvider<Exec> =
         standardInput = sayYes
 
         workingDir(publicationDir)
+
         pub("publish", "--trace")
     }
 
+private val activateLocallyName = TaskName.of("activateLocally", Exec::class)
 
 /**
+ * Locates `activateLocally` task in this [TaskContainer].
+ *
  * Makes this package available in the command line as an executable.
  *
  * The `dart run` command supports running a Dart program — located in a file, in the current
@@ -147,13 +154,13 @@ private fun DartTasks.publishToPub(): TaskProvider<Exec> =
  * See [dart pub global | Dart](https://dart.dev/tools/pub/cmd/pub-global)
  */
 val TaskContainer.activateLocally: TaskProvider<Exec>
-    get() = named<Exec>("stagePubPublication")
+    get() = named(activateLocallyName)
 
 private fun DartTasks.activateLocally(): TaskProvider<Exec> =
-    register<Exec>("activateLocally") {
+    register(activateLocallyName) {
 
         description = "Activates this package locally."
-        group = dartPublishTask
+        group = DartTasks.Group.publish
 
         dependsOn(stagePubPublication)
 
