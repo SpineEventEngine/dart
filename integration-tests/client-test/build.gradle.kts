@@ -43,7 +43,6 @@ dependencies {
 
 dart {
     tasks {
-
         build {
             assemble.configure {
                 dependsOn("generateDart")
@@ -52,12 +51,10 @@ dart {
                 enabled = false
             }
         }
-
         generateDart {
             descriptor = protoDart.testDescriptorSet
             target = "$projectDir/integration-test"
         }
-
         integrationTest()
     }
 

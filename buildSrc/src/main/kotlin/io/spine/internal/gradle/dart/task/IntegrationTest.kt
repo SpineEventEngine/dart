@@ -79,7 +79,13 @@ fun DartTasks.integrationTest() =
             ":test-app:appBeforeIntegrationTest"
         )
 
-        pub("run", "test", integrationTestDir, "-p", "chrome")
+        pub(
+            "run",
+            "test",
+            integrationTestDir,
+            "-p",
+            "chrome"
+        )
 
         finalizedBy(":test-app:appAfterIntegrationTest")
     }
