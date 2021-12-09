@@ -27,7 +27,6 @@
 package io.spine.internal.gradle.dart.plugin
 
 import com.google.protobuf.gradle.builtins
-import com.google.protobuf.gradle.generateProtoTasks
 import com.google.protobuf.gradle.id
 import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
@@ -44,16 +43,10 @@ fun DartPlugins.protobuf() {
     plugins.apply(Protobuf.GradlePlugin.id)
 
     project.protobuf {
-        generateProtoTasks {
-            all().forEach { task ->
-                task.apply {
-                    plugins {
-                        id("dart")
-                    }
-                    builtins {
-                        remove("java")
-                    }
-                }
+        generateProtoTasks.all().forEach { task ->
+            task.apply {
+                plugins { id("dart") }
+                builtins { remove("java") }
             }
         }
     }

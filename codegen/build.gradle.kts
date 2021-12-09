@@ -37,7 +37,6 @@ plugins {
 }
 
 dependencies {
-
     val spineBaseVersion: String by project.extra
 
     protobuf("io.spine:spine-base:$spineBaseVersion")
@@ -51,11 +50,8 @@ dependencies {
 dart {
     tasks {
         build {
-            testDart.configure {
-                enabled = false
-            }
+            testDart { enabled = false }
         }
-
         publish()
     }
 }

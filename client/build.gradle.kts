@@ -53,36 +53,33 @@ dependencies {
     protobuf("io.spine.gcloud:spine-firebase-web:$spineWebVersion")
 
     // Until https://github.com/dart-lang/protobuf/issues/295 is
-    //  resolved, all types must be compiled in a single batch.
+    // resolved, all types must be compiled in a single batch.
 
     testProtobuf("io.spine:spine-base:$spineBaseVersion")
     testProtobuf("io.spine.tools:spine-tool-base:$spineBaseVersion")
 }
 
 dart {
-    tasks {
-
-        build {
-            assemble {
-                dependsOn("generateDart", "generateTestDart")
-            }
-        }
-
-        publish()
-    }
-
     plugins {
         protobuf()
     }
+    tasks {
+        build {
+            assemble { dependsOn("generateDart", "generateTestDart") }
+        }
+        publish()
+    }
 }
 
-val dartDocDir: Path = Files.createTempDirectory("dartDocDir")
-val dartDoc by tasks.registering(Exec::class) {
-    commandLine("dartdoc", "--output", dartDocDir, "$projectDir/lib/")
-}
+tasks {
+    val dartDocDir: Path = Files.createTempDirectory("dartDocDir")
+    val dartDoc by registering(Exec::class) {
+        commandLine("dartdoc", "--output", dartDocDir, "$projectDir/lib/")
+    }
 
-afterEvaluate {
-    extra["generatedDocs"] = files(dartDocDir)
-    tasks["updateGitHubPages"].dependsOn(dartDoc)
-    tasks["publish"].dependsOn("updateGitHubPages")
+    afterEvaluate {
+        extra["generatedDocs"] = files(dartDocDir)
+        tasks["updateGitHubPages"].dependsOn(dartDoc)
+        tasks["publish"].dependsOn("updateGitHubPages")
+    }
 }

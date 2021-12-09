@@ -42,28 +42,21 @@ dependencies {
 }
 
 dart {
+    plugins {
+        protobuf()
+        protoDart { testDir.set(integrationTestDir) }
+    }
     tasks {
         build {
-            assemble.configure {
-                dependsOn("generateDart")
-            }
-            testDart.configure {
-                enabled = false
-            }
+            assemble { dependsOn("generateDart") }
+            testDart { enabled = false }
         }
+
+        integrationTest()
+
         generateDart {
             descriptor = protoDart.testDescriptorSet
             target = "$projectDir/integration-test"
-        }
-        integrationTest()
-    }
-
-    plugins {
-
-        protobuf()
-
-        protoDart {
-            testDir.set(integrationTestDir)
         }
     }
 }
