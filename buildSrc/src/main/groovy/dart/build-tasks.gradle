@@ -26,7 +26,8 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
-println("`build-tasks.gradle` script is deprecated. Please use `dart` extension instead.")
+println("`build-tasks.gradle` script is deprecated. " +
+        "Please use `DartTasks.build()` extension instead.")
 
 final def GROUP = 'Dart'
 final def packageIndex = "$projectDir/.packages" as File
