@@ -31,15 +31,15 @@ import org.gradle.api.tasks.Exec
 
 /**
  * Provides access to the current [DartEnvironment] and shortcuts for running `pub` tool.
- *
- * The Dart ecosystem uses packages to manage shared software such as libraries and tools.
- * To get or publish Dart packages, you use the `pub` package manager.
  */
 open class DartContext(dartEnv: DartEnvironment, internal val project: Project)
     : DartEnvironment by dartEnv
 {
     /**
      * Executes `pub` command in this [Exec] task.
+     *
+     * The Dart ecosystem uses packages to manage shared software such as libraries and tools.
+     * To get or publish Dart packages, the `pub` package manager is to be used.
      */
     fun Exec.pub(vararg args: Any) = commandLine(pubExecutable, *args)
 }
