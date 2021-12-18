@@ -4,8 +4,8 @@
 # Remove the following pattern if you wish to check in your lock file
 pubspec.lock
 
-# Conventional directory for build outputs
-build/
+# IMPORTANT: ignoring `/build/` folder in any form makes it impossible to publish
+# the `build/pub/..` contents due to the recently introduced `pub` tool regulations.
 
 # Directory created by dartdoc
 doc/api/

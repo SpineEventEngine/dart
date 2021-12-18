@@ -41,3 +41,20 @@
 ## 1.7.3
  This release introduces null-safe API, according to the new Dart null safety feature.
  The Dart language version is promoted to `2.13`.
+
+## 1.7.4
+
+ In this release, the subscription API has been improved. It is now possible to cancel the event 
+ subscriptions via `EventSubscription` type, which is now returned 
+ instead of `Stream<EventMessage>`.
+
+## 1.7.5
+ In this release, the asynchronous nature of the subscription API has been reflected in returning
+ `Future`s upon calling `post(..)`. This makes the flow more transparent for end-users, 
+ as previously `Future` instances were hidden deep inside the returned `EventSubscription` and
+ `StateSubscription` objects.
+
+## 1.8.0
+ This release is a compatibility package, issued in scope of Spine's `1.8.0` release. 
+ Additionally, the dependency onto `optional` package was upgraded from 
+ a pre-release `6.0.0-nullsafety.2` to `^6.0.0`.
