@@ -101,7 +101,7 @@ hs_err_pid*
 # Files and directories created by pub
 .dart_tool/
 .packages
-#pubspec.lock
+pubspec.lock
 
 **/*.pb.dart
 **/*.pbenum.dart
