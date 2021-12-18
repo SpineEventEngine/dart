@@ -47,7 +47,14 @@
 **/generated/**
 
 # Gradle build files
-**/build/**
+# IMPORTANT: ignoring `/build/` folder in any form makes it impossible to publish
+# the `build/pub/..` contents due to the recently introduced `pub` tool regulations.
+**/build/descriptors
+**/build/extracted-include-protos
+**/build/extracted-protos
+**/build/libs
+**/build/resources
+**/build/tmp
 
 # Build files produced by the IDE
 **/out/**
@@ -94,7 +101,7 @@ hs_err_pid*
 # Files and directories created by pub
 .dart_tool/
 .packages
-pubspec.lock
+#pubspec.lock
 
 **/*.pb.dart
 **/*.pbenum.dart
