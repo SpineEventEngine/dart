@@ -58,3 +58,6 @@
  This release is a compatibility package, issued in scope of Spine's `1.8.0` release. 
  Additionally, the dependency onto `optional` package was upgraded from 
  a pre-release `6.0.0-nullsafety.2` to `^6.0.0`.
+
+## 1.8.1
+ This release fixes the previously broken `dart_code_gen:1.8.0`.
