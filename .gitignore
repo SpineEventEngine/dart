@@ -47,7 +47,14 @@
 **/generated/**
 
 # Gradle build files
-**/build/**
+# IMPORTANT: ignoring `/build/` folder in any form makes it impossible to publish
+# the `build/pub/..` contents due to the recently introduced `pub` tool regulations.
+**/build/descriptors
+**/build/extracted-include-protos
+**/build/extracted-protos
+**/build/libs
+**/build/resources
+**/build/tmp
 
 # Build files produced by the IDE
 **/out/**
@@ -91,16 +98,21 @@ gcs-auth-key.json
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
-# Files and directories created by pub
-.dart_tool/
-.packages
-pubspec.lock
 
-**/*.pb.dart
-**/*.pbenum.dart
-**/*.pbserver.dart
-**/*.pbjson.dart
-**/types.dart
-**/validators.dart
+# IMPORTANT: Any ignored `.dart` files produced by `pub` tool won't make their way to the final
+# package. Therefore, no files should be ignored.
+#
+# Files and directories created by pub:
+#
+#.dart_tool/
+#.packages
+#pubspec.lock
+#
+#**/*.pb.dart
+#**/*.pbenum.dart
+#**/*.pbserver.dart
+#**/*.pbjson.dart
+#**/types.dart
+#**/validators.dart
 
 **/spine-dev.json
