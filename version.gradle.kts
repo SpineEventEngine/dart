@@ -31,4 +31,4 @@
 
 val spineBaseVersion: String by extra("1.8.0")
 val spineWebVersion: String by extra("1.8.0")
-val versionToPublish: String by extra("1.8.0")
+val versionToPublish: String by extra("1.8.1")
