@@ -28,4 +28,7 @@ jobs:
         run: dart pub global activate protoc_plugin
 
       - name: Build with gradle
-        run: ./gradlew build
+        run: ./gradlew build --stacktrace
+
+      - name: Run integration tests
+        run: ./gradlew integrationTest
