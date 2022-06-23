@@ -24,12 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import 'package:firebase_dart/firebase_dart.dart' as fb;
 import 'package:spine_client/client.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/spine_client.dart';
 import 'package:spine_client/time.dart';
 import 'package:spine_client/uuids.dart';
-import 'package:spine_client/web_firebase_client.dart';
 import 'package:test/test.dart';
 
 import 'endpoints.dart';
@@ -42,9 +42,11 @@ import 'spine/web/test/given/project_progress.pb.dart';
 import 'spine/web/test/given/task.pb.dart';
 import 'spine/web/test/given/user_tasks.pb.dart';
 import 'types.dart' as testTypes;
+import 'dart_firebase_client.dart';
 
 @TestOn("browser")
 void main() {
+    fb.FirebaseDart.setup();
 
     group('Client should', () {
 
@@ -52,9 +54,10 @@ void main() {
         late FirebaseClient firebaseClient;
         late UserId actor;
 
-        setUp(() {
+        setUp(() async {
+            await FirebaseApp().init();
             var database = FirebaseApp().database;
-            firebaseClient = WebFirebaseClient(database);
+            firebaseClient = DartFirebaseClient(database);
             clients = Clients(BACKEND,
                               firebase: firebaseClient,
                               typeRegistries: [testTypes.types()]);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021, TeamDev. All rights reserved.
+ * Copyright 2022, TeamDev. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,18 +24,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:firebase/firebase.dart' as fb;
+import 'package:firebase_dart/firebase_dart.dart' as fb;
 import 'package:spine_client/firebase_client.dart';
 
-/// An implementation of [FirebaseClient] specific to browser JavaScript.
+/// An implementation of [FirebaseClient] that uses native firebase implementation.
 ///
-/// See `RestClient` for a platform-agnostic implementation.
-///
-class WebFirebaseClient implements FirebaseClient {
+class DartFirebaseClient implements FirebaseClient {
 
-    final fb.Database _db;
+    final fb.FirebaseDatabase _db;
 
-    WebFirebaseClient(this._db);
+    DartFirebaseClient(this._db);
 
     @override
     Stream<String> get(String path) {
@@ -45,7 +43,8 @@ class WebFirebaseClient implements FirebaseClient {
     @override
     Stream<String> childAdded(String path) {
         return _db
-            .ref(path)
+            .reference()
+            .child(path)
             .onChildAdded
             .map(_toJsonString);
     }
@@ -53,7 +52,8 @@ class WebFirebaseClient implements FirebaseClient {
     @override
     Stream<String> childChanged(String path) {
         return _db
-            .ref(path)
+            .reference()
+            .child(path)
             .onChildChanged
             .map(_toJsonString);
     }
@@ -61,12 +61,13 @@ class WebFirebaseClient implements FirebaseClient {
     @override
     Stream<String> childRemoved(String path) {
         return _db
-            .ref(path)
+            .reference()
+            .child(path)
             .onChildRemoved
             .map(_toJsonString);
     }
 
-    String _toJsonString(event) {
-        return event.snapshot.toJson().toString();
+    String _toJsonString(fb.Event event) {
+        return event.snapshot.value.toString();
     }
 }
