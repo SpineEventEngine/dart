@@ -27,7 +27,7 @@
 import 'package:firebase_dart/firebase_dart.dart' as fb;
 import 'package:spine_client/firebase_client.dart';
 
-/// An implementation of [FirebaseClient] that uses native firebase implementation.
+/// An implementation of [FirebaseClient] that uses dart Firebase implementation.
 ///
 class DartFirebaseClient implements FirebaseClient {
 
