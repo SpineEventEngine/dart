@@ -27,13 +27,13 @@ jobs:
       - name: Activate Dart Protoc Plugin
         run: dart pub global activate protoc_plugin
 
-      - name: Build with gradle
-        run: ./gradlew build --stacktrace
-
       - name: Unpack credentials
         run:  >
           chmod +x ./script/unpack-credentials.sh
           && ./script/unpack-credentials.sh
+
+      - name: Build with gradle
+        run: ./gradlew build --stacktrace
 
       - name: Run integration tests
         run: ./gradlew integrationTest
