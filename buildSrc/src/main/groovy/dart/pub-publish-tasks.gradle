@@ -24,11 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
-
 final def publicationDir = "$buildDir/pub/publication/$project.name"
-final def extension = Os.isFamily(Os.FAMILY_WINDOWS) ? '.bat' : ''
-final def PUB_EXECUTABLE = 'pub' + extension
 
 task stagePubPublication(type: Copy) {
     description = 'Prepares the Dart package for Pub publication.'
@@ -54,7 +50,7 @@ task publishToPub(type: Exec) {
     description = 'Publishes this package to Pub.'
 
     workingDir publicationDir
-    commandLine PUB_EXECUTABLE, 'publish', '--trace'
+    commandLine 'dart', 'pub', 'publish', '--trace'
     final sayYes = new ByteArrayInputStream('y'.getBytes())
     standardInput(sayYes)
 
@@ -67,7 +63,7 @@ task publishToPub(type: Exec) {
 task activateLocally(type: Exec) {
     description = 'Activates this package locally.'
 
-    commandLine PUB_EXECUTABLE, 'global', 'activate', '--source', 'path', publicationDir, '--trace'
+    commandLine 'dart', 'pub', 'global', 'activate', '--source', 'path', publicationDir, '--trace'
 
     workingDir publicationDir
     dependsOn 'stagePubPublication'

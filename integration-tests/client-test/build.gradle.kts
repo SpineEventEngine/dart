@@ -52,11 +52,9 @@ tasks["testDart"].enabled = false
 val integrationTestDir = "./integration-test"
 
 val integrationTest by tasks.creating(Exec::class) {
-    val pub = "pub" + if (Os.isFamily(Os.FAMILY_WINDOWS)) ".bat" else ""
-
     // Run tests in Chrome browser because they use a `WebFirebaseClient` which only works in web
     // environment.
-    commandLine(pub, "run", "test", integrationTestDir, "-p", "chrome")
+    commandLine("dart", "pub", "run", "test", integrationTestDir, "-p", "chrome")
 
     dependsOn("resolveDependencies", ":test-app:appBeforeIntegrationTest")
     finalizedBy(":test-app:appAfterIntegrationTest")
