@@ -1,6 +1,6 @@
 name: spine_client
 description: Dart-based library for client applications of Spine-based systems.
-version: 1.8.1
+version: 1.8.2
 homepage: https://spine.io
 
 environment:
