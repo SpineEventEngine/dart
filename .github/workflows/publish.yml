@@ -28,6 +28,9 @@ jobs:
       - name: Build with gradle
         run: ./gradlew build --stacktrace
 
+      - name: Ensure credential directory exists
+        run: mkdir $XDG_CONFIG_HOME/dart/
+
       - name: Decrypt Pub credentials
         run: ./script/decrypt.sh "$PUB_CREDENTIALS_KEY" ./.github/keys/pub-credentials.json.gpg $XDG_CONFIG_HOME/dart/pub-credentials.json
         shell: bash
