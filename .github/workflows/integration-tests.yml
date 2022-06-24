@@ -33,7 +33,7 @@ jobs:
         shell: bash
 
       - name: Decrypt Firebase service account key
-        run: ./scripts/decrypt.sh "$FIREBASE_SA_KEY" ./.github/keys/firebase-sa.json.gpg ./integration-tests/test-app/src/main/resources/spine-dev.json
+        run: ./script/decrypt.sh "$FIREBASE_SA_KEY" ./.github/keys/firebase-sa.json.gpg ./integration-tests/test-app/src/main/resources/spine-dev.json
         shell: bash
         env:
           FIREBASE_SA_KEY: ${{ secrets.FIREBASE_SA_KEY }}
