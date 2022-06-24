@@ -27,5 +27,5 @@ jobs:
         run: >
           choco install dart-sdk --limitoutput
           && refreshenv
-          && pub global activate protoc_plugin
+          && dart pub global activate protoc_plugin
           && gradlew.bat build

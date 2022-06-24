@@ -47,8 +47,6 @@ object Scripts {
     fun npmPublishTasks(p: Project)        = p.script("js/npm-publish-tasks.gradle")
     fun npmCli(p: Project)                 = p.script("js/npm-cli.gradle")
     fun updatePackageVersion(p: Project)   = p.script("js/update-package-version.gradle")
-    fun dartBuildTasks(p: Project)         = p.script("dart/build-tasks.gradle")
-    fun pubPublishTasks(p: Project)        = p.script("dart/pub-publish-tasks.gradle")
     fun pmd(p: Project)                    = p.script("pmd.gradle")
     fun checkstyle(p: Project)             = p.script("checkstyle.gradle")
     fun runBuild(p: Project)               = p.script("run-build.gradle")

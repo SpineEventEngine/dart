@@ -26,10 +26,10 @@
 
 package io.spine.gradle.internal
 
+import java.net.URI
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.dsl.RepositoryHandler
-import java.net.URI
 
 /*
  * This file describes shared dependencies of Spine sub-projects.
@@ -256,6 +256,7 @@ object Test {
 object Scripts {
 
     private const val COMMON_PATH = "/config/gradle/"
+    private const val DART = "/buildSrc/src/main/groovy/dart/"
 
     fun testArtifacts(p: Project)          = p.script("test-artifacts.gradle")
     fun testOutput(p: Project)             = p.script("test-output.gradle")
@@ -271,8 +272,6 @@ object Scripts {
     fun npmPublishTasks(p: Project)        = p.script("js/npm-publish-tasks.gradle")
     fun npmCli(p: Project)                 = p.script("js/npm-cli.gradle")
     fun updatePackageVersion(p: Project)   = p.script("js/update-package-version.gradle")
-    fun dartBuildTasks(p: Project)         = p.script("dart/build-tasks.gradle")
-    fun pubPublishTasks(p: Project)        = p.script("dart/pub-publish-tasks.gradle")
     fun pmd(p: Project)                    = p.script("pmd.gradle")
     fun checkstyle(p: Project)             = p.script("checkstyle.gradle")
     fun runBuild(p: Project)               = p.script("run-build.gradle")
@@ -283,7 +282,11 @@ object Scripts {
     fun generatePom(p: Project)            = p.script("generate-pom.gradle")
     fun updateGitHubPages(p: Project)      = p.script("update-gh-pages.gradle")
 
+    fun dartBuildTasks(p: Project)         =  p.dartScript("build-tasks.gradle")
+    fun pubPublishTasks(p: Project)        =  p.dartScript("pub-publish-tasks.gradle")
+
     private fun Project.script(name: String) = "${rootDir}$COMMON_PATH$name"
+    private fun Project.dartScript(name: String) = "${rootDir}$DART$name"
 }
 
 object Deps {

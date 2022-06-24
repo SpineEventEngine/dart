@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:firebase/firebase.dart' as fb;
+import 'package:firebase_dart/firebase_dart.dart' as fb;
 
 /// A holder of the test Firebase App.
 ///
@@ -35,20 +35,33 @@ class FirebaseApp {
 
     static final FirebaseApp _instance = FirebaseApp._internal();
 
-    final fb.App firebaseApp = fb.initializeApp(
+    var options = fb.FirebaseOptions(
         apiKey: "AIzaSyD8Nr2zrW9QFLbNS5Kg-Ank-QIZP_jo5pU",
         authDomain: "spine-dev.firebaseapp.com",
         databaseURL: "https://spine-dev.firebaseio.com",
         projectId: "spine-dev",
-        storageBucket: "",
-        messagingSenderId: "165066236051"
+        storageBucket: "spine-dev.appspot.com",
+        messagingSenderId: "165066236051",
+        appId: "1:165066236051:web:649b727355f917bdc0ed66",
+        measurementId: "G-ZVFWCSQG5Y"
     );
+
+    late fb.FirebaseApp app;
+    late fb.FirebaseDatabase database;
+    bool _initialized = false;
 
     factory FirebaseApp() {
         return _instance;
     }
 
-    fb.Database get database => firebaseApp.database();
+    Future<fb.FirebaseApp> init() async {
+        if (!_initialized) {
+            app = await fb.Firebase.initializeApp(options: options);
+            database = fb.FirebaseDatabase(app: app);
+            _initialized = true;
+        }
+        return app;
+    }
 
     FirebaseApp._internal();
 }

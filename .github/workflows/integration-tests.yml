@@ -1,0 +1,46 @@
+name: Run integration tests
+
+on: push
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+
+      - uses: actions/setup-java@v3
+        with:
+          java-version: 8
+          distribution: zulu
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1.3
+
+      - name: Activate Dart Protoc Plugin
+        run: dart pub global activate protoc_plugin
+
+      - name: Ensure test resource directory exists
+        run: mkdir ./integration-tests/test-app/src/main/resources/
+        shell: bash
+
+      - name: Decrypt Firebase service account key
+        run: ./script/decrypt.sh "$FIREBASE_SA_KEY" ./.github/keys/firebase-sa.json.gpg ./integration-tests/test-app/src/main/resources/spine-dev.json
+        shell: bash
+        env:
+          FIREBASE_SA_KEY: ${{ secrets.FIREBASE_SA_KEY }}
+
+      - name: Build with gradle
+        run: ./gradlew build --stacktrace
+
+      - name: Run tests
+        shell: bash
+        run: ./gradlew integrationTest --stacktrace

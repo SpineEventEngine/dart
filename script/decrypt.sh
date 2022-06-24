@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #
-# Copyright 2021, TeamDev. All rights reserved.
+# Copyright 2022, TeamDev. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,12 +26,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Decrypt and unpack credentials:
-#  - spine-dev.json - the Firebase service account to use for integration tests;
-#  - pub-credentials.json - credentials to publish package to Pub;
-#  - deploy_key_rsa - private key for deploying GitHub Pages.
-openssl aes-256-cbc -K $encrypted_54891cbed47a_key -iv $encrypted_54891cbed47a_iv -in credentials.tar.enc -out credentials.tar -d
-tar xvf credentials.tar
-mkdir ./integration-tests/test-app/src/main/resources
-mv ./spine-dev-firebase.json ./integration-tests/test-app/src/main/resources/spine-dev.json
-mv ./pub-credentials.json "$HOME"/.pub-cache/credentials.json
+# Decrypts a file via `gpg`.
+#
+# Params:
+#   1. The secret passphrase used when encrypting the file.
+#   2. The encrypted file.
+#   3. The path where the decrypted file should go.
+#
+
+if [ "$#" -ne 3 ]; then
+    echo "Usage: decrypt.sh <passphrase> <encrypted file> <target file>"
+    exit 1
+fi
+
+gpg --quiet --batch --yes --decrypt --passphrase="$1" --output "$3" "$2"
