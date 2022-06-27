@@ -67,7 +67,7 @@ tasks.assemble {
 val dartDocDir = Files.createTempDir()
 
 val dartDoc by tasks.creating(Exec::class) {
-    commandLine("dart", "doc", "--output", dartDocDir.path, "$projectDir/lib/")
+    commandLine("dart", "doc", "--output", dartDocDir.path)
 }
 
 afterEvaluate {
