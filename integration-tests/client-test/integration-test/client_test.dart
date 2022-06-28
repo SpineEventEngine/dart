@@ -76,7 +76,7 @@ void main() {
         /// if they already create subscriptions, they are not likely to make a query as soon as
         /// an update occurs.
         ///
-        Future<void> _sleep() => Future.delayed(Duration(seconds: 2));
+        Future<void> _sleep() => Future.delayed(Duration(seconds: 3));
 
         test('send commands and obtain query data through Firebase RDB', () async {
             var taskId = TaskId()
