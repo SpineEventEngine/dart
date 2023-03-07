@@ -44,7 +44,12 @@ apply {
 }
 
 dependencies {
-    testProtobuf(project(":test-app"))
+
+    // Exclude Proto messages from Firebase Admin SDK,
+    // as they use `optional` fields, and require `experimental_allow_proto3_optional` flag set.
+    testProtobuf(project(":test-app")) {
+        exclude(group = "com.google.firebase", module = "firebase-admin")
+    }
 }
 
 tasks["testDart"].enabled = false

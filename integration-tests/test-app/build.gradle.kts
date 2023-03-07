@@ -73,6 +73,13 @@ val spineWebVersion: String by extra
 
 dependencies {
     implementation("io.spine.gcloud:spine-firebase-web:$spineWebVersion")
+    implementation(io.spine.gradle.internal.Grpc.protobuf)
+
+    // Exclude Proto messages from Firebase Admin SDK,
+    // as they use `optional` fields, and require `experimental_allow_proto3_optional` flag set.
+    protobuf("io.spine.gcloud:spine-firebase-web:$spineWebVersion") {
+        exclude(group = "com.google.firebase", module = "firebase-admin")
+    }
 }
 
 configurations.all { resolutionStrategy { force("com.google.code.gson:gson:2.7") } }
