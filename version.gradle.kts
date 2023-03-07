@@ -29,6 +29,19 @@
  * already in the root directory.
  */
 
-val spineBaseVersion: String by extra("1.8.2")
-val spineWebVersion: String by extra("1.8.2")
-val versionToPublish: String by extra("1.8.2")
+/**
+ * Version of this library.
+ */
+val dart = "1.9.0-SNAPSHOT.12"
+
+/**
+ * Versions of the Spine libraries that `core-java` depends on.
+ */
+val base = "1.9.0-SNAPSHOT.6"
+val web = "1.9.0-SNAPSHOT.12"
+
+project.extra.apply {
+    this["versionToPublish"] = dart
+    this["spineBaseVersion"] = base
+    this["spineWebVersion"] = web
+}
