@@ -37,7 +37,7 @@ val dart = "1.9.0-SNAPSHOT.12"
 /**
  * Versions of the Spine libraries that `core-java` depends on.
  */
-val base = "1.9.0-SNAPSHOT.6"
+val base = "1.9.0-SNAPSHOT.5"
 val web = "1.9.0-SNAPSHOT.12"
 
 project.extra.apply {
