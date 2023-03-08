@@ -144,7 +144,7 @@ class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> 
 Stream<T> _checkBroadcast<T>(Stream<T> stream) {
     if (!stream.isBroadcast) {
         throw ArgumentError(
-            'All streams passed to an `Subscription` instance should be broadcast.'
+            'All streams passed to a `Subscription` instance should be broadcast.'
         );
     }
     return stream;
