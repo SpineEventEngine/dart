@@ -63,12 +63,6 @@ allprojects {
 
     DependencyResolution.defaultRepositories(repositories)
 
-    // Just in case, exclude Lite version of gRPC from everywhere,
-    // as we need fully-fledged gRPC, and only in the modules really requiring it.
-    configurations.all {
-        exclude(group = "io.grpc", module = "grpc-protobuf-lite")
-    }
-
     repositories {
         repositories.maven {
             url = uri(Repos.spineSnapshots)
