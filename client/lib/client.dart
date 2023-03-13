@@ -256,10 +256,8 @@ class Client {
     }
 
     Future<void> _postCommand(Command command, CommandErrorCallback? onError) {
-        var response = _httpClient.postMessage(_endpoints.command, command);
-        return response.then((response) {
-            var ack = Ack();
-            parseInto(ack, response.body);
+        var translated = _httpClient.postAndTranslate(_endpoints.command, command, Ack());
+        return translated.then((ack) {
             if (ack.status.hasError() && onError != null) {
                 onError(ack.status.error);
             }
