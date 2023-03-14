@@ -26,7 +26,6 @@
 
 import 'dart:async';
 
-import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/google/protobuf/field_mask.pb.dart';
@@ -45,7 +44,6 @@ import 'package:spine_client/spine/web/firebase/subscription/firebase_subscripti
 import 'package:spine_client/src/actor_request_factory.dart';
 import 'package:spine_client/src/any_packer.dart';
 import 'package:spine_client/src/http_client.dart';
-import 'package:spine_client/src/json.dart';
 import 'package:spine_client/src/known_types.dart';
 import 'package:spine_client/src/query_processor.dart';
 import 'package:spine_client/subscription.dart';
@@ -94,8 +92,8 @@ class Clients {
     final ZoneId? _zoneId;
     final FirebaseClient? _firebase;
     final Endpoints _endpoints;
-    final QueryResponseProcessor _queryProcessor;
     final Set<Client> _activeClients = Set();
+    late QueryProcessor _queryProcessor;
 
     /// Creates a new instance of `Clients`.
     ///
@@ -137,12 +135,12 @@ class Clients {
             _tenant = tenantId,
             _zoneOffset = zoneOffset,
             _zoneId = zoneId,
-            _queryProcessor = _chooseProcessor(queryMode, firebase),
             _endpoints = endpoints ?? Endpoints(),
             _firebase = firebase
     {
         _checkNonNullOrDefault(_guestId, 'guestId');
         ArgumentError.checkNotNull(subscriptionKeepUpPeriod, 'subscriptionKeepUpPeriod');
+        _queryProcessor = _chooseProcessor(queryMode, _httpClient, firebase);
         theKnownTypes.registerAll(typeRegistries);
         Timer.periodic(subscriptionKeepUpPeriod,
                        (timer) => _refreshSubscriptions());
@@ -156,11 +154,12 @@ class Clients {
         }
     }
 
-    static QueryResponseProcessor _chooseProcessor(QueryMode queryMode, FirebaseClient? firebase) {
+    static QueryProcessor
+    _chooseProcessor(QueryMode queryMode, HttpClient httpClient, FirebaseClient? firebase) {
         ArgumentError.checkNotNull(queryMode, 'queryMode');
         return queryMode == QueryMode.FIREBASE
-               ? FirebaseResponseProcessor(firebase!)
-               : DirectResponseProcessor();
+               ? FirebaseQueryProcessor(firebase!, httpClient)
+               : DirectQueryProcessor(httpClient);
     }
 
     /// Creates a new client which sends requests on behalf of a guest user.
@@ -213,7 +212,7 @@ class Client {
     final ActorRequestFactory _requests;
     final FirebaseClient? _firebase;
     final Endpoints _endpoints;
-    final QueryResponseProcessor _queryProcessor;
+    final QueryProcessor _queryProcessor;
     final Set<Subscription> _activeSubscriptions = Set();
 
     Client._(this._httpClient,
@@ -285,22 +284,14 @@ class Client {
         if (builder == null) {
             throw ArgumentError.value(topic, 'topic', 'Target type `$targetTypeUrl` is unknown.');
         }
-        var subscription = _httpClient
-            .postMessage(_endpoints.subscription.create, topic)
-            .then(_parseFirebaseSubscription)
+        var subscription =
+        _httpClient.postAndTranslate(_endpoints.subscription.create, topic, FirebaseSubscription())
             .then((value) => newSubscription(value, _firebase!));
         return subscription;
     }
 
-    FirebaseSubscription _parseFirebaseSubscription(http.Response response) {
-        var firebaseSubscription = FirebaseSubscription();
-        parseInto(firebaseSubscription, response.body);
-        return firebaseSubscription;
-    }
-
     Stream<S> _execute<S extends GeneratedMessage>(Query query) {
-        var httpResponse = _httpClient.postMessage(_endpoints.query, query);
-        return _queryProcessor.process(httpResponse, query);
+        return _queryProcessor.execute(query, _endpoints.query);
     }
 
     void _refreshSubscriptions() {
