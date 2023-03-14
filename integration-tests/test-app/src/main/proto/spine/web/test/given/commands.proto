@@ -58,6 +58,11 @@ message CompleteTask {
     TaskId id = 1;
 }
 
+message DeleteTask {
+
+    TaskId id = 1;
+}
+
 message RenameTask {
 
     TaskId id = 1;

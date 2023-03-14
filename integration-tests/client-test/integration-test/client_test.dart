@@ -81,12 +81,12 @@ void main() {
         test('send commands and obtain query data through Firebase RDB', () async {
             var taskId = TaskId()
                 ..value = newUuid();
-            var cmd = CreateTask()
+            var createTask = CreateTask()
                 ..id = taskId
                 ..name = 'Task name 1'
                 ..description = 'Firebase query test';
             var client = clients.onBehalfOf(actor);
-            var request = client.command(cmd);
+            var request = client.command(createTask);
             var stateSubscription = await client.subscribeTo<Task>()
                                                 .whereIdIn([taskId])
                                                 .post();
@@ -190,6 +190,31 @@ void main() {
             var changedTask = await itemChanged.first;
             expect(changedTask.name, equals(renameTaskCmd.name));
             entitySubscription.unsubscribe();
+        });
+
+        test('subscribe to entity removals', () async {
+            var taskId = TaskId()
+                ..value = newUuid();
+            var createTask = CreateTask()
+                ..id = taskId
+                ..name = 'Delete-me'
+                ..description = 'This task will be deleted. Soon.';
+            var client = clients.onBehalfOf(actor);
+            var request = client.command(createTask);
+            var stateSubscription = await client.subscribeTo<Task>()
+                .whereIdIn([taskId])
+                .post();
+            request.postAndForget();
+            await _sleep();
+
+            var deleteTask = DeleteTask()
+                ..id = taskId;
+            client.command(deleteTask)
+                .postAndForget();
+            var justDeleted = await stateSubscription.itemRemoved.first;
+            expect(justDeleted.id, equals(createTask.id));
+            expect(justDeleted.name, equals(createTask.name));
+            expect(justDeleted.description, equals(createTask.description));
         });
 
         test('query entities by column values', () async {
