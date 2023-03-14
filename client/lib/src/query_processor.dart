@@ -42,7 +42,7 @@ abstract class QueryProcessor {
 
 /// Posts [Query] message to the corresponding endpoint via HTTP,
 /// parses the HTTP response as a Firebase database reference,
-/// and reads the query response from by that reference.
+/// and reads the query response from Firebase by that reference.
 ///
 class FirebaseQueryProcessor implements QueryProcessor {
 
