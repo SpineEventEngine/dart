@@ -56,16 +56,20 @@ class HttpClient {
     /// The given [path] will be concatenated with the [_baseUrl].
     ///
     Future<http.Response> postMessage(UrlPath path, GeneratedMessage message) {
-        String preparedBody = _translator.body(message);
-        var url = Url.from(_baseUrl, path).asUri;
-        var response = http.post(url, body: preparedBody, headers: _translator.headers());
+        var uri = _toAbsoluteUri(path);
+        String preparedBody = _translator.body(uri, message);
+        var preparedHeaders = _translator.headers(uri);
+        var response = http.post(uri, body: preparedBody, headers: preparedHeaders);
         return response;
     }
+
+    Uri _toAbsoluteUri(UrlPath path) => Url.from(_baseUrl, path).asUri;
 
     Future<T> postAndTranslate<T extends GeneratedMessage>
         (UrlPath path, GeneratedMessage msg, T destination) {
         var response = postMessage(path, msg);
-        return response.then((r) => _translator.translate(r.body, destination));
+        var uri = _toAbsoluteUri(path);
+        return response.then((r) => _translator.translate(uri, r.body, destination));
     }
 }
 
@@ -75,34 +79,41 @@ class HttpClient {
 /// implementation, once set, may serve as an adapter to the circumstances,
 /// under which the server-side of the application is running.
 ///
+/// Please note, that API of this type includes the seemingly unused parameter of type [URI].
+/// It is a design decision, allowing the descendants of this type (i.e. those wishing
+/// to set their custom `HttpTranslator`) to have more control over which translation
+/// strategy to apply depending on the server endpoint.
+///
 class HttpTranslator {
 
     /// Transforms the given [message] into [String] which is used as HTTP POST body
-    /// by [postMessage].
+    /// by [postMessage], when the request is about to be sent to [uri].
     ///
     /// By default, transforms the message into bytes, and encodes it with Base64.
     ///
-    String body(GeneratedMessage message) {
+    String body(Uri uri, GeneratedMessage message) {
         var bytes = message.writeToBuffer();
         var result = _base64.encode(bytes);
         return result;
     }
 
-    /// Returns HTTP request headers to use in [postMessage].
+    /// Returns HTTP request headers to use in [postMessage], when configuring
+    /// the request to send to [uri].
     ///
     /// By default, returns `{'Content-Type': 'application/x-protobuf'}`.
     ///
-    Map<String, String> headers() => _protobufContentType;
+    Map<String, String> headers(Uri uri) => _protobufContentType;
 
     /// Translates the HTTP response body into an object of type [T].
     ///
     /// By default, parses the response body as JSON.
     ///
     /// Parameters:
-    /// - [responseBody] body of a successful HTTP response
-    /// - [destination] an instance of Proto message into which the translated data is to be merged
+    /// - [uri] URI of the web resource to which the original HTTP request was sent;
+    /// - [responseBody] body of a successful HTTP response;
+    /// - [destination] an instance of Proto message into which the translated data is to be merged.
     ///
-    T translate<T extends GeneratedMessage>(String responseBody, T destination) {
+    T translate<T extends GeneratedMessage>(Uri uri, String responseBody, T destination) {
         parseInto(destination, responseBody);
         return destination;
     }
