@@ -32,7 +32,7 @@ import 'package:spine_client/spine/client/subscription.pb.dart' as pb;
 import 'package:spine_client/spine/core/event.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
-import 'package:spine_client/src/json.dart';
+import 'package:spine_client/json.dart';
 
 /// A subscription to updates from server.
 class Subscription<T extends GeneratedMessage> {

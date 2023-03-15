@@ -29,7 +29,7 @@ import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/google/protobuf/any.pb.dart';
 import 'package:spine_client/google/protobuf/type.pb.dart';
 import 'package:spine_client/google/protobuf/wrappers.pb.dart';
-import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/known_types.dart';
 import 'package:spine_client/unknown_type.dart';
 
 /// Separates the type URL prefix from the type name.

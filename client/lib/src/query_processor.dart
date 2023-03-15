@@ -28,11 +28,11 @@ import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/spine/web/firebase/query/response.pb.dart';
-import 'package:spine_client/src/json.dart';
-import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/json.dart';
+import 'package:spine_client/known_types.dart';
 
 import 'any_packer.dart';
-import 'http_client.dart';
+import '../http_client.dart';
 
 /// A strategy of executing [Query] instances through query endpoint via HTTP.
 abstract class QueryProcessor {

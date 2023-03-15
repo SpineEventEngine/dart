@@ -43,8 +43,8 @@ import 'package:spine_client/spine/time/time.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
 import 'package:spine_client/src/actor_request_factory.dart';
 import 'package:spine_client/src/any_packer.dart';
-import 'package:spine_client/src/http_client.dart';
-import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/http_client.dart';
+import 'package:spine_client/known_types.dart';
 import 'package:spine_client/src/query_processor.dart';
 import 'package:spine_client/subscription.dart';
 import 'package:spine_client/validate.dart';
@@ -118,7 +118,10 @@ class Clients {
     ///  - [typeRegistries] — a list of known type registries; the `dart_code_gen` tool generates
     ///    the `types.dart` files for each module for main and test scopes. A `types.dart` file
     ///    contains information about the known Protobuf types of this module. See the class level
-    ///    doc for an example of how to access a type registry and pass it to this constructor.
+    ///    doc for an example of how to access a type registry and pass it to this constructor;
+    ///  - [httpTranslator] — a custom instance of [HttpTranslator], which allows to configure
+    ///    how HTTP requests are sent, and how their responses are treated. By default,
+    ///    a new instance of [HttpTranslator] will be used.
     ///
     Clients(String baseUrl,
            {UserId? guestId = null,
@@ -129,8 +132,9 @@ class Clients {
             FirebaseClient? firebase = null,
             Endpoints? endpoints = null,
             Duration subscriptionKeepUpPeriod = const Duration(minutes: 2),
-            List<dynamic> typeRegistries = const []}) :
-            _httpClient = HttpClient(baseUrl),
+            List<dynamic> typeRegistries = const [],
+            HttpTranslator? httpTranslator = null}) :
+            _httpClient = _createHttpClient(baseUrl, httpTranslator),
             _guestId = guestId ?? _DEFAULT_GUEST_ID,
             _tenant = tenantId,
             _zoneOffset = zoneOffset,
@@ -152,6 +156,14 @@ class Clients {
                 name,
                 '$name should have a non-default value.');
         }
+    }
+
+    static HttpClient _createHttpClient(String baseUrl, HttpTranslator? httpTranslator) {
+        ArgumentError.checkNotNull(baseUrl, 'baseUrl');
+        if(httpTranslator == null) {
+            return HttpClient(baseUrl);
+        }
+        return HttpClient.withTranslator(baseUrl, httpTranslator);
     }
 
     static QueryProcessor
