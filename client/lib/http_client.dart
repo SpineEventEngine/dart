@@ -31,6 +31,7 @@ import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/src/url.dart';
 
+import 'client.dart';
 import 'json.dart';
 
 const _base64 = Base64Codec();
@@ -54,7 +55,7 @@ class HttpClient {
     ///
     /// The given [path] will be concatenated with the [_baseUrl].
     ///
-    Future<http.Response> postMessage(String path, GeneratedMessage message) {
+    Future<http.Response> postMessage(UrlPath path, GeneratedMessage message) {
         String preparedBody = _translator.body(message);
         var url = Url.from(_baseUrl, path).asUri;
         var response = http.post(url, body: preparedBody, headers: _translator.headers());
@@ -62,7 +63,7 @@ class HttpClient {
     }
 
     Future<T> postAndTranslate<T extends GeneratedMessage>
-        (String path, GeneratedMessage msg, T destination) {
+        (UrlPath path, GeneratedMessage msg, T destination) {
         var response = postMessage(path, msg);
         return response.then((r) => _translator.translate(r.body, destination));
     }

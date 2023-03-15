@@ -29,6 +29,8 @@ import 'dart:async';
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/google/protobuf/field_mask.pb.dart';
+import 'package:spine_client/http_client.dart';
+import 'package:spine_client/known_types.dart';
 import 'package:spine_client/spine/base/error.pb.dart' as pbError;
 import 'package:spine_client/spine/base/field_path.pb.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
@@ -43,8 +45,6 @@ import 'package:spine_client/spine/time/time.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
 import 'package:spine_client/src/actor_request_factory.dart';
 import 'package:spine_client/src/any_packer.dart';
-import 'package:spine_client/http_client.dart';
-import 'package:spine_client/known_types.dart';
 import 'package:spine_client/src/query_processor.dart';
 import 'package:spine_client/subscription.dart';
 import 'package:spine_client/validate.dart';
@@ -713,14 +713,14 @@ enum QueryMode {
 
 /// A part of URL path, specifying a destination of client requests of some type.
 ///
-typedef Endpoint = String;
+typedef UrlPath = String;
 
 /// URL paths to which the client should send requests.
 ///
 class Endpoints {
 
-    final Endpoint query;
-    final Endpoint command;
+    final UrlPath query;
+    final UrlPath command;
     late SubscriptionEndpoints _subscription;
 
     Endpoints({
@@ -744,9 +744,9 @@ class Endpoints {
 ///
 class SubscriptionEndpoints {
 
-    final Endpoint create;
-    final Endpoint keepUp;
-    final Endpoint cancel;
+    final UrlPath create;
+    final UrlPath keepUp;
+    final UrlPath cancel;
 
     SubscriptionEndpoints({
         this.create = 'subscription/create',
