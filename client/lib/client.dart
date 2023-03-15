@@ -711,12 +711,16 @@ enum QueryMode {
     FIREBASE
 }
 
+/// A part of URL path, specifying a destination of client requests of some type.
+///
+typedef Endpoint = String;
+
 /// URL paths to which the client should send requests.
 ///
 class Endpoints {
 
-    final String query;
-    final String command;
+    final Endpoint query;
+    final Endpoint command;
     late SubscriptionEndpoints _subscription;
 
     Endpoints({
@@ -740,9 +744,9 @@ class Endpoints {
 ///
 class SubscriptionEndpoints {
 
-    final String create;
-    final String keepUp;
-    final String cancel;
+    final Endpoint create;
+    final Endpoint keepUp;
+    final Endpoint cancel;
 
     SubscriptionEndpoints({
         this.create = 'subscription/create',
