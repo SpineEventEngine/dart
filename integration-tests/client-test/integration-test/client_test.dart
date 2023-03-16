@@ -25,7 +25,7 @@
  */
 
 import 'package:firebase_dart/firebase_dart.dart' as fb;
-import 'package:spine_client/client.dart';
+import 'package:spine_client/known_types.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/spine_client.dart';
 import 'package:spine_client/time.dart';
@@ -34,6 +34,7 @@ import 'package:test/test.dart';
 
 import 'endpoints.dart';
 import 'firebase_app.dart';
+import 'reversing_http_translator.dart';
 import 'spine/core/user_id.pb.dart' as testUserId;
 import 'spine/web/test/given/commands.pb.dart';
 import 'spine/web/test/given/events.pb.dart';
@@ -68,7 +69,7 @@ void main() {
             clients.cancelAllSubscriptions();
         });
 
-        /// Creates a future which waits for two seconds.
+        /// Creates a future which waits for three seconds.
         ///
         /// Tests need for a process on the server to end before sending a query. Since the entity
         /// state update is broadcast before the entity state is stored (by design), we have to way
@@ -321,6 +322,40 @@ void main() {
                 .toList();
             expect(completedProjects, hasLength(1));
             expect(projectsInProgress, hasLength(0));
+        });
+
+        test('allow to customize HTTP headers and content type via `HttpTranslator`', () async {
+            var commandEndpoint = "reverse-json-command";
+            var customClients = Clients(BACKEND,
+                firebase: firebaseClient,
+                endpoints: Endpoints(command: commandEndpoint),
+                httpTranslator: ReversingHttpTranslator(theKnownTypes.registry(), commandEndpoint),
+                typeRegistries: [testTypes.types()]);
+            try {
+                var taskId = TaskId()
+                    ..value = newUuid();
+                var createTask = CreateTask()
+                    ..id = taskId
+                    ..name = 'A reversed task'
+                    ..description = 'The command to create this task '
+                        'will travel as reversed JSON string';
+                var client = customClients.onBehalfOf(actor);
+                var request = client.command(createTask);
+                var stateSubscription = await client.subscribeTo<Task>()
+                    .whereIdIn([taskId])
+                    .post();
+                request.postAndForget();
+                await stateSubscription.itemAdded.first;
+                await _sleep();
+                var tasks = await client.select<Task>()
+                    .post()
+                    .toList();
+                expect(tasks, hasLength(greaterThanOrEqualTo(1)));
+                var matchingById = tasks.where((task) => task.id == taskId);
+                expect(matchingById, hasLength(1));
+            } finally {
+                customClients.cancelAllSubscriptions();
+            }
         });
     });
 }
