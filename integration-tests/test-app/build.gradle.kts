@@ -89,7 +89,14 @@ dependencies {
     }
 }
 
-configurations.all { resolutionStrategy { force("com.google.code.gson:gson:2.7") } }
+configurations.all {
+    resolutionStrategy {
+        force(
+            "com.google.code.gson:gson:2.7",
+            "com.google.protobuf:protobuf-java-util:${io.spine.gradle.internal.Versions.protobuf}"
+        )
+    }
+}
 
 gretty {
     contextPath = "/"
