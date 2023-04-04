@@ -72,6 +72,9 @@ class Subscription<T extends GeneratedMessage> {
 /// subscription both on the client and on the server, stopping the changes from being reflected to
 /// Firebase.
 ///
+/// Please note that only broadcast streams are supported. It is a responsibility of end-users
+/// to convert any streams to broadcast streams prior to using this class.
+///
 class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
 
     final Stream<T> itemChanged;
@@ -116,6 +119,9 @@ class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
 /// To stop receiving updates from the server, invoke [unsubscribe]. This will cancel the
 /// subscription both on the client and on the server, stopping the changes from being reflected to
 /// Firebase.
+///
+/// Please note that only broadcast streams are supported. It is a responsibility of end-users
+/// to convert any streams to broadcast streams prior to using this class.
 ///
 class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> {
 
