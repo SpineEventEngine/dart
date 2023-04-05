@@ -143,7 +143,6 @@ class Clients {
             _firebase = firebase
     {
         _checkNonNullOrDefault(_guestId, 'guestId');
-        ArgumentError.checkNotNull(subscriptionKeepUpPeriod, 'subscriptionKeepUpPeriod');
         _queryProcessor = _chooseProcessor(queryMode, _httpClient, firebase);
         theKnownTypes.registerAll(typeRegistries);
         Timer.periodic(subscriptionKeepUpPeriod,
@@ -159,7 +158,6 @@ class Clients {
     }
 
     static HttpClient _createHttpClient(String baseUrl, HttpTranslator? httpTranslator) {
-        ArgumentError.checkNotNull(baseUrl, 'baseUrl');
         if(httpTranslator == null) {
             return HttpClient(baseUrl);
         }
@@ -168,7 +166,6 @@ class Clients {
 
     static QueryProcessor
     _chooseProcessor(QueryMode queryMode, HttpClient httpClient, FirebaseClient? firebase) {
-        ArgumentError.checkNotNull(queryMode, 'queryMode');
         return queryMode == QueryMode.FIREBASE
                ? FirebaseQueryProcessor(firebase!, httpClient)
                : DirectQueryProcessor(httpClient);
@@ -235,7 +232,6 @@ class Client {
 
     /// Constructs a request to post a command to the server.
     CommandRequest<M> command<M extends GeneratedMessage>(M commandMessage) {
-        ArgumentError.checkNotNull(commandMessage, 'command message');
         return CommandRequest._(this, commandMessage, );
     }
 
@@ -381,7 +377,6 @@ class SimpleFilter implements FilterOrComposite {
 /// All the field filters should pass in order for the composite filter to pass.
 ///
 Composite all(Iterable<SimpleFilter> filters) {
-    ArgumentError.checkNotNull(filters);
     return Composite._(CompositeFilter()
         ..operator = CompositeFilter_CompositeOperator.ALL
         ..filter.addAll(filters.map((f) => f.filter))
@@ -393,7 +388,6 @@ Composite all(Iterable<SimpleFilter> filters) {
 /// At least one field filter should pass in order for the composite filter to pass.
 ///
 Composite either(Iterable<SimpleFilter> filters) {
-    ArgumentError.checkNotNull(filters);
     return Composite._(CompositeFilter()
         ..operator = CompositeFilter_CompositeOperator.EITHER
         ..filter.addAll(filters.map((f) => f.filter))
@@ -421,8 +415,6 @@ SimpleFilter gt(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.GREATER_THAN, value);
 
 SimpleFilter _filter(String fieldPath, Filter_Operator operator, Object value) {
-    ArgumentError.checkNotNull(fieldPath);
-    ArgumentError.checkNotNull(value);
     var pathElements = fieldPath.split('.');
     return SimpleFilter._(Filter()
         ..fieldPath = (FieldPath()..fieldName.addAll(pathElements))
@@ -540,7 +532,6 @@ class QueryRequest<M extends GeneratedMessage> {
     /// By default, all the fields are included.
     ///
     QueryRequest<M> fields(List<String> fieldPaths) {
-        ArgumentError.checkNotNull(fieldPaths, 'field paths');
         _fields.addAll(fieldPaths);
         return this;
     }
@@ -554,7 +545,6 @@ class QueryRequest<M extends GeneratedMessage> {
     /// results.
     ///
     QueryRequest<M> where(FilterOrComposite filter) {
-        ArgumentError.checkNotNull(filter, 'filter');
         _filters.add(filter._toProto());
         return this;
     }
@@ -566,7 +556,6 @@ class QueryRequest<M extends GeneratedMessage> {
     /// If called multiple times, the IDs add up.
     ///
     QueryRequest<M> whereIds(Iterable<Object> ids) {
-        ArgumentError.checkNotNull(ids, 'ids');
         _ids.addAll(ids);
         return this;
     }
@@ -578,8 +567,6 @@ class QueryRequest<M extends GeneratedMessage> {
     ///
     QueryRequest<M> orderBy(String column,
                             [OrderBy_Direction direction = OrderBy_Direction.ASCENDING]) {
-        ArgumentError.checkNotNull(column, 'column');
-        ArgumentError.checkNotNull(direction, 'direction');
         _orderBy = OrderBy()
             ..column = column
             ..direction = direction;
@@ -591,7 +578,6 @@ class QueryRequest<M extends GeneratedMessage> {
     /// A limit can only be used along with `orderBy(..)`.
     ///
     QueryRequest<M> limit(int count) {
-        ArgumentError.checkNotNull(count, 'limit');
         if (count <= 0) {
             throw ArgumentError('Invalid value of limit = $count');
         }
@@ -637,7 +623,6 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
     /// an entity state should pass all of the composite filters to match the subscription.
     ///
     StateSubscriptionRequest<M> where(FilterOrComposite filter) {
-        ArgumentError.checkNotNull(filter, 'filter');
         _filters.add(filter._toProto());
         return this;
     }
@@ -649,7 +634,6 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
     /// If called multiple times, the IDs add up.
     ///
     StateSubscriptionRequest<M> whereIdIn(Iterable<Object> ids) {
-        ArgumentError.checkNotNull(ids, 'ids');
         _ids.addAll(ids);
         return this;
     }
@@ -684,7 +668,6 @@ class EventSubscriptionRequest<M extends GeneratedMessage> {
     /// an event should pass all of the composite filters to match the subscription.
     ///
     EventSubscriptionRequest<M> where(FilterOrComposite filter) {
-        ArgumentError.checkNotNull(filter, 'filter');
         _filers.add(filter._toProto());
         return this;
     }
@@ -728,8 +711,6 @@ class Endpoints {
         this.command = 'command',
         SubscriptionEndpoints? subscription
     }) {
-        ArgumentError.checkNotNull(query, 'query');
-        ArgumentError.checkNotNull(command, 'command');
         this._subscription = subscription ?? SubscriptionEndpoints();
     }
 
@@ -752,9 +733,5 @@ class SubscriptionEndpoints {
         this.create = 'subscription/create',
         this.keepUp = 'subscription/keep-up',
         this.cancel = 'subscription/cancel'
-    }) {
-        ArgumentError.checkNotNull(create, 'subscription.create');
-        ArgumentError.checkNotNull(keepUp, 'subscription.keepUp');
-        ArgumentError.checkNotNull(cancel, 'subscription.cancel');
-    }
+    });
 }

@@ -49,10 +49,11 @@ class FirebaseQueryProcessor implements QueryProcessor {
     final FirebaseClient _database;
     final HttpClient _httpClient;
 
-    FirebaseQueryProcessor(this._database, this._httpClient) {
-        ArgumentError.checkNotNull(_database, 'FirebaseClient');
-        ArgumentError.checkNotNull(_httpClient, 'HttpClient');
-    }
+    /// Creates an instance of this query processor,
+    /// which communicates with the passed Firebase database instance,
+    /// and uses passed HTTP client to communicate with Spine back-end.
+    ///
+    FirebaseQueryProcessor(this._database, this._httpClient);
 
     @override
     Stream<T> execute<T extends GeneratedMessage>(Query query, String endpoint) {
@@ -76,9 +77,10 @@ class DirectQueryProcessor extends QueryProcessor {
 
     final HttpClient _httpClient;
 
-    DirectQueryProcessor(this._httpClient) {
-        ArgumentError.checkNotNull(_httpClient, 'HttpClient');
-    }
+    /// Creates an instance of processor which uses the passed HTTP client
+    /// for communication with Spine back-end.
+    ///
+    DirectQueryProcessor(this._httpClient);
 
     @override
     Stream<T> execute<T extends GeneratedMessage>(Query query, String endpoint) {

@@ -44,12 +44,13 @@ class HttpClient {
     final String _baseUrl;
     final HttpTranslator _translator;
 
+    /// Creates an instance of HTTP client with the default [HttpTranslator].
+    ///
     HttpClient(String baseUrl) : this.withTranslator(baseUrl, HttpTranslator());
 
-    HttpClient.withTranslator(String baseUrl, HttpTranslator translator)
-        : this._translator = ArgumentError.checkNotNull(translator, 'HTTP translator'),
-          this._baseUrl = ArgumentError.checkNotNull(baseUrl, 'base URL');
-
+    /// Creates an instance of HTTP client with the passed HTTP translator.
+    ///
+    HttpClient.withTranslator(this._baseUrl, this._translator);
 
     /// Sends an HTTP POST request at the given path with the given message as request body.
     ///
