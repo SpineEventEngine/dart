@@ -1,0 +1,49 @@
+name: Publish
+
+on:
+  push:
+    branches: [master]
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+
+      - uses: actions/setup-java@v3
+        with:
+          java-version: 8
+          distribution: zulu
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1.3
+
+      - name: Activate Dart Protoc Plugin
+        run: dart pub global activate protoc_plugin
+
+      - name: Build with gradle
+        run: ./gradlew build --stacktrace
+
+      - name: Ensure credential directory exists
+        run: mkdir -p $XDG_CONFIG_HOME/dart/
+
+      - name: Decrypt Pub credentials
+        run: ./script/decrypt.sh "$PUB_CREDENTIALS_KEY" ./.github/keys/pub-credentials.json.gpg $XDG_CONFIG_HOME/dart/pub-credentials.json
+        shell: bash
+        env:
+          PUB_CREDENTIALS_KEY: ${{ secrets.PUB_CREDENTIALS_KEY }}
+
+      - name: Decrypt Git SSH credentials
+        run: ./script/decrypt.sh "$GIT_CREDENTIALS_KEY" ./.github/keys/deploy_key_rsa.gpg ./deploy_key_rsa
+        env:
+          GIT_CREDENTIALS_KEY: ${{ secrets.GIT_CREDENTIALS_KEY }}
+
+      - name: Publish to Pub
+        run: ./gradlew publish -x test --stacktrace
+        env:
+          FORMAL_GIT_HUB_PAGES_AUTHOR: developers@spine.io
+          TRAVIS_REPO_SLUG: $GITHUB_REPOSITORY

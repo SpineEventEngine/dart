@@ -44,16 +44,16 @@ public class TaskAggregate extends Aggregate<TaskId, Task, Task.Builder> {
 
     @Assign
     TaskCreated handle(CreateTask command) {
-        TaskCreated.Builder taskCreated = TaskCreated.newBuilder()
-                                                     .setId(command.getId())
-                                                     .setName(command.getName())
-                                                     .setDescription(command.getDescription())
-                                                     .setWhen(currentTime())
-                                                     .setProject(command.getProject());
+        TaskCreated.Builder taskCreated =
+                TaskCreated.newBuilder()
+                        .setId(command.getId())
+                        .setName(command.getName())
+                        .setDescription(command.getDescription())
+                        .setWhen(currentTime())
+                        .setProject(command.getProject());
         if (command.hasAssignee()) {
             taskCreated.setAssignee(command.getAssignee());
         }
-
         return taskCreated.vBuild();
     }
 
@@ -69,23 +69,31 @@ public class TaskAggregate extends Aggregate<TaskId, Task, Task.Builder> {
 
     @Assign
     TaskReassigned handle(ReassignTask command) {
-        TaskReassigned.Builder taskReassigned = TaskReassigned.newBuilder()
-                                                              .setId(command.getId())
-                                                              .setTo(command.getNewAssignee())
-                                                              .setWhen(currentTime());
+        TaskReassigned.Builder taskReassigned =
+                TaskReassigned.newBuilder()
+                        .setId(command.getId())
+                        .setTo(command.getNewAssignee())
+                        .setWhen(currentTime());
         if (state().hasAssignee()) {
             taskReassigned.setFrom(state().getAssignee());
         }
-
         return taskReassigned.vBuild();
     }
 
     @Assign
     TaskCompleted handle(CompleteTask command) {
-        TaskCompleted.Builder taskCompleted = TaskCompleted.newBuilder()
-                                                           .setId(command.getId())
-                                                           .setProject(state().getProject());
+        TaskCompleted.Builder taskCompleted =
+                TaskCompleted.newBuilder()
+                        .setId(command.getId())
+                        .setProject(state().getProject());
         return taskCompleted.vBuild();
+    }
+
+    @Assign
+    TaskDeleted handle(DeleteTask command) {
+        return TaskDeleted.newBuilder()
+                .setId(command.getId())
+                .vBuild();
     }
 
     @Apply
@@ -95,7 +103,6 @@ public class TaskAggregate extends Aggregate<TaskId, Task, Task.Builder> {
                  .setWhenCreated(event.getWhen())
                  .setDescription(event.getDescription())
                  .setProject(event.getProject());
-
         if (event.hasAssignee()) {
             builder().setAssignee(event.getAssignee());
         }
@@ -114,5 +121,10 @@ public class TaskAggregate extends Aggregate<TaskId, Task, Task.Builder> {
     @Apply
     private void on(TaskCompleted event) {
         builder().setCompleted(true);
+    }
+
+    @Apply
+    private void on(TaskDeleted event) {
+        setDeleted(true);
     }
 }

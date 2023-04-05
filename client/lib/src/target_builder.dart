@@ -26,7 +26,7 @@
 
 import 'package:spine_client/spine/client/filters.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
-import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/known_types.dart';
 import 'package:spine_client/validate.dart';
 
 /// Creates a target which matches messages with the given IDs and field filters.

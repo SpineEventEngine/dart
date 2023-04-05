@@ -63,6 +63,11 @@ message TaskCompleted {
     ProjectId project = 2;
 }
 
+message TaskDeleted {
+
+    TaskId id = 1;
+}
+
 message TaskRenamed {
 
     TaskId id = 1;

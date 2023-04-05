@@ -29,7 +29,7 @@ import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/google/protobuf/any.pb.dart';
 import 'package:spine_client/google/protobuf/type.pb.dart';
 import 'package:spine_client/google/protobuf/wrappers.pb.dart';
-import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/known_types.dart';
 import 'package:spine_client/unknown_type.dart';
 
 /// Separates the type URL prefix from the type name.
@@ -66,7 +66,6 @@ Any pack(GeneratedMessage message) {
 /// are not supported and would cause an `ArgumentError`.
 ///
 Any packId(Object rawId) {
-    ArgumentError.checkNotNull(rawId);
     if (rawId is GeneratedMessage || rawId is String || rawId is int || rawId is Int64) {
         return packObject(rawId);
     } else {
@@ -88,7 +87,6 @@ Any packId(Object rawId) {
 /// Other types are not supported and would cause an `ArgumentError`.
 ///
 Any packObject(Object value) {
-    ArgumentError.checkNotNull(value);
     if (value is Any) {
         return value;
     } else if (value is GeneratedMessage) {

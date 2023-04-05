@@ -24,7 +24,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/known_types.dart';
 import 'package:spine_client/src/target_builder.dart';
 import 'package:test/test.dart';
 

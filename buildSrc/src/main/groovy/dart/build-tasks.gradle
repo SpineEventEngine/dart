@@ -24,12 +24,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import org.apache.tools.ant.taskdefs.condition.Os
-
 final def GROUP = 'Dart'
 final def packageIndex = "$projectDir/.packages" as File
-final def extension = Os.isFamily(Os.FAMILY_WINDOWS) ? '.bat' : ''
-final def PUB_EXECUTABLE = 'pub' + extension
 
 task resolveDependencies(type: Exec) {
     group = GROUP
@@ -38,7 +34,7 @@ task resolveDependencies(type: Exec) {
     inputs.file "$projectDir/pubspec.yaml"
     outputs.file packageIndex
 
-    commandLine PUB_EXECUTABLE, 'get'
+    commandLine 'dart', 'pub', 'get'
 
     mustRunAfter 'cleanPackageIndex'
 }
@@ -57,7 +53,7 @@ task testDart(type: Exec) {
     group = GROUP
     description = 'Runs Dart tests declared in the `./test` directory. See `https://pub.dev/packages/test#running-tests`.'
 
-    commandLine PUB_EXECUTABLE, 'run', 'test'
+    commandLine 'dart', 'pub', 'run', 'test'
 
     dependsOn 'resolveDependencies'
 }

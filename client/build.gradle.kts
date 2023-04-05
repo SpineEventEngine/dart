@@ -51,7 +51,12 @@ val spineBaseVersion: String by extra
 val spineWebVersion: String by extra
 
 dependencies {
-    protobuf("io.spine.gcloud:spine-firebase-web:$spineWebVersion")
+
+    // Exclude Proto messages from Firebase Admin SDK,
+    // as they use `optional` fields, and require `experimental_allow_proto3_optional` flag set.
+    protobuf("io.spine.gcloud:spine-firebase-web:$spineWebVersion") {
+        exclude(group = "com.google.firebase", module = "firebase-admin")
+    }
 
     // TODO:2019-10-25:dmytro.dashenkov: Until https://github.com/dart-lang/protobuf/issues/295 is
     //  resolved, all types must be compiled in a single batch.
@@ -67,7 +72,7 @@ tasks.assemble {
 val dartDocDir = Files.createTempDir()
 
 val dartDoc by tasks.creating(Exec::class) {
-    commandLine("dartdoc", "--output", dartDocDir.path, "$projectDir/lib/")
+    commandLine("dart", "doc", "--output", dartDocDir.path)
 }
 
 afterEvaluate {

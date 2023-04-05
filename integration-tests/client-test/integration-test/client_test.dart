@@ -24,16 +24,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:spine_client/client.dart';
+import 'package:firebase_dart/firebase_dart.dart' as fb;
+import 'package:spine_client/known_types.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/spine_client.dart';
 import 'package:spine_client/time.dart';
 import 'package:spine_client/uuids.dart';
-import 'package:spine_client/web_firebase_client.dart';
 import 'package:test/test.dart';
 
 import 'endpoints.dart';
 import 'firebase_app.dart';
+import 'reversing_http_translator.dart';
 import 'spine/core/user_id.pb.dart' as testUserId;
 import 'spine/web/test/given/commands.pb.dart';
 import 'spine/web/test/given/events.pb.dart';
@@ -42,9 +43,11 @@ import 'spine/web/test/given/project_progress.pb.dart';
 import 'spine/web/test/given/task.pb.dart';
 import 'spine/web/test/given/user_tasks.pb.dart';
 import 'types.dart' as testTypes;
+import 'dart_firebase_client.dart';
 
 @TestOn("browser")
 void main() {
+    fb.FirebaseDart.setup();
 
     group('Client should', () {
 
@@ -52,9 +55,10 @@ void main() {
         late FirebaseClient firebaseClient;
         late UserId actor;
 
-        setUp(() {
+        setUp(() async {
+            await FirebaseApp().init();
             var database = FirebaseApp().database;
-            firebaseClient = WebFirebaseClient(database);
+            firebaseClient = DartFirebaseClient(database);
             clients = Clients(BACKEND,
                               firebase: firebaseClient,
                               typeRegistries: [testTypes.types()]);
@@ -65,7 +69,7 @@ void main() {
             clients.cancelAllSubscriptions();
         });
 
-        /// Creates a future which waits for two seconds.
+        /// Creates a future which waits for three seconds.
         ///
         /// Tests need for a process on the server to end before sending a query. Since the entity
         /// state update is broadcast before the entity state is stored (by design), we have to way
@@ -73,17 +77,17 @@ void main() {
         /// if they already create subscriptions, they are not likely to make a query as soon as
         /// an update occurs.
         ///
-        Future<void> _sleep() => Future.delayed(Duration(seconds: 2));
+        Future<void> _sleep() => Future.delayed(Duration(seconds: 3));
 
         test('send commands and obtain query data through Firebase RDB', () async {
             var taskId = TaskId()
                 ..value = newUuid();
-            var cmd = CreateTask()
+            var createTask = CreateTask()
                 ..id = taskId
                 ..name = 'Task name 1'
                 ..description = 'Firebase query test';
             var client = clients.onBehalfOf(actor);
-            var request = client.command(cmd);
+            var request = client.command(createTask);
             var stateSubscription = await client.subscribeTo<Task>()
                                                 .whereIdIn([taskId])
                                                 .post();
@@ -187,6 +191,31 @@ void main() {
             var changedTask = await itemChanged.first;
             expect(changedTask.name, equals(renameTaskCmd.name));
             entitySubscription.unsubscribe();
+        });
+
+        test('subscribe to entity removals', () async {
+            var taskId = TaskId()
+                ..value = newUuid();
+            var createTask = CreateTask()
+                ..id = taskId
+                ..name = 'Delete-me'
+                ..description = 'This task will be deleted. Soon.';
+            var client = clients.onBehalfOf(actor);
+            var request = client.command(createTask);
+            var stateSubscription = await client.subscribeTo<Task>()
+                .whereIdIn([taskId])
+                .post();
+            request.postAndForget();
+            await _sleep();
+
+            var deleteTask = DeleteTask()
+                ..id = taskId;
+            client.command(deleteTask)
+                .postAndForget();
+            var justDeleted = await stateSubscription.itemRemoved.first;
+            expect(justDeleted.id, equals(createTask.id));
+            expect(justDeleted.name, equals(createTask.name));
+            expect(justDeleted.description, equals(createTask.description));
         });
 
         test('query entities by column values', () async {
@@ -293,6 +322,40 @@ void main() {
                 .toList();
             expect(completedProjects, hasLength(1));
             expect(projectsInProgress, hasLength(0));
+        });
+
+        test('allow to customize HTTP headers and content type via `HttpTranslator`', () async {
+            var commandEndpoint = "reverse-json-command";
+            var customClients = Clients(BACKEND,
+                firebase: firebaseClient,
+                endpoints: Endpoints(command: commandEndpoint),
+                httpTranslator: ReversingHttpTranslator(theKnownTypes.registry(), commandEndpoint),
+                typeRegistries: [testTypes.types()]);
+            try {
+                var taskId = TaskId()
+                    ..value = newUuid();
+                var createTask = CreateTask()
+                    ..id = taskId
+                    ..name = 'A reversed task'
+                    ..description = 'The command to create this task '
+                        'will travel as reversed JSON string';
+                var client = customClients.onBehalfOf(actor);
+                var request = client.command(createTask);
+                var stateSubscription = await client.subscribeTo<Task>()
+                    .whereIdIn([taskId])
+                    .post();
+                request.postAndForget();
+                await stateSubscription.itemAdded.first;
+                await _sleep();
+                var tasks = await client.select<Task>()
+                    .post()
+                    .toList();
+                expect(tasks, hasLength(greaterThanOrEqualTo(1)));
+                var matchingById = tasks.where((task) => task.id == taskId);
+                expect(matchingById, hasLength(1));
+            } finally {
+                customClients.cancelAllSubscriptions();
+            }
         });
     });
 }

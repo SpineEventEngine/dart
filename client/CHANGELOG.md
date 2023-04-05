@@ -61,3 +61,6 @@
 
 ## 1.8.1
  This release fixes the previously broken `dart_code_gen:1.8.0`.
+
+## 1.8.2
+ This release removes web-based `firebase` implementation from the client.

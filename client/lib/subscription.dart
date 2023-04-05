@@ -32,7 +32,7 @@ import 'package:spine_client/spine/client/subscription.pb.dart' as pb;
 import 'package:spine_client/spine/core/event.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
-import 'package:spine_client/src/json.dart';
+import 'package:spine_client/json.dart';
 
 /// A subscription to updates from server.
 class Subscription<T extends GeneratedMessage> {
@@ -71,6 +71,9 @@ class Subscription<T extends GeneratedMessage> {
 /// To stop receiving updates from the server, invoke [unsubscribe]. This will cancel the
 /// subscription both on the client and on the server, stopping the changes from being reflected to
 /// Firebase.
+///
+/// Please note that only broadcast streams are supported. It is a responsibility of end-users
+/// to convert any streams to broadcast streams prior to using this class.
 ///
 class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
 
@@ -117,6 +120,9 @@ class StateSubscription<T extends GeneratedMessage> extends Subscription<T> {
 /// subscription both on the client and on the server, stopping the changes from being reflected to
 /// Firebase.
 ///
+/// Please note that only broadcast streams are supported. It is a responsibility of end-users
+/// to convert any streams to broadcast streams prior to using this class.
+///
 class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> {
 
     static final BuilderInfo _eventBuilderInfo = Event.getDefault().info_;
@@ -144,7 +150,7 @@ class EventSubscription<T extends GeneratedMessage> extends Subscription<Event> 
 Stream<T> _checkBroadcast<T>(Stream<T> stream) {
     if (!stream.isBroadcast) {
         throw ArgumentError(
-            'All streams passed to an `Subscription` instance should be broadcast.'
+            'All streams passed to a `Subscription` instance should be broadcast.'
         );
     }
     return stream;

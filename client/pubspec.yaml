@@ -1,6 +1,6 @@
 name: spine_client
 description: Dart-based library for client applications of Spine-based systems.
-version: 1.8.1
+version: 1.9.0-SNAPSHOT.1
 homepage: https://spine.io
 
 environment:
@@ -10,7 +10,6 @@ dependencies:
   protobuf: ^2.0.0
   http: ^0.13.3
   uuid: ^3.0.4
-  firebase: ^9.0.1
   fixnum: ^1.0.0
   sprintf: ^6.0.0
   optional: ^6.0.0

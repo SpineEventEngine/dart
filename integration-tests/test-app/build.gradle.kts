@@ -73,9 +73,30 @@ val spineWebVersion: String by extra
 
 dependencies {
     implementation("io.spine.gcloud:spine-firebase-web:$spineWebVersion")
+    implementation(io.spine.gradle.internal.Grpc.protobuf)
+
+    // Exclude transitive Proto messages from Firebase Admin SDK, for two reasons:
+    //
+    // 1) they use `optional` fields, and require `experimental_allow_proto3_optional` flag set.
+    // 2) we don't want to generate Java code from the transitive Proto types,
+    //    as they were already generated in their respective libraries, and arrive
+    //    to us as Java `.class` files.
+    //
+    protobuf("io.spine.gcloud:spine-firebase-web:$spineWebVersion") {
+        exclude(group = "com.google.firebase", module = "firebase-admin")
+        exclude(group = "com.google.api.grpc", module = "*")
+        exclude(group = "io.spine", module = "*")
+    }
 }
 
-configurations.all { resolutionStrategy { force("com.google.code.gson:gson:2.7") } }
+configurations.all {
+    resolutionStrategy {
+        force(
+            "com.google.code.gson:gson:2.7",
+            "com.google.protobuf:protobuf-java-util:${io.spine.gradle.internal.Versions.protobuf}"
+        )
+    }
+}
 
 gretty {
     contextPath = "/"

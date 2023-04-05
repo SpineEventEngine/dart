@@ -27,7 +27,7 @@
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/spine/validate/validation_error.pb.dart';
 import 'package:spine_client/src/any_packer.dart';
-import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/known_types.dart';
 import 'package:test/test.dart';
 
 import 'google/protobuf/empty.pb.dart';

@@ -25,7 +25,7 @@
  */
 
 import 'package:spine_client/spine/web/firebase/client.pb.dart';
-import 'package:spine_client/src/json.dart';
+import 'package:spine_client/json.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -24,73 +24,70 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/spine/client/query.pb.dart';
 import 'package:spine_client/spine/web/firebase/query/response.pb.dart';
-import 'package:spine_client/src/json.dart';
-import 'package:spine_client/src/known_types.dart';
+import 'package:spine_client/json.dart';
+import 'package:spine_client/known_types.dart';
 
 import 'any_packer.dart';
+import '../http_client.dart';
 
-/// A strategy of processing HTTP responses from the query endpoint.
-abstract class QueryResponseProcessor {
+/// A strategy of executing [Query] instances through query endpoint via HTTP.
+abstract class QueryProcessor {
 
-    Stream<T> process<T extends GeneratedMessage>(Future<http.Response> httpResponse, Query query);
+    Stream<T> execute<T extends GeneratedMessage>(Query query, String endpoint);
 }
 
-/// Parses the HTTP response as a Firebase database reference and reads the query response from
-/// by that reference.
-class FirebaseResponseProcessor implements QueryResponseProcessor {
+/// Posts [Query] message to the corresponding endpoint via HTTP,
+/// parses the HTTP response as a Firebase database reference,
+/// and reads the query response from Firebase by that reference.
+///
+class FirebaseQueryProcessor implements QueryProcessor {
 
     final FirebaseClient _database;
+    final HttpClient _httpClient;
 
-    FirebaseResponseProcessor(this._database) {
-        ArgumentError.checkNotNull(_database, 'FirebaseClient');
-    }
+    /// Creates an instance of this query processor,
+    /// which communicates with the passed Firebase database instance,
+    /// and uses passed HTTP client to communicate with Spine back-end.
+    ///
+    FirebaseQueryProcessor(this._database, this._httpClient);
 
     @override
-    Stream<T> process<T extends GeneratedMessage>(Future<http.Response> httpResponse, Query query) {
+    Stream<T> execute<T extends GeneratedMessage>(Query query, String endpoint) {
         var targetTypeUrl = query.target.type;
         var builder = theKnownTypes.findBuilderInfo(targetTypeUrl);
         if (builder == null) {
             throw ArgumentError.value(query, 'query', 'Target type `$targetTypeUrl` is unknown.');
         }
-        return httpResponse.then(_parse)
-                           .asStream()
-                           .asyncExpand((response) => _database.get(response.path)
-                                                               .take(response.count.toInt()))
-                           .map((json) => parseIntoNewInstance(builder, json));
-  }
 
-    FirebaseQueryResponse _parse(http.Response response) {
-        var queryResponse = FirebaseQueryResponse();
-        _parseInto(queryResponse, response);
-        return queryResponse;
+        return _httpClient.postAndTranslate(endpoint, query, FirebaseQueryResponse())
+            .asStream()
+            .asyncExpand((response) => _database.get(response.path).take(response.count.toInt()))
+            .map((json) => parseIntoNewInstance(builder, json));
     }
 }
 
-/// Parses the HTTP response as a [QueryResponse].
-class DirectResponseProcessor extends QueryResponseProcessor {
+/// Posts [Query] message to the corresponding endpoint via HTTP,
+/// and parses the HTTP response as a [QueryResponse].
+///
+class DirectQueryProcessor extends QueryProcessor {
+
+    final HttpClient _httpClient;
+
+    /// Creates an instance of processor which uses the passed HTTP client
+    /// for communication with Spine back-end.
+    ///
+    DirectQueryProcessor(this._httpClient);
 
     @override
-    Stream<T> process<T extends GeneratedMessage>(Future<http.Response> httpResponse, Query query) {
-        var response = httpResponse.then(_parse);
-        var entities = response.asStream()
-                               .expand((r) => r.message)
-                               .map((entity) => unpack(entity.state) as T);
+    Stream<T> execute<T extends GeneratedMessage>(Query query, String endpoint) {
+        var entities = _httpClient.postAndTranslate(endpoint, query, QueryResponse())
+            .asStream()
+            .expand((r) => r.message)
+            .map((entity) => unpack(entity.state) as T);
         return entities;
     }
-
-    QueryResponse _parse(http.Response response) {
-        var queryResponse = QueryResponse();
-        _parseInto(queryResponse, response);
-        return queryResponse;
-    }
-}
-
-void _parseInto(GeneratedMessage message, http.Response response) {
-    var json = response.body;
-    parseInto(message, json);
 }

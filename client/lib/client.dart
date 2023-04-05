@@ -26,10 +26,11 @@
 
 import 'dart:async';
 
-import 'package:http/http.dart' as http;
 import 'package:protobuf/protobuf.dart';
 import 'package:spine_client/firebase_client.dart';
 import 'package:spine_client/google/protobuf/field_mask.pb.dart';
+import 'package:spine_client/http_client.dart';
+import 'package:spine_client/known_types.dart';
 import 'package:spine_client/spine/base/error.pb.dart' as pbError;
 import 'package:spine_client/spine/base/field_path.pb.dart';
 import 'package:spine_client/spine/client/filters.pb.dart';
@@ -44,9 +45,6 @@ import 'package:spine_client/spine/time/time.pb.dart';
 import 'package:spine_client/spine/web/firebase/subscription/firebase_subscription.pb.dart';
 import 'package:spine_client/src/actor_request_factory.dart';
 import 'package:spine_client/src/any_packer.dart';
-import 'package:spine_client/src/http_client.dart';
-import 'package:spine_client/src/json.dart';
-import 'package:spine_client/src/known_types.dart';
 import 'package:spine_client/src/query_processor.dart';
 import 'package:spine_client/subscription.dart';
 import 'package:spine_client/validate.dart';
@@ -94,8 +92,8 @@ class Clients {
     final ZoneId? _zoneId;
     final FirebaseClient? _firebase;
     final Endpoints _endpoints;
-    final QueryResponseProcessor _queryProcessor;
     final Set<Client> _activeClients = Set();
+    late QueryProcessor _queryProcessor;
 
     /// Creates a new instance of `Clients`.
     ///
@@ -120,7 +118,10 @@ class Clients {
     ///  - [typeRegistries] — a list of known type registries; the `dart_code_gen` tool generates
     ///    the `types.dart` files for each module for main and test scopes. A `types.dart` file
     ///    contains information about the known Protobuf types of this module. See the class level
-    ///    doc for an example of how to access a type registry and pass it to this constructor.
+    ///    doc for an example of how to access a type registry and pass it to this constructor;
+    ///  - [httpTranslator] — a custom instance of [HttpTranslator], which allows to configure
+    ///    how HTTP requests are sent, and how their responses are treated. By default,
+    ///    a new instance of [HttpTranslator] will be used.
     ///
     Clients(String baseUrl,
            {UserId? guestId = null,
@@ -131,18 +132,18 @@ class Clients {
             FirebaseClient? firebase = null,
             Endpoints? endpoints = null,
             Duration subscriptionKeepUpPeriod = const Duration(minutes: 2),
-            List<dynamic> typeRegistries = const []}) :
-            _httpClient = HttpClient(baseUrl),
+            List<dynamic> typeRegistries = const [],
+            HttpTranslator? httpTranslator = null}) :
+            _httpClient = _createHttpClient(baseUrl, httpTranslator),
             _guestId = guestId ?? _DEFAULT_GUEST_ID,
             _tenant = tenantId,
             _zoneOffset = zoneOffset,
             _zoneId = zoneId,
-            _queryProcessor = _chooseProcessor(queryMode, firebase),
             _endpoints = endpoints ?? Endpoints(),
             _firebase = firebase
     {
         _checkNonNullOrDefault(_guestId, 'guestId');
-        ArgumentError.checkNotNull(subscriptionKeepUpPeriod, 'subscriptionKeepUpPeriod');
+        _queryProcessor = _chooseProcessor(queryMode, _httpClient, firebase);
         theKnownTypes.registerAll(typeRegistries);
         Timer.periodic(subscriptionKeepUpPeriod,
                        (timer) => _refreshSubscriptions());
@@ -156,11 +157,18 @@ class Clients {
         }
     }
 
-    static QueryResponseProcessor _chooseProcessor(QueryMode queryMode, FirebaseClient? firebase) {
-        ArgumentError.checkNotNull(queryMode, 'queryMode');
+    static HttpClient _createHttpClient(String baseUrl, HttpTranslator? httpTranslator) {
+        if(httpTranslator == null) {
+            return HttpClient(baseUrl);
+        }
+        return HttpClient.withTranslator(baseUrl, httpTranslator);
+    }
+
+    static QueryProcessor
+    _chooseProcessor(QueryMode queryMode, HttpClient httpClient, FirebaseClient? firebase) {
         return queryMode == QueryMode.FIREBASE
-               ? FirebaseResponseProcessor(firebase!)
-               : DirectResponseProcessor();
+               ? FirebaseQueryProcessor(firebase!, httpClient)
+               : DirectQueryProcessor(httpClient);
     }
 
     /// Creates a new client which sends requests on behalf of a guest user.
@@ -213,7 +221,7 @@ class Client {
     final ActorRequestFactory _requests;
     final FirebaseClient? _firebase;
     final Endpoints _endpoints;
-    final QueryResponseProcessor _queryProcessor;
+    final QueryProcessor _queryProcessor;
     final Set<Subscription> _activeSubscriptions = Set();
 
     Client._(this._httpClient,
@@ -224,7 +232,6 @@ class Client {
 
     /// Constructs a request to post a command to the server.
     CommandRequest<M> command<M extends GeneratedMessage>(M commandMessage) {
-        ArgumentError.checkNotNull(commandMessage, 'command message');
         return CommandRequest._(this, commandMessage, );
     }
 
@@ -256,10 +263,8 @@ class Client {
     }
 
     Future<void> _postCommand(Command command, CommandErrorCallback? onError) {
-        var response = _httpClient.postMessage(_endpoints.command, command);
-        return response.then((response) {
-            var ack = Ack();
-            parseInto(ack, response.body);
+        var translated = _httpClient.postAndTranslate(_endpoints.command, command, Ack());
+        return translated.then((ack) {
             if (ack.status.hasError() && onError != null) {
                 onError(ack.status.error);
             }
@@ -287,22 +292,14 @@ class Client {
         if (builder == null) {
             throw ArgumentError.value(topic, 'topic', 'Target type `$targetTypeUrl` is unknown.');
         }
-        var subscription = _httpClient
-            .postMessage(_endpoints.subscription.create, topic)
-            .then(_parseFirebaseSubscription)
+        var subscription =
+        _httpClient.postAndTranslate(_endpoints.subscription.create, topic, FirebaseSubscription())
             .then((value) => newSubscription(value, _firebase!));
         return subscription;
     }
 
-    FirebaseSubscription _parseFirebaseSubscription(http.Response response) {
-        var firebaseSubscription = FirebaseSubscription();
-        parseInto(firebaseSubscription, response.body);
-        return firebaseSubscription;
-    }
-
     Stream<S> _execute<S extends GeneratedMessage>(Query query) {
-        var httpResponse = _httpClient.postMessage(_endpoints.query, query);
-        return _queryProcessor.process(httpResponse, query);
+        return _queryProcessor.execute(query, _endpoints.query);
     }
 
     void _refreshSubscriptions() {
@@ -380,7 +377,6 @@ class SimpleFilter implements FilterOrComposite {
 /// All the field filters should pass in order for the composite filter to pass.
 ///
 Composite all(Iterable<SimpleFilter> filters) {
-    ArgumentError.checkNotNull(filters);
     return Composite._(CompositeFilter()
         ..operator = CompositeFilter_CompositeOperator.ALL
         ..filter.addAll(filters.map((f) => f.filter))
@@ -392,7 +388,6 @@ Composite all(Iterable<SimpleFilter> filters) {
 /// At least one field filter should pass in order for the composite filter to pass.
 ///
 Composite either(Iterable<SimpleFilter> filters) {
-    ArgumentError.checkNotNull(filters);
     return Composite._(CompositeFilter()
         ..operator = CompositeFilter_CompositeOperator.EITHER
         ..filter.addAll(filters.map((f) => f.filter))
@@ -420,8 +415,6 @@ SimpleFilter gt(String fieldPath, Object value) =>
     _filter(fieldPath, Filter_Operator.GREATER_THAN, value);
 
 SimpleFilter _filter(String fieldPath, Filter_Operator operator, Object value) {
-    ArgumentError.checkNotNull(fieldPath);
-    ArgumentError.checkNotNull(value);
     var pathElements = fieldPath.split('.');
     return SimpleFilter._(Filter()
         ..fieldPath = (FieldPath()..fieldName.addAll(pathElements))
@@ -539,7 +532,6 @@ class QueryRequest<M extends GeneratedMessage> {
     /// By default, all the fields are included.
     ///
     QueryRequest<M> fields(List<String> fieldPaths) {
-        ArgumentError.checkNotNull(fieldPaths, 'field paths');
         _fields.addAll(fieldPaths);
         return this;
     }
@@ -553,7 +545,6 @@ class QueryRequest<M extends GeneratedMessage> {
     /// results.
     ///
     QueryRequest<M> where(FilterOrComposite filter) {
-        ArgumentError.checkNotNull(filter, 'filter');
         _filters.add(filter._toProto());
         return this;
     }
@@ -565,7 +556,6 @@ class QueryRequest<M extends GeneratedMessage> {
     /// If called multiple times, the IDs add up.
     ///
     QueryRequest<M> whereIds(Iterable<Object> ids) {
-        ArgumentError.checkNotNull(ids, 'ids');
         _ids.addAll(ids);
         return this;
     }
@@ -577,8 +567,6 @@ class QueryRequest<M extends GeneratedMessage> {
     ///
     QueryRequest<M> orderBy(String column,
                             [OrderBy_Direction direction = OrderBy_Direction.ASCENDING]) {
-        ArgumentError.checkNotNull(column, 'column');
-        ArgumentError.checkNotNull(direction, 'direction');
         _orderBy = OrderBy()
             ..column = column
             ..direction = direction;
@@ -590,7 +578,6 @@ class QueryRequest<M extends GeneratedMessage> {
     /// A limit can only be used along with `orderBy(..)`.
     ///
     QueryRequest<M> limit(int count) {
-        ArgumentError.checkNotNull(count, 'limit');
         if (count <= 0) {
             throw ArgumentError('Invalid value of limit = $count');
         }
@@ -636,7 +623,6 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
     /// an entity state should pass all of the composite filters to match the subscription.
     ///
     StateSubscriptionRequest<M> where(FilterOrComposite filter) {
-        ArgumentError.checkNotNull(filter, 'filter');
         _filters.add(filter._toProto());
         return this;
     }
@@ -648,7 +634,6 @@ class StateSubscriptionRequest<M extends GeneratedMessage> {
     /// If called multiple times, the IDs add up.
     ///
     StateSubscriptionRequest<M> whereIdIn(Iterable<Object> ids) {
-        ArgumentError.checkNotNull(ids, 'ids');
         _ids.addAll(ids);
         return this;
     }
@@ -683,7 +668,6 @@ class EventSubscriptionRequest<M extends GeneratedMessage> {
     /// an event should pass all of the composite filters to match the subscription.
     ///
     EventSubscriptionRequest<M> where(FilterOrComposite filter) {
-        ArgumentError.checkNotNull(filter, 'filter');
         _filers.add(filter._toProto());
         return this;
     }
@@ -710,12 +694,16 @@ enum QueryMode {
     FIREBASE
 }
 
+/// A part of URL path, specifying a destination of client requests of some type.
+///
+typedef UrlPath = String;
+
 /// URL paths to which the client should send requests.
 ///
 class Endpoints {
 
-    final String query;
-    final String command;
+    final UrlPath query;
+    final UrlPath command;
     late SubscriptionEndpoints _subscription;
 
     Endpoints({
@@ -723,8 +711,6 @@ class Endpoints {
         this.command = 'command',
         SubscriptionEndpoints? subscription
     }) {
-        ArgumentError.checkNotNull(query, 'query');
-        ArgumentError.checkNotNull(command, 'command');
         this._subscription = subscription ?? SubscriptionEndpoints();
     }
 
@@ -739,17 +725,13 @@ class Endpoints {
 ///
 class SubscriptionEndpoints {
 
-    final String create;
-    final String keepUp;
-    final String cancel;
+    final UrlPath create;
+    final UrlPath keepUp;
+    final UrlPath cancel;
 
     SubscriptionEndpoints({
         this.create = 'subscription/create',
         this.keepUp = 'subscription/keep-up',
         this.cancel = 'subscription/cancel'
-    }) {
-        ArgumentError.checkNotNull(create, 'subscription.create');
-        ArgumentError.checkNotNull(keepUp, 'subscription.keepUp');
-        ArgumentError.checkNotNull(cancel, 'subscription.cancel');
-    }
+    });
 }
