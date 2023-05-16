@@ -32,7 +32,7 @@
 /**
  * Version of this library.
  */
-val dart = "1.9.0-SNAPSHOT.12"
+val dart = "1.9.0-SNAPSHOT.13"
 
 /**
  * Versions of the Spine libraries that this library depends on.
