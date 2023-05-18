@@ -1,5 +1,5 @@
 /*
- * Copyright 2021, TeamDev. All rights reserved.
+ * Copyright 2023, TeamDev. All rights reserved.
  *
  * Redistribution and use in source and/or binary forms, with or without
  * modification, must retain the above copyright notice and the following
@@ -32,13 +32,13 @@
 /**
  * Version of this library.
  */
-val dart = "1.9.0-SNAPSHOT.12"
+val dart = "1.9.0-SNAPSHOT.13"
 
 /**
  * Versions of the Spine libraries that this library depends on.
  */
-val base = "1.9.0-SNAPSHOT.5"
-val web = "1.9.0-SNAPSHOT.12"
+val base = "1.9.0-SNAPSHOT.6"
+val web = "1.9.0-SNAPSHOT.13"
 
 project.extra.apply {
     this["versionToPublish"] = dart
