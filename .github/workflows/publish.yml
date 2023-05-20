@@ -1,9 +1,10 @@
-name: Publish
+name: Publishing for Spine v1.x
 
 on:
   push:
-    branches: [master]
-
+    branches:
+      - v1
+      - 1.x-dev
 
 jobs:
   build:
