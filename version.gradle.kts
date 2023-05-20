@@ -32,13 +32,13 @@
 /**
  * Version of this library.
  */
-val dart = "1.9.0-SNAPSHOT.13"
+val dart = "1.9.0"
 
 /**
  * Versions of the Spine libraries that this library depends on.
  */
-val base = "1.9.0-SNAPSHOT.6"
-val web = "1.9.0-SNAPSHOT.13"
+val base = "1.9.0"
+val web = "1.9.0"
 
 project.extra.apply {
     this["versionToPublish"] = dart
