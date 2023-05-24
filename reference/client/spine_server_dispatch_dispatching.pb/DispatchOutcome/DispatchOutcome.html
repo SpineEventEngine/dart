@@ -21,8 +21,7 @@
 </head>
 
 
-<body data-base-href="../../"
-      data-using-base-href="false">
+<body data-base-href="../../" data-using-base-href="false">
 
 <div id="overlay-under-drawer"></div>
 
@@ -54,7 +53,10 @@
 <li><span class="parameter" id="-param-success"><span class="type-annotation"><a href="../../spine_server_dispatch_dispatching.pb/Success-class.html">Success</a>?</span> <span class="parameter-name">success</span>, </span></li>
 <li><span class="parameter" id="-param-error"><span class="type-annotation"><a href="../../spine_base_error.pb/Error-class.html">Error</a>?</span> <span class="parameter-name">error</span>, </span></li>
 <li><span class="parameter" id="-param-interrupted"><span class="type-annotation"><a href="../../spine_server_dispatch_dispatching.pb/Interruption-class.html">Interruption</a>?</span> <span class="parameter-name">interrupted</span>, </span></li>
-<li><span class="parameter" id="-param-ignored"><span class="type-annotation"><a href="../../spine_server_dispatch_dispatching.pb/Ignore-class.html">Ignore</a>?</span> <span class="parameter-name">ignored</span>}</span></li>
+<li><span class="parameter" id="-param-ignored"><span class="type-annotation"><a href="../../spine_server_dispatch_dispatching.pb/Ignore-class.html">Ignore</a>?</span> <span class="parameter-name">ignored</span>, </span></li>
+<li><span class="parameter" id="-param-sentToInbox"><span class="type-annotation"><a href="../../spine_server_dispatch_dispatching.pb/InboxAddresses-class.html">InboxAddresses</a>?</span> <span class="parameter-name">sentToInbox</span>, </span></li>
+<li><span class="parameter" id="-param-publishedToRemote"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.18.6/dart-core/bool-class.html">bool</a>?</span> <span class="parameter-name">publishedToRemote</span>, </span></li>
+<li><span class="parameter" id="-param-noTargetsToRoute"><span class="type-annotation"><a href="https://api.dart.dev/stable/2.18.6/dart-core/bool-class.html">bool</a>?</span> <span class="parameter-name">noTargetsToRoute</span>}</span></li>
 </ol>)
     </section>
 
@@ -65,11 +67,14 @@
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">factory DispatchOutcome({
-  $60.MessageId? propagatedSignal,
+  $42.MessageId? propagatedSignal,
   Success? success,
-  $63.Error? error,
+  $45.Error? error,
   Interruption? interrupted,
   Ignore? ignored,
+  InboxAddresses? sentToInbox,
+  $core.bool? publishedToRemote,
+  $core.bool? noTargetsToRoute,
 }) {
   final _result = create();
   if (propagatedSignal != null) {
@@ -86,6 +91,15 @@
   }
   if (ignored != null) {
     _result.ignored = ignored;
+  }
+  if (sentToInbox != null) {
+    _result.sentToInbox = sentToInbox;
+  }
+  if (publishedToRemote != null) {
+    _result.publishedToRemote = publishedToRemote;
+  }
+  if (noTargetsToRoute != null) {
+    _result.noTargetsToRoute = noTargetsToRoute;
   }
   return _result;
 }</code></pre>
@@ -128,8 +142,11 @@
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/info_.html">info_</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/interrupted.html">interrupted</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/isFrozen.html">isFrozen</a></li>
+    <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/noTargetsToRoute.html">noTargetsToRoute</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/propagatedSignal.html">propagatedSignal</a></li>
-    <li class="inherited"><a href="https://api.dart.dev/stable/2.17.1/dart-core/Object/runtimeType.html">runtimeType</a></li>
+    <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/publishedToRemote.html">publishedToRemote</a></li>
+    <li class="inherited"><a href="https://api.dart.dev/stable/2.18.6/dart-core/Object/runtimeType.html">runtimeType</a></li>
+    <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/sentToInbox.html">sentToInbox</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/success.html">success</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/unknownFields.html">unknownFields</a></li>
 
@@ -164,8 +181,11 @@
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/clearField.html">clearField</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/clearIgnored.html">clearIgnored</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/clearInterrupted.html">clearInterrupted</a></li>
+    <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/clearNoTargetsToRoute.html">clearNoTargetsToRoute</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/clearPropagatedSignal.html">clearPropagatedSignal</a></li>
+    <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/clearPublishedToRemote.html">clearPublishedToRemote</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/clearResult.html">clearResult</a></li>
+    <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/clearSentToInbox.html">clearSentToInbox</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/clearSuccess.html">clearSuccess</a></li>
     <li><a class="deprecated" href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/clone.html">clone</a></li>
     <li><a class="deprecated" href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/copyWith.html">copyWith</a></li>
@@ -176,6 +196,7 @@
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/ensureIgnored.html">ensureIgnored</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/ensureInterrupted.html">ensureInterrupted</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/ensurePropagatedSignal.html">ensurePropagatedSignal</a></li>
+    <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/ensureSentToInbox.html">ensureSentToInbox</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/ensureSuccess.html">ensureSuccess</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/extensionsAreInitialized.html">extensionsAreInitialized</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/freeze.html">freeze</a></li>
@@ -189,8 +210,11 @@
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/hasField.html">hasField</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/hasIgnored.html">hasIgnored</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/hasInterrupted.html">hasInterrupted</a></li>
+    <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/hasNoTargetsToRoute.html">hasNoTargetsToRoute</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/hasPropagatedSignal.html">hasPropagatedSignal</a></li>
+    <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/hasPublishedToRemote.html">hasPublishedToRemote</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/hasRequiredFields.html">hasRequiredFields</a></li>
+    <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/hasSentToInbox.html">hasSentToInbox</a></li>
     <li><a href="../../spine_server_dispatch_dispatching.pb/DispatchOutcome/hasSuccess.html">hasSuccess</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/isInitialized.html">isInitialized</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/mergeFromBuffer.html">mergeFromBuffer</a></li>
@@ -200,7 +224,7 @@
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/mergeFromMessage.html">mergeFromMessage</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/mergeFromProto3Json.html">mergeFromProto3Json</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/mergeUnknownFields.html">mergeUnknownFields</a></li>
-    <li class="inherited"><a href="https://api.dart.dev/stable/2.17.1/dart-core/Object/noSuchMethod.html">noSuchMethod</a></li>
+    <li class="inherited"><a href="https://api.dart.dev/stable/2.18.6/dart-core/Object/noSuchMethod.html">noSuchMethod</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/setExtension.html">setExtension</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/setField.html">setField</a></li>
     <li class="inherited"><a href="https://pub.dev/documentation/protobuf/2.1.0/protobuf/GeneratedMessage/toBuilder.html">toBuilder</a></li>
@@ -235,7 +259,7 @@
 <footer>
   <span class="no-break">
     spine_client
-      1.8.2
+      1.9.0
   </span>
 
   
@@ -244,7 +268,7 @@
 
 
 <script src="../../static-assets/highlight.pack.js?v1"></script>
-<script src="../../static-assets/script.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
 
 
 
